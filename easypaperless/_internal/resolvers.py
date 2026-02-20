@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import logging
+
 from easypaperless.exceptions import NotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 class NameResolver:
@@ -19,7 +23,9 @@ class NameResolver:
         key = value.lower()
         if key not in self._cache[resource]:
             raise NotFoundError(f"{resource!r} item with name {value!r} not found")
-        return self._cache[resource][key]
+        resolved_id = self._cache[resource][key]
+        logger.debug("Resolved %s %r -> %d", resource, value, resolved_id)
+        return resolved_id
 
     async def resolve_list(self, resource: str, values: list[int | str]) -> list[int]:
         result = []
@@ -29,9 +35,14 @@ class NameResolver:
 
     async def _ensure_loaded(self, resource: str) -> None:
         if resource in self._cache:
+            logger.debug("Cache hit for %r (%d entries)", resource, len(self._cache[resource]))
             return
+        logger.debug("Cache miss for %r — fetching from API", resource)
         items = await self._session.get_all_pages(f"/{resource}/")
         self._cache[resource] = {item["name"].lower(): item["id"] for item in items}
+        logger.debug("Cache populated for %r: %d names loaded", resource, len(self._cache[resource]))
 
     def invalidate(self, resource: str) -> None:
-        self._cache.pop(resource, None)
+        if resource in self._cache:
+            self._cache.pop(resource)
+            logger.debug("Cache invalidated for %r", resource)

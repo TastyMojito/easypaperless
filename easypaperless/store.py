@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import re
 import sqlite3
 from datetime import date
@@ -12,6 +13,8 @@ from typing import Any
 
 from easypaperless.client import PaperlessClient
 from easypaperless.models.documents import Document
+
+logger = logging.getLogger(__name__)
 
 
 _DDL = """
@@ -75,6 +78,7 @@ class DocumentStore:
 
     def _get_conn(self) -> sqlite3.Connection:
         if self._conn is None:
+            logger.debug("Opening SQLite database at %s", self._db_path)
             self._conn = sqlite3.connect(self._db_path)
             self._conn.row_factory = sqlite3.Row
             self._conn.executescript(_DDL)
@@ -95,6 +99,7 @@ class DocumentStore:
 
         Returns the number of documents synced.
         """
+        logger.info("Starting sync from server")
         docs, tags, correspondents, doc_types, storage_paths = await asyncio.gather(
             self._client.list_documents(),
             self._client.list_tags(),
@@ -158,6 +163,10 @@ class DocumentStore:
             (datetime.now(timezone.utc).isoformat(),),
         )
         conn.commit()
+        logger.info(
+            "Sync complete: %d documents, %d tags, %d correspondents, %d document_types, %d storage_paths",
+            len(docs), len(tags), len(correspondents), len(doc_types), len(storage_paths),
+        )
 
         return len(docs)
 
@@ -176,6 +185,25 @@ class DocumentStore:
         created_before: str | None = None,
         correspondent: int | str | None = None,
     ) -> list[Document]:
+        active_filters = {
+            k: v for k, v in {
+                "title_contains": title_contains,
+                "title_regex": title_regex,
+                "content_regex": content_regex,
+                "tags": tags,
+                "created_after": created_after,
+                "created_before": created_before,
+                "correspondent": correspondent,
+            }.items() if v is not None
+        }
+        if active_filters:
+            logger.debug(
+                "search_documents(%s)",
+                ", ".join(f"{k}={v!r}" for k, v in active_filters.items()),
+            )
+        else:
+            logger.debug("search_documents()")
+
         conn = self._get_conn()
 
         conditions: list[str] = []
@@ -222,6 +250,7 @@ class DocumentStore:
                 continue
             results.append(Document.model_validate(data))
 
+        logger.debug("search_documents returned %d result(s)", len(results))
         return results
 
     def _resolve_local(self, table: str, value: int | str) -> int:

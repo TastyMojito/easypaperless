@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import httpx
@@ -13,6 +14,8 @@ from easypaperless.exceptions import (
     ServerError,
     ValidationError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class HttpSession:
@@ -36,7 +39,7 @@ class HttpSession:
             await self._client.aclose()
             self._client = None
 
-    def _raise_for_status(self, response: httpx.Response) -> None:
+    def _raise_for_status(self, response: httpx.Response, method: str, path: str) -> None:
         if response.is_success:
             return
         try:
@@ -45,6 +48,7 @@ class HttpSession:
             detail = response.text
 
         status = response.status_code
+        logger.warning("HTTP %s on %s %s — %s", status, method.upper(), path, detail)
         if status in (401, 403):
             raise AuthError(detail, status_code=status)
         elif status == 404:
@@ -67,6 +71,7 @@ class HttpSession:
         files: Any = None,
     ) -> httpx.Response:
         client = self._get_client()
+        logger.debug("%s %s", method.upper(), path)
         try:
             response = await client.request(
                 method,
@@ -78,7 +83,8 @@ class HttpSession:
             )
         except httpx.HTTPError as exc:
             raise ServerError(str(exc)) from exc
-        self._raise_for_status(response)
+        logger.debug("%s %s %s", response.status_code, method.upper(), path)
+        self._raise_for_status(response, method, path)
         return response
 
     async def get(self, path: str, *, params: dict[str, Any] | None = None) -> httpx.Response:
@@ -103,21 +109,27 @@ class HttpSession:
     async def get_all_pages(self, path: str, params: dict[str, Any] | None = None) -> list[dict]:
         results: list[dict] = []
         # First page — use path relative to base_url
+        if params:
+            logger.debug("Fetching %s (params=%s)", path, params)
+        else:
+            logger.debug("Fetching %s", path)
         response = await self.get(path, params=params)
         page = response.json()
         results.extend(page.get("results", []))
 
         next_url: str | None = page.get("next")
         while next_url:
+            logger.debug("Fetching next page: %s", next_url)
             # next is absolute; pass it directly to the client
             client = self._get_client()
             try:
                 response = await client.get(next_url)
             except httpx.HTTPError as exc:
                 raise ServerError(str(exc)) from exc
-            self._raise_for_status(response)
+            self._raise_for_status(response, "GET", next_url)
             page = response.json()
             results.extend(page.get("results", []))
             next_url = page.get("next")
 
+        logger.debug("Pagination complete: %d items from %s", len(results), path)
         return results

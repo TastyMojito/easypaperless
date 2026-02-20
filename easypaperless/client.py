@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from easypaperless._internal.http import HttpSession
 from easypaperless._internal.resolvers import NameResolver
@@ -130,6 +133,7 @@ class PaperlessClient:
         asn: int | None = None,
         custom_fields: list[dict] | None = None,
     ) -> Document:
+        logger.debug("Updating document id=%d", id)
         payload: dict[str, Any] = {}
 
         if title is not None:
@@ -153,6 +157,7 @@ class PaperlessClient:
         return Document.model_validate(resp.json())
 
     async def delete_document(self, id: int) -> None:
+        logger.debug("Deleting document id=%d", id)
         await self._session.delete(f"/documents/{id}/")
 
     async def download_document(self, id: int, *, original: bool = False) -> bytes:
@@ -181,6 +186,7 @@ class PaperlessClient:
     ) -> str | Document:
         file_path = Path(file)
         file_bytes = file_path.read_bytes()
+        logger.info("Uploading %r (%d bytes)", file_path.name, len(file_bytes))
 
         data: dict[str, Any] = {}
         if title is not None:
@@ -202,6 +208,7 @@ class PaperlessClient:
         files = {"document": (file_path.name, file_bytes)}
         resp = await self._session.post("/documents/post_document/", data=data, files=files)
         task_id: str = resp.text.strip('"')
+        logger.debug("Upload accepted, task_id=%r", task_id)
 
         if not wait:
             return task_id
@@ -213,7 +220,8 @@ class PaperlessClient:
     async def _poll_task(
         self, task_id: str, *, poll_interval: float, poll_timeout: float
     ) -> Document:
-        deadline = time.monotonic() + poll_timeout
+        start = time.monotonic()
+        deadline = start + poll_timeout
         while time.monotonic() < deadline:
             resp = await self._session.get("/tasks/", params={"task_id": task_id})
             tasks = resp.json()
@@ -222,13 +230,19 @@ class PaperlessClient:
                 continue
 
             task = Task.model_validate(tasks[0])
+            elapsed = time.monotonic() - start
+            logger.debug("Polling task %r (status=%s, elapsed=%.1fs)", task_id, task.status.value, elapsed)
             if task.status == TaskStatus.SUCCESS:
                 doc_id = int(task.related_document)  # type: ignore[arg-type]
+                logger.info("Task %r succeeded, document_id=%d", task_id, doc_id)
                 return await self.get_document(doc_id)
             elif task.status == TaskStatus.FAILURE:
+                logger.warning("Task %r failed: %s", task_id, task.result)
                 raise UploadError(f"Document processing failed: {task.result}")
             await asyncio.sleep(poll_interval)
 
+        elapsed = time.monotonic() - start
+        logger.warning("Task %r timed out after %.1fs", task_id, elapsed)
         raise TaskTimeoutError(f"Task {task_id!r} did not complete within {poll_timeout}s")
 
     # ------------------------------------------------------------------
@@ -291,18 +305,21 @@ class PaperlessClient:
         return model_class.model_validate(resp.json())
 
     async def _create_resource(self, resource: str, model_class: type, **kwargs: Any):
+        logger.debug("Creating %s resource", resource)
         payload = {k: v for k, v in kwargs.items() if v is not None}
         resp = await self._session.post(f"/{resource}/", json=payload)
         self._resolver.invalidate(resource)
         return model_class.model_validate(resp.json())
 
     async def _update_resource(self, resource: str, id: int, model_class: type, **kwargs: Any):
+        logger.debug("Updating %s resource id=%d", resource, id)
         payload = {k: v for k, v in kwargs.items() if v is not None}
         resp = await self._session.patch(f"/{resource}/{id}/", json=payload)
         self._resolver.invalidate(resource)
         return model_class.model_validate(resp.json())
 
     async def _delete_resource(self, resource: str, id: int) -> None:
+        logger.debug("Deleting %s resource id=%d", resource, id)
         await self._session.delete(f"/{resource}/{id}/")
         self._resolver.invalidate(resource)
 

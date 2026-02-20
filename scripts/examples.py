@@ -18,6 +18,7 @@ Notes:
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from pathlib import Path
 
@@ -27,6 +28,18 @@ from easypaperless import PaperlessClient, SyncPaperlessClient
 
 # Load credentials from .env (file is git-ignored — never committed).
 load_dotenv(Path(__file__).parent.parent / ".env")
+
+# Logging setup — control easypaperless verbosity:
+#   DEBUG   → see every request, cache operation, poll step
+#   INFO    → see only uploads and sync
+#   (nothing) → library is silent (NullHandler default, no output)
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(asctime)s %(name)-40s %(levelname)-8s %(message)s",
+    datefmt="%H:%M:%S",
+)
+logging.getLogger("httpx").setLevel(logging.DEBUG)
+logging.getLogger("hpack").setLevel(logging.DEBUG)
 
 PAPERLESS_URL = os.environ["PAPERLESS_URL"]
 PAPERLESS_API_KEY = os.environ["PAPERLESS_API_KEY"]
@@ -121,8 +134,8 @@ async def demo_upload(client: PaperlessClient) -> None:
     print("\n=== Upload ===")
 
     # Submit a file and get back the task ID immediately (non-blocking)
-    # task_id = await client.upload_document("scan.pdf", title="April Invoice")
-    # print(f"Submitted, task ID: {task_id}")
+    #task_id = await client.upload_document(r"scan.pdf", title="April Invoice")
+    #print(f"Submitted, task ID: {task_id}")
 
     # Submit and wait until paperless finishes processing — returns a Document
     # doc = await client.upload_document(
@@ -156,7 +169,7 @@ async def demo_bulk(client: PaperlessClient) -> None:
     ids = [d.id for d in docs[:2]]
     print(f"Would operate on document IDs: {ids}")
 
-    # Add the same tag to multiple documents at once
+    # # Add the same tag to multiple documents at once
     # await client.bulk_add_tag(ids, "reviewed")
     # print("Added tag 'reviewed' to all")
 
@@ -192,7 +205,7 @@ async def demo_tags(client: PaperlessClient) -> None:
     tags = await client.list_tags()
     print(f"Total tags: {len(tags)}")
     for tag in tags[:5]:
-        print(f"  [{tag.id}] {tag.name!r}  (color: {tag.colour})")
+        print(f"  [{tag.id}] {tag.name!r}  (color: {tag.color})")
 
     if tags:
         tag = await client.get_tag(tags[0].id)
@@ -360,10 +373,10 @@ async def main() -> None:
         await demo_storage_paths(client)
         await demo_custom_fields(client)
 
-    demo_sync_client()
-
-    print("\nDone.")
-
 
 if __name__ == "__main__":
     asyncio.run(main())
+    # SyncPaperlessClient uses asyncio.run() internally, so it must be called
+    # outside of any running event loop — never from inside an async function.
+    demo_sync_client()
+    print("\nDone.")
