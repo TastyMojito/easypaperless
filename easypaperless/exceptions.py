@@ -4,35 +4,65 @@ from __future__ import annotations
 
 
 class PaperlessError(Exception):
-    """Base exception for all easypaperless errors."""
+    """Base exception for all easypaperless errors.
+
+    Attributes:
+        status_code: The HTTP status code associated with the error, or
+            ``None`` for non-HTTP errors (e.g. timeouts, local validation).
+    """
 
     def __init__(self, message: str, status_code: int | None = None) -> None:
+        """Create a PaperlessError.
+
+        Args:
+            message: Human-readable error description.
+            status_code: HTTP status code, if applicable.
+        """
         super().__init__(message)
         self.status_code = status_code
 
 
 class AuthError(PaperlessError):
-    """Raised on 401 or 403 responses."""
+    """Raised on 401 or 403 responses.
+
+    Indicates that the API key is missing, invalid, or lacks permission for
+    the requested operation.
+    """
 
 
 class NotFoundError(PaperlessError):
-    """Raised on 404 responses."""
+    """Raised on 404 responses or when a local name lookup fails.
+
+    Also raised by
+    :meth:`~easypaperless.store.DocumentStore.search_documents` when a tag
+    or correspondent name is not found in the local SQLite cache.
+    """
 
 
 class ValidationError(PaperlessError):
-    """Raised on 422 responses or bad input."""
+    """Raised on 422 responses or bad input supplied by the caller."""
 
 
 class ServerError(PaperlessError):
-    """Raised on 5xx responses or transport errors."""
+    """Raised on 5xx responses or unrecoverable transport errors."""
 
 
 class UploadError(PaperlessError):
-    """Raised when file submission or processing fails."""
+    """Raised when file submission or document processing fails.
+
+    Typically raised when paperless-ngx reports a ``FAILURE`` status on the
+    Celery task created by
+    :meth:`~easypaperless.client.PaperlessClient.upload_document`.
+    """
 
 
 class TaskTimeoutError(PaperlessError):
-    """Raised when upload polling exceeds the configured timeout."""
+    """Raised when upload polling exceeds the configured timeout.
+
+    Raised by :meth:`~easypaperless.client.PaperlessClient.upload_document`
+    (with ``wait=True``) when the document processing task does not reach a
+    terminal state within ``poll_timeout`` seconds.
+    """
 
     def __init__(self, message: str) -> None:
         super().__init__(message, status_code=None)

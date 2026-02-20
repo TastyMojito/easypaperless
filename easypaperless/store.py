@@ -67,11 +67,32 @@ CREATE TABLE IF NOT EXISTS sync_metadata (
 class DocumentStore:
     """SQLite-backed local mirror of paperless-ngx document metadata.
 
-    Sync is manual and explicit: call store.sync() to pull fresh data from the
-    server. search_documents() is a pure SQLite query — no network involved.
+    Wraps a :class:`~easypaperless.client.PaperlessClient` and mirrors
+    document metadata (plus tags, correspondents, document types, and storage
+    paths) into a local SQLite database for fast, offline-capable search.
+
+    Sync is **manual and explicit**: call :meth:`sync` to pull fresh data from
+    the server.  :meth:`search_documents` is a pure SQLite query — no network
+    is involved.
+
+    Example:
+        async with PaperlessClient(url="...", api_key="...") as client:
+            store = DocumentStore(client, "paperless.db")
+            await store.sync()
+            results = store.search_documents(tags=["invoice"], created_after="2024-01-01")
+            store.close()
     """
 
     def __init__(self, client: PaperlessClient, db_path: str | Path) -> None:
+        """Create a DocumentStore backed by a local SQLite file.
+
+        Args:
+            client: An initialised
+                :class:`~easypaperless.client.PaperlessClient` used for
+                fetching data during :meth:`sync`.
+            db_path: Path to the SQLite database file.  The file is created
+                if it does not exist.
+        """
         self._client = client
         self._db_path = Path(db_path)
         self._conn: sqlite3.Connection | None = None
@@ -86,6 +107,7 @@ class DocumentStore:
         return self._conn
 
     def close(self) -> None:
+        """Close the SQLite database connection."""
         if self._conn is not None:
             self._conn.close()
             self._conn = None
@@ -97,7 +119,13 @@ class DocumentStore:
     async def sync(self) -> int:
         """Pull all documents and supporting metadata from the server and upsert locally.
 
-        Returns the number of documents synced.
+        Fetches documents, tags, correspondents, document types, and storage
+        paths in parallel, then upserts everything into SQLite.  Existing
+        local records are replaced; documents no longer present on the server
+        are *not* removed (incremental sync is not yet implemented).
+
+        Returns:
+            Number of documents synced.
         """
         logger.info("Starting sync from server")
         docs, tags, correspondents, doc_types, storage_paths = await asyncio.gather(
@@ -185,6 +213,40 @@ class DocumentStore:
         created_before: str | None = None,
         correspondent: int | str | None = None,
     ) -> list[Document]:
+        """Search the local SQLite cache — no network request is made.
+
+        SQL filters (``title_contains``, ``created_after``, ``created_before``,
+        ``correspondent``, ``tags``) are applied first.  Regex filters
+        (``title_regex``, ``content_regex``) are then applied in Python on the
+        resulting rows.
+
+        Args:
+            title_contains: Case-insensitive substring match on the document
+                title.  Applied as a SQL ``LIKE`` filter.
+            title_regex: Python ``re`` pattern applied to the document title
+                (case-insensitive).  Applied after SQL filtering.
+            content_regex: Python ``re`` pattern applied to the OCR content of
+                each candidate document (case-insensitive).  Applied after SQL
+                filtering.  Content must have been present when :meth:`sync`
+                was last called.
+            tags: Documents must have **all** of these tags.  Accepts tag IDs
+                or tag names (resolved from the local cache).
+            created_after: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
+                documents created **after** this date are returned.
+            created_before: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
+                documents created **before** this date are returned.
+            correspondent: Filter to documents assigned to this correspondent.
+                Accepts a correspondent ID or name (resolved from the local
+                cache).
+
+        Returns:
+            List of :class:`~easypaperless.models.documents.Document`
+            objects matching all supplied filters.
+
+        Raises:
+            ~easypaperless.exceptions.NotFoundError: If a tag or correspondent
+                name is supplied that does not exist in the local cache.
+        """
         active_filters = {
             k: v for k, v in {
                 "title_contains": title_contains,

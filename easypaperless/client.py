@@ -36,7 +36,19 @@ _RESOURCE_MODELS = {
 
 
 class PaperlessClient:
-    """Async client for the paperless-ngx API."""
+    """Async client for the paperless-ngx API.
+
+    All operations are flat methods on the client.  String names are resolved
+    to integer IDs automatically wherever the API requires IDs (tags,
+    correspondents, document types, storage paths).
+
+    Use as an async context manager to ensure the underlying HTTP connection
+    pool is closed when you are done:
+
+    Example:
+        async with PaperlessClient(url="http://localhost:8000", api_key="abc") as client:
+            docs = await client.list_documents()
+    """
 
     def __init__(
         self,
@@ -46,12 +58,30 @@ class PaperlessClient:
         poll_interval: float = 2.0,
         poll_timeout: float = 60.0,
     ) -> None:
+        """Create an async paperless-ngx client.
+
+        Args:
+            url: Base URL of the paperless-ngx instance
+                (e.g. ``"http://localhost:8000"``).
+            api_key: API token.  Generate one in paperless-ngx under
+                *Settings → API → Generate Token*.
+            poll_interval: Seconds between status checks when ``wait=True``
+                is passed to :meth:`upload_document`.  Default: ``2.0``.
+            poll_timeout: Maximum seconds to wait for a document to finish
+                processing before raising
+                :exc:`~easypaperless.exceptions.TaskTimeoutError`.
+                Default: ``60.0``.
+        """
         self._session = HttpSession(base_url=url, api_key=api_key)
         self._resolver = NameResolver(self._session)
         self._poll_interval = poll_interval
         self._poll_timeout = poll_timeout
 
     async def close(self) -> None:
+        """Close the underlying HTTP connection pool.
+
+        Called automatically when used as an async context manager.
+        """
         await self._session.close()
 
     async def __aenter__(self) -> PaperlessClient:
@@ -65,6 +95,19 @@ class PaperlessClient:
     # ------------------------------------------------------------------
 
     async def get_document(self, id: int) -> Document:
+        """Fetch a single document by its ID.
+
+        Args:
+            id: Numeric paperless-ngx document ID.
+
+        Returns:
+            The :class:`~easypaperless.models.documents.Document` with the
+            given ID.
+
+        Raises:
+            ~easypaperless.exceptions.NotFoundError: If no document exists
+                with that ID.
+        """
         resp = await self._session.get(f"/documents/{id}/")
         return Document.model_validate(resp.json())
 
@@ -82,6 +125,43 @@ class PaperlessClient:
         created_after: str | None = None,
         created_before: str | None = None,
     ) -> list[Document]:
+        """Return a filtered list of documents.
+
+        All tag, correspondent, and document-type parameters accept either
+        integer IDs or string names — names are resolved to IDs transparently.
+
+        Args:
+            search: Search string.  Behaviour depends on ``search_mode``.
+            search_mode: How ``search`` is applied.  One of:
+
+                * ``"title_or_text"`` *(default)* — full-text search across
+                  title and OCR content (Whoosh FTS, raw API ``search``
+                  parameter).
+                * ``"title"`` — case-insensitive substring match on title
+                  only (raw API ``title__icontains``).
+                * ``"query"`` — paperless query language, e.g.
+                  ``"tag:invoice date:[2024 TO *]"`` (raw API ``query``).
+
+            tags: Documents must have **all** of these tags (AND semantics).
+                Accepts tag IDs or tag names.
+            any_tag: Documents must have **at least one** of these tags
+                (OR semantics).  Accepts tag IDs or tag names.
+            exclude_tags: Documents must have **none** of these tags.
+                Accepts tag IDs or tag names.
+            correspondent: Filter to documents assigned to this correspondent.
+                Accepts a correspondent ID or name.
+            document_type: Filter to documents of this type.  Accepts a
+                document-type ID or name.
+            asn: Filter by archive serial number.
+            created_after: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
+                documents created **after** this date are returned.
+            created_before: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
+                documents created **before** this date are returned.
+
+        Returns:
+            List of :class:`~easypaperless.models.documents.Document`
+            objects.  All pages are fetched and concatenated automatically.
+        """
         params: dict[str, Any] = {}
 
         if search is not None:
@@ -133,6 +213,27 @@ class PaperlessClient:
         asn: int | None = None,
         custom_fields: list[dict] | None = None,
     ) -> Document:
+        """Partially update a document (PATCH semantics — only passed fields change).
+
+        Args:
+            id: Numeric ID of the document to update.
+            title: New document title.
+            date: Creation date as an ISO-8601 string (``"YYYY-MM-DD"``).
+            correspondent: Correspondent to assign, as an ID or name.
+                Pass ``0`` to clear.
+            document_type: Document type to assign, as an ID or name.
+                Pass ``0`` to clear.
+            storage_path: Storage path to assign, as an ID or name.
+                Pass ``0`` to clear.
+            tags: Full replacement list of tags (IDs or names).  The existing
+                tag list is replaced, not merged.
+            asn: Archive serial number to assign.
+            custom_fields: List of ``{"field": <field_id>, "value": ...}``
+                dicts.  Replaces the existing custom-field values.
+
+        Returns:
+            The updated :class:`~easypaperless.models.documents.Document`.
+        """
         logger.debug("Updating document id=%d", id)
         payload: dict[str, Any] = {}
 
@@ -157,10 +258,30 @@ class PaperlessClient:
         return Document.model_validate(resp.json())
 
     async def delete_document(self, id: int) -> None:
+        """Permanently delete a document.
+
+        Args:
+            id: Numeric ID of the document to delete.
+
+        Raises:
+            ~easypaperless.exceptions.NotFoundError: If no document exists
+                with that ID.
+        """
         logger.debug("Deleting document id=%d", id)
         await self._session.delete(f"/documents/{id}/")
 
     async def download_document(self, id: int, *, original: bool = False) -> bytes:
+        """Download the binary content of a document.
+
+        Args:
+            id: Numeric ID of the document to download.
+            original: If ``False`` *(default)*, returns the archived
+                (post-processed) PDF.  If ``True``, returns the original
+                file that was uploaded.
+
+        Returns:
+            Raw file bytes.
+        """
         endpoint = "download" if original else "archive"
         resp = await self._session.get(f"/documents/{id}/{endpoint}/")
         return resp.content
@@ -184,6 +305,39 @@ class PaperlessClient:
         poll_interval: float | None = None,
         poll_timeout: float | None = None,
     ) -> str | Document:
+        """Upload a document to paperless-ngx.
+
+        Args:
+            file: Path to the file to upload (``str`` or
+                :class:`~pathlib.Path`).
+            title: Title to assign to the document.  Paperless-ngx derives
+                one from the file name if omitted.
+            created: Creation date as an ISO-8601 string (``"YYYY-MM-DD"``).
+            correspondent: Correspondent to assign, as an ID or name.
+            document_type: Document type to assign, as an ID or name.
+            storage_path: Storage path to assign, as an ID or name.
+            tags: Tags to assign, as IDs or names.
+            asn: Archive serial number to assign.
+            wait: If ``False`` *(default)*, returns immediately with the
+                task ID string.  If ``True``, polls the task-status endpoint
+                until processing completes and returns the resulting
+                :class:`~easypaperless.models.documents.Document`.
+            poll_interval: Override the client-level ``poll_interval`` for
+                this upload.  Only used when ``wait=True``.
+            poll_timeout: Override the client-level ``poll_timeout`` for
+                this upload.  Only used when ``wait=True``.
+
+        Returns:
+            The Celery task ID string when ``wait=False``, or the fully
+            processed :class:`~easypaperless.models.documents.Document`
+            when ``wait=True``.
+
+        Raises:
+            ~easypaperless.exceptions.UploadError: If paperless-ngx reports
+                that the processing task failed.
+            ~easypaperless.exceptions.TaskTimeoutError: If ``wait=True`` and
+                processing does not complete within the timeout.
+        """
         file_path = Path(file)
         file_bytes = file_path.read_bytes()
         logger.info("Uploading %r (%d bytes)", file_path.name, len(file_bytes))
@@ -252,14 +406,39 @@ class PaperlessClient:
     async def bulk_edit(
         self, document_ids: list[int], method: str, **parameters: Any
     ) -> None:
+        """Execute a bulk-edit operation on a list of documents.
+
+        This is a low-level method; prefer the higher-level helpers such as
+        :meth:`bulk_add_tag`, :meth:`bulk_remove_tag`, and
+        :meth:`bulk_modify_tags`.
+
+        Args:
+            document_ids: List of document IDs to operate on.
+            method: Bulk-edit method name as recognised by paperless-ngx
+                (e.g. ``"add_tag"``, ``"remove_tag"``, ``"delete"``).
+            **parameters: Additional keyword arguments forwarded to the API as
+                the ``parameters`` object.
+        """
         payload = {"documents": document_ids, "method": method, "parameters": parameters}
         await self._session.post("/documents/bulk_edit/", json=payload)
 
     async def bulk_add_tag(self, document_ids: list[int], tag: int | str) -> None:
+        """Add a tag to multiple documents in a single request.
+
+        Args:
+            document_ids: List of document IDs to tag.
+            tag: Tag to add, as an ID or name.
+        """
         tag_id = await self._resolver.resolve("tags", tag)
         await self.bulk_edit(document_ids, "add_tag", tag=tag_id)
 
     async def bulk_remove_tag(self, document_ids: list[int], tag: int | str) -> None:
+        """Remove a tag from multiple documents in a single request.
+
+        Args:
+            document_ids: List of document IDs to un-tag.
+            tag: Tag to remove, as an ID or name.
+        """
         tag_id = await self._resolver.resolve("tags", tag)
         await self.bulk_edit(document_ids, "remove_tag", tag=tag_id)
 
@@ -270,11 +449,23 @@ class PaperlessClient:
         add_tags: list[int | str] | None = None,
         remove_tags: list[int | str] | None = None,
     ) -> None:
+        """Add and/or remove tags on multiple documents atomically.
+
+        Args:
+            document_ids: List of document IDs to modify.
+            add_tags: Tags to add, as IDs or names.
+            remove_tags: Tags to remove, as IDs or names.
+        """
         add_ids = await self._resolver.resolve_list("tags", add_tags or [])
         remove_ids = await self._resolver.resolve_list("tags", remove_tags or [])
         await self.bulk_edit(document_ids, "modify_tags", add_tags=add_ids, remove_tags=remove_ids)
 
     async def bulk_delete(self, document_ids: list[int]) -> None:
+        """Permanently delete multiple documents in a single request.
+
+        Args:
+            document_ids: List of document IDs to delete.
+        """
         await self.bulk_edit(document_ids, "delete")
 
     async def bulk_edit_objects(
@@ -284,6 +475,17 @@ class PaperlessClient:
         operation: str,
         **parameters: Any,
     ) -> None:
+        """Execute a bulk operation on non-document objects (tags, etc.).
+
+        Args:
+            object_type: The paperless-ngx object type string (e.g.
+                ``"tags"``, ``"correspondents"``).
+            object_ids: List of object IDs to operate on.
+            operation: Operation name recognised by the
+                ``/bulk_edit_objects/`` endpoint.
+            **parameters: Additional keyword arguments forwarded directly to
+                the API payload.
+        """
         payload = {
             "objects": object_ids,
             "object_type": object_type,
@@ -328,18 +530,49 @@ class PaperlessClient:
     # ------------------------------------------------------------------
 
     async def list_tags(self) -> list[Tag]:
+        """Return all tags defined in paperless-ngx."""
         return await self._list_resource("tags", Tag)
 
     async def get_tag(self, id: int) -> Tag:
+        """Fetch a single tag by its ID.
+
+        Args:
+            id: Numeric tag ID.
+        """
         return await self._get_resource("tags", id, Tag)
 
     async def create_tag(self, *, name: str, **kwargs: Any) -> Tag:
+        """Create a new tag.
+
+        Args:
+            name: Tag name (must be unique).
+            **kwargs: Additional fields passed directly to the paperless-ngx
+                API (e.g. ``color="#ff0000"``, ``is_inbox_tag=True``).
+
+        Returns:
+            The newly created :class:`~easypaperless.models.tags.Tag`.
+        """
         return await self._create_resource("tags", Tag, name=name, **kwargs)
 
     async def update_tag(self, id: int, **kwargs: Any) -> Tag:
+        """Partially update a tag (PATCH semantics).
+
+        Args:
+            id: Numeric ID of the tag to update.
+            **kwargs: Fields to update (e.g. ``name="new-name"``,
+                ``color="#00ff00"``).
+
+        Returns:
+            The updated :class:`~easypaperless.models.tags.Tag`.
+        """
         return await self._update_resource("tags", id, Tag, **kwargs)
 
     async def delete_tag(self, id: int) -> None:
+        """Delete a tag.
+
+        Args:
+            id: Numeric ID of the tag to delete.
+        """
         await self._delete_resource("tags", id)
 
     # ------------------------------------------------------------------
@@ -347,18 +580,49 @@ class PaperlessClient:
     # ------------------------------------------------------------------
 
     async def list_correspondents(self) -> list[Correspondent]:
+        """Return all correspondents defined in paperless-ngx."""
         return await self._list_resource("correspondents", Correspondent)
 
     async def get_correspondent(self, id: int) -> Correspondent:
+        """Fetch a single correspondent by its ID.
+
+        Args:
+            id: Numeric correspondent ID.
+        """
         return await self._get_resource("correspondents", id, Correspondent)
 
     async def create_correspondent(self, *, name: str, **kwargs: Any) -> Correspondent:
+        """Create a new correspondent.
+
+        Args:
+            name: Correspondent name (must be unique).
+            **kwargs: Additional fields passed directly to the API.
+
+        Returns:
+            The newly created
+            :class:`~easypaperless.models.correspondents.Correspondent`.
+        """
         return await self._create_resource("correspondents", Correspondent, name=name, **kwargs)
 
     async def update_correspondent(self, id: int, **kwargs: Any) -> Correspondent:
+        """Partially update a correspondent (PATCH semantics).
+
+        Args:
+            id: Numeric ID of the correspondent to update.
+            **kwargs: Fields to update (e.g. ``name="ACME Corp"``).
+
+        Returns:
+            The updated
+            :class:`~easypaperless.models.correspondents.Correspondent`.
+        """
         return await self._update_resource("correspondents", id, Correspondent, **kwargs)
 
     async def delete_correspondent(self, id: int) -> None:
+        """Delete a correspondent.
+
+        Args:
+            id: Numeric ID of the correspondent to delete.
+        """
         await self._delete_resource("correspondents", id)
 
     # ------------------------------------------------------------------
@@ -366,18 +630,49 @@ class PaperlessClient:
     # ------------------------------------------------------------------
 
     async def list_document_types(self) -> list[DocumentType]:
+        """Return all document types defined in paperless-ngx."""
         return await self._list_resource("document_types", DocumentType)
 
     async def get_document_type(self, id: int) -> DocumentType:
+        """Fetch a single document type by its ID.
+
+        Args:
+            id: Numeric document-type ID.
+        """
         return await self._get_resource("document_types", id, DocumentType)
 
     async def create_document_type(self, *, name: str, **kwargs: Any) -> DocumentType:
+        """Create a new document type.
+
+        Args:
+            name: Document-type name (must be unique).
+            **kwargs: Additional fields passed directly to the API.
+
+        Returns:
+            The newly created
+            :class:`~easypaperless.models.document_types.DocumentType`.
+        """
         return await self._create_resource("document_types", DocumentType, name=name, **kwargs)
 
     async def update_document_type(self, id: int, **kwargs: Any) -> DocumentType:
+        """Partially update a document type (PATCH semantics).
+
+        Args:
+            id: Numeric ID of the document type to update.
+            **kwargs: Fields to update (e.g. ``name="Receipt"``).
+
+        Returns:
+            The updated
+            :class:`~easypaperless.models.document_types.DocumentType`.
+        """
         return await self._update_resource("document_types", id, DocumentType, **kwargs)
 
     async def delete_document_type(self, id: int) -> None:
+        """Delete a document type.
+
+        Args:
+            id: Numeric ID of the document type to delete.
+        """
         await self._delete_resource("document_types", id)
 
     # ------------------------------------------------------------------
@@ -385,18 +680,51 @@ class PaperlessClient:
     # ------------------------------------------------------------------
 
     async def list_storage_paths(self) -> list[StoragePath]:
+        """Return all storage paths defined in paperless-ngx."""
         return await self._list_resource("storage_paths", StoragePath)
 
     async def get_storage_path(self, id: int) -> StoragePath:
+        """Fetch a single storage path by its ID.
+
+        Args:
+            id: Numeric storage-path ID.
+        """
         return await self._get_resource("storage_paths", id, StoragePath)
 
     async def create_storage_path(self, *, name: str, **kwargs: Any) -> StoragePath:
+        """Create a new storage path.
+
+        Args:
+            name: Storage-path name (must be unique).
+            **kwargs: Additional fields passed directly to the API
+                (e.g. ``path="{created_year}/{correspondent}/{title}"``).
+
+        Returns:
+            The newly created
+            :class:`~easypaperless.models.storage_paths.StoragePath`.
+        """
         return await self._create_resource("storage_paths", StoragePath, name=name, **kwargs)
 
     async def update_storage_path(self, id: int, **kwargs: Any) -> StoragePath:
+        """Partially update a storage path (PATCH semantics).
+
+        Args:
+            id: Numeric ID of the storage path to update.
+            **kwargs: Fields to update (e.g. ``path="{title}"``,
+                ``name="new-name"``).
+
+        Returns:
+            The updated
+            :class:`~easypaperless.models.storage_paths.StoragePath`.
+        """
         return await self._update_resource("storage_paths", id, StoragePath, **kwargs)
 
     async def delete_storage_path(self, id: int) -> None:
+        """Delete a storage path.
+
+        Args:
+            id: Numeric ID of the storage path to delete.
+        """
         await self._delete_resource("storage_paths", id)
 
     # ------------------------------------------------------------------
@@ -404,18 +732,54 @@ class PaperlessClient:
     # ------------------------------------------------------------------
 
     async def list_custom_fields(self) -> list[CustomField]:
+        """Return all custom fields defined in paperless-ngx."""
         return await self._list_resource("custom_fields", CustomField)
 
     async def get_custom_field(self, id: int) -> CustomField:
+        """Fetch a single custom field by its ID.
+
+        Args:
+            id: Numeric custom-field ID.
+        """
         return await self._get_resource("custom_fields", id, CustomField)
 
     async def create_custom_field(self, *, name: str, data_type: str, **kwargs: Any) -> CustomField:
+        """Create a new custom field.
+
+        Args:
+            name: Field name (must be unique).
+            data_type: Value type.  Must be one of the
+                :class:`~easypaperless.models.custom_fields.FieldDataType`
+                enum values: ``"string"``, ``"boolean"``, ``"integer"``,
+                ``"float"``, ``"monetary"``, ``"date"``, ``"url"``,
+                ``"documentlink"``, ``"select"``.
+            **kwargs: Additional fields passed directly to the API.
+
+        Returns:
+            The newly created
+            :class:`~easypaperless.models.custom_fields.CustomField`.
+        """
         return await self._create_resource(
             "custom_fields", CustomField, name=name, data_type=data_type, **kwargs
         )
 
     async def update_custom_field(self, id: int, **kwargs: Any) -> CustomField:
+        """Partially update a custom field (PATCH semantics).
+
+        Args:
+            id: Numeric ID of the custom field to update.
+            **kwargs: Fields to update (e.g. ``name="Invoice Number"``).
+
+        Returns:
+            The updated
+            :class:`~easypaperless.models.custom_fields.CustomField`.
+        """
         return await self._update_resource("custom_fields", id, CustomField, **kwargs)
 
     async def delete_custom_field(self, id: int) -> None:
+        """Delete a custom field.
+
+        Args:
+            id: Numeric ID of the custom field to delete.
+        """
         await self._delete_resource("custom_fields", id)

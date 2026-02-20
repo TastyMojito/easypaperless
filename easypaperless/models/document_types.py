@@ -6,6 +6,14 @@ from pydantic import BaseModel, ConfigDict
 
 
 class DocumentType(BaseModel):
+    """A paperless-ngx document type (e.g. Invoice, Receipt, Contract).
+
+    Attributes:
+        id: Unique document-type ID.
+        name: Document-type name.
+        document_count: Number of documents assigned to this document type.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     id: int

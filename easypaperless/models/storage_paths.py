@@ -6,6 +6,16 @@ from pydantic import BaseModel, ConfigDict
 
 
 class StoragePath(BaseModel):
+    """A paperless-ngx storage path — controls where archived files are stored.
+
+    Attributes:
+        id: Unique storage-path ID.
+        name: Storage-path name.
+        path: Template string used to build the storage path, e.g.
+            ``"{created_year}/{correspondent}/{title}"``.
+        document_count: Number of documents using this storage path.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     id: int

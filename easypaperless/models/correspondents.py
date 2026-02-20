@@ -8,6 +8,16 @@ from pydantic import BaseModel, ConfigDict
 
 
 class Correspondent(BaseModel):
+    """A paperless-ngx correspondent (sender or recipient of a document).
+
+    Attributes:
+        id: Unique correspondent ID.
+        name: Correspondent name.
+        document_count: Number of documents assigned to this correspondent.
+        last_correspondence: Date of the most recent document assigned here,
+            or ``None``.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     id: int

@@ -6,6 +6,19 @@ from pydantic import BaseModel, ConfigDict
 
 
 class Tag(BaseModel):
+    """A paperless-ngx tag.
+
+    Attributes:
+        id: Unique tag ID.
+        name: Tag name.
+        color: Hex colour code used in the UI (e.g. ``"#ff0000"``).
+        is_inbox_tag: If ``True``, newly ingested documents receive this tag
+            automatically until they are processed.
+        document_count: Number of documents currently assigned to this tag.
+        parent: ID of the parent tag for hierarchical tag trees, or ``None``.
+        children: IDs of child tags, or ``None``.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     id: int

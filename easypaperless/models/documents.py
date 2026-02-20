@@ -10,6 +10,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class TaskStatus(StrEnum):
+    """Status values for a paperless-ngx background processing task."""
+
     PENDING = "PENDING"
     STARTED = "STARTED"
     SUCCESS = "SUCCESS"
@@ -19,6 +21,17 @@ class TaskStatus(StrEnum):
 
 
 class Task(BaseModel):
+    """A paperless-ngx background processing task (e.g. document ingestion).
+
+    Attributes:
+        task_id: Unique Celery task identifier.
+        task_file_name: Original file name submitted for processing.
+        status: Current task status as a :class:`TaskStatus` enum value.
+        result: Human-readable result or error message, set on completion.
+        related_document: String representation of the resulting document ID
+            on success, ``None`` otherwise.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     task_id: str
@@ -33,6 +46,14 @@ class Task(BaseModel):
 
 
 class SearchHit(BaseModel):
+    """Full-text search relevance metadata returned alongside a document.
+
+    Attributes:
+        score: Relevance score assigned by the Whoosh FTS engine.
+        highlights: HTML snippet with matching terms highlighted.
+        rank: Position in the result set by relevance.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     score: float | None = None
@@ -42,6 +63,15 @@ class SearchHit(BaseModel):
 
 
 class CustomFieldValue(BaseModel):
+    """A custom field value attached to a document.
+
+    Attributes:
+        field: ID of the :class:`~easypaperless.models.custom_fields.CustomField`
+            definition.
+        value: The stored value; its Python type depends on the field's
+            ``data_type``.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     field: int
@@ -49,6 +79,16 @@ class CustomFieldValue(BaseModel):
 
 
 class DocumentNote(BaseModel):
+    """A user note attached to a document.
+
+    Attributes:
+        id: Unique note ID.
+        note: Text content of the note.
+        created: Timestamp when the note was created.
+        document: ID of the parent document.
+        user: ID of the user who created the note.
+    """
+
     model_config = ConfigDict(extra="ignore")
 
     id: int | None = None
@@ -59,6 +99,25 @@ class DocumentNote(BaseModel):
 
 
 class Document(BaseModel):
+    """A paperless-ngx document.
+
+    Attributes:
+        id: Unique document ID.
+        title: Document title.
+        content: Full OCR text content, if available.
+        tags: List of tag IDs assigned to this document.
+        document_type: ID of the assigned document type, or ``None``.
+        correspondent: ID of the assigned correspondent, or ``None``.
+        storage_path: ID of the assigned storage path, or ``None``.
+        created: Full creation datetime.
+        created_date: Date portion of creation (``date`` object).
+        archive_serial_number: Archive serial number (ASN), or ``None``.
+        custom_fields: List of :class:`CustomFieldValue` instances.
+        notes: User notes attached to this document.
+        search_hit: Full-text search relevance metadata, populated only when
+            the document was returned by a full-text search.
+    """
+
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     id: int
