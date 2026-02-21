@@ -79,6 +79,81 @@ async with PaperlessClient(url="http://localhost:8000", api_key="YOUR_TOKEN") as
     store.close()
 ```
 
+## Filtering documents
+
+`list_documents()` accepts a rich set of filter parameters.  All parameters
+that accept IDs also accept string names — resolution happens transparently.
+
+### Search
+
+| Parameter | Type | Description |
+|---|---|---|
+| `search` | `str` | Search string; behaviour controlled by `search_mode`. |
+| `search_mode` | `str` | `"title_or_text"` *(default)* — FTS across title + OCR content; `"title"` — title substring; `"query"` — raw paperless query language. |
+
+### Tag filters
+
+| Parameter | Type | Semantics |
+|---|---|---|
+| `tags` | `list[int \| str]` | Document must have **all** of these tags (AND). |
+| `any_tag` | `list[int \| str]` | Document must have **at least one** of these tags (OR). |
+| `exclude_tags` | `list[int \| str]` | Document must have **none** of these tags. |
+
+### Correspondent filters
+
+| Parameter | Type | Semantics |
+|---|---|---|
+| `correspondent` | `int \| str` | Document is assigned to this correspondent (single value). |
+| `any_correspondent` | `list[int \| str]` | Document is assigned to **any** of these (OR).  Takes precedence over `correspondent`. |
+| `exclude_correspondents` | `list[int \| str]` | Document is **not** assigned to any of these. |
+
+### Document-type filters
+
+| Parameter | Type | Semantics |
+|---|---|---|
+| `document_type` | `int \| str` | Document has this type (single value). |
+| `any_document_type` | `list[int \| str]` | Document type is **any** of these (OR).  Takes precedence over `document_type`. |
+| `exclude_document_types` | `list[int \| str]` | Document type is **none** of these. |
+
+### Date filters
+
+All date strings are ISO-8601 (`"YYYY-MM-DD"`).
+
+| Parameter | Filters on | Raw API param |
+|---|---|---|
+| `created_after` | Document date | `created__date__gt` |
+| `created_before` | Document date | `created__date__lt` |
+| `added_after` | Ingestion date | `added__date__gt` |
+| `added_before` | Ingestion date | `added__date__lt` |
+| `modified_after` | Last-modified date | `modified__date__gt` |
+| `modified_before` | Last-modified date | `modified__date__lt` |
+
+### Other filters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `asn` | `int` | Archive serial number (exact match). |
+
+### Pagination control
+
+| Parameter | Default | Description |
+|---|---|---|
+| `page_size` | `25` | Results per API page.  Increase (e.g. `500`) to reduce round-trips on large archives. |
+| `max_results` | `None` | Stop fetching once this many documents have been collected.  Avoids pulling the entire archive when you only need the first N results. |
+
+### Example
+
+```python
+docs = await client.list_documents(
+    any_correspondent=["ACME Corp", "Bank"],
+    exclude_document_types=["Spam"],
+    added_after="2024-01-01",
+    tags=["inbox"],
+    page_size=100,
+    max_results=50,
+)
+```
+
 ## Logging
 
 `easypaperless` uses the standard `logging` module under the `easypaperless` logger hierarchy.

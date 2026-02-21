@@ -98,3 +98,113 @@ async def test_status_code_stored_on_error(session):
         with pytest.raises(NotFoundError) as exc_info:
             await session.get("/x/")
         assert exc_info.value.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# get_all_pages — max_results
+# ---------------------------------------------------------------------------
+
+async def test_get_all_pages_max_results_trims_single_page(session):
+    """max_results smaller than one page — trims result, does not follow next."""
+    data = {
+        "count": 10,
+        "next": BASE_URL + "/api/items/?page=2",
+        "previous": None,
+        "results": [{"id": i} for i in range(1, 6)],
+    }
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        return Response(200, json=data)
+
+    with respx.mock(assert_all_called=False) as router:
+        router.get(BASE_URL + "/api/items/").mock(side_effect=side_effect)
+        results = await session.get_all_pages("/items/", max_results=3)
+
+    assert len(results) == 3
+    assert [r["id"] for r in results] == [1, 2, 3]
+    assert call_count == 1  # second page must NOT be fetched
+
+
+async def test_get_all_pages_max_results_exact_page_size(session):
+    """max_results == page size — stops after one page even with a next URL."""
+    data = {
+        "count": 6,
+        "next": BASE_URL + "/api/items/?page=2",
+        "previous": None,
+        "results": [{"id": 1}, {"id": 2}],
+    }
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        return Response(200, json=data)
+
+    with respx.mock(assert_all_called=False) as router:
+        router.get(BASE_URL + "/api/items/").mock(side_effect=side_effect)
+        results = await session.get_all_pages("/items/", max_results=2)
+
+    assert len(results) == 2
+    assert call_count == 1
+
+
+async def test_get_all_pages_max_results_across_pages(session):
+    """max_results spanning two pages — fetches second page then stops."""
+    page1 = {
+        "count": 6,
+        "next": BASE_URL + "/api/items/?page=2",
+        "previous": None,
+        "results": [{"id": 1}, {"id": 2}],
+    }
+    page2 = {
+        "count": 6,
+        "next": None,
+        "previous": None,
+        "results": [{"id": 3}, {"id": 4}],
+    }
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        return Response(200, json=page1 if call_count == 1 else page2)
+
+    with respx.mock(assert_all_called=False) as router:
+        router.get(BASE_URL + "/api/items/").mock(side_effect=side_effect)
+        results = await session.get_all_pages("/items/", max_results=3)
+
+    assert len(results) == 3
+    assert [r["id"] for r in results] == [1, 2, 3]
+    assert call_count == 2
+
+
+async def test_get_all_pages_no_max_results_fetches_all(session):
+    """Without max_results, all pages are still fetched (regression guard)."""
+    page1 = {
+        "count": 4,
+        "next": BASE_URL + "/api/items/?page=2",
+        "previous": None,
+        "results": [{"id": 1}, {"id": 2}],
+    }
+    page2 = {
+        "count": 4,
+        "next": None,
+        "previous": None,
+        "results": [{"id": 3}, {"id": 4}],
+    }
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        return Response(200, json=page1 if call_count == 1 else page2)
+
+    with respx.mock(assert_all_called=False) as router:
+        router.get(BASE_URL + "/api/items/").mock(side_effect=side_effect)
+        results = await session.get_all_pages("/items/")
+
+    assert len(results) == 4
+    assert call_count == 2

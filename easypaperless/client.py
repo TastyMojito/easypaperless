@@ -120,10 +120,20 @@ class PaperlessClient:
         any_tag: list[int | str] | None = None,
         exclude_tags: list[int | str] | None = None,
         correspondent: int | str | None = None,
+        any_correspondent: list[int | str] | None = None,
+        exclude_correspondents: list[int | str] | None = None,
         document_type: int | str | None = None,
+        any_document_type: list[int | str] | None = None,
+        exclude_document_types: list[int | str] | None = None,
         asn: int | None = None,
         created_after: str | None = None,
         created_before: str | None = None,
+        added_after: str | None = None,
+        added_before: str | None = None,
+        modified_after: str | None = None,
+        modified_before: str | None = None,
+        page_size: int = 25,
+        max_results: int | None = None,
     ) -> list[Document]:
         """Return a filtered list of documents.
 
@@ -148,21 +158,45 @@ class PaperlessClient:
                 (OR semantics).  Accepts tag IDs or tag names.
             exclude_tags: Documents must have **none** of these tags.
                 Accepts tag IDs or tag names.
-            correspondent: Filter to documents assigned to this correspondent.
-                Accepts a correspondent ID or name.
-            document_type: Filter to documents of this type.  Accepts a
-                document-type ID or name.
+            correspondent: Filter to documents assigned to exactly this
+                correspondent.  Accepts a correspondent ID or name.
+            any_correspondent: Filter to documents assigned to **any** of
+                these correspondents (OR semantics).  Accepts IDs or names.
+                Takes precedence over ``correspondent`` when both are given.
+            exclude_correspondents: Exclude documents assigned to any of
+                these correspondents.  Accepts IDs or names.
+            document_type: Filter to documents of exactly this type.
+                Accepts a document-type ID or name.
+            any_document_type: Filter to documents whose type is **any** of
+                these (OR semantics).  Accepts IDs or names.  Takes
+                precedence over ``document_type`` when both are given.
+            exclude_document_types: Exclude documents whose type is any of
+                these.  Accepts IDs or names.
             asn: Filter by archive serial number.
             created_after: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
                 documents created **after** this date are returned.
             created_before: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
                 documents created **before** this date are returned.
+            added_after: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
+                documents **added** (ingested) after this date are returned.
+            added_before: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
+                documents **added** (ingested) before this date are returned.
+            modified_after: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
+                documents **modified** after this date are returned.
+            modified_before: ISO-8601 date string (``"YYYY-MM-DD"``).  Only
+                documents **modified** before this date are returned.
+            page_size: Number of results per API page.  Default: ``25``.
+                Increase to reduce the number of HTTP requests for large
+                result sets.
+            max_results: Stop fetching pages once this many documents have
+                been collected and return at most this many results.
+                ``None`` *(default)* returns everything.
 
         Returns:
             List of :class:`~easypaperless.models.documents.Document`
-            objects.  All pages are fetched and concatenated automatically.
+            objects.
         """
-        params: dict[str, Any] = {}
+        params: dict[str, Any] = {"page_size": page_size}
 
         if search is not None:
             api_param = _SEARCH_MODE_MAP.get(search_mode, "search")
@@ -180,13 +214,27 @@ class PaperlessClient:
             resolved = await self._resolver.resolve_list("tags", exclude_tags)
             params["tags__id__none"] = ",".join(str(t) for t in resolved)
 
-        if correspondent is not None:
+        if any_correspondent is not None:
+            resolved = await self._resolver.resolve_list("correspondents", any_correspondent)
+            params["correspondent__id__in"] = ",".join(str(c) for c in resolved)
+        elif correspondent is not None:
             resolved_id = await self._resolver.resolve("correspondents", correspondent)
             params["correspondent__id__in"] = resolved_id
 
-        if document_type is not None:
+        if exclude_correspondents is not None:
+            resolved = await self._resolver.resolve_list("correspondents", exclude_correspondents)
+            params["correspondent__id__none"] = ",".join(str(c) for c in resolved)
+
+        if any_document_type is not None:
+            resolved = await self._resolver.resolve_list("document_types", any_document_type)
+            params["document_type__id__in"] = ",".join(str(d) for d in resolved)
+        elif document_type is not None:
             resolved_id = await self._resolver.resolve("document_types", document_type)
             params["document_type"] = resolved_id
+
+        if exclude_document_types is not None:
+            resolved = await self._resolver.resolve_list("document_types", exclude_document_types)
+            params["document_type__id__none"] = ",".join(str(d) for d in resolved)
 
         if asn is not None:
             params["archive_serial_number"] = asn
@@ -197,7 +245,19 @@ class PaperlessClient:
         if created_before is not None:
             params["created__date__lt"] = created_before
 
-        items = await self._session.get_all_pages("/documents/", params)
+        if added_after is not None:
+            params["added__date__gt"] = added_after
+
+        if added_before is not None:
+            params["added__date__lt"] = added_before
+
+        if modified_after is not None:
+            params["modified__date__gt"] = modified_after
+
+        if modified_before is not None:
+            params["modified__date__lt"] = modified_before
+
+        items = await self._session.get_all_pages("/documents/", params, max_results=max_results)
         return [Document.model_validate(item) for item in items]
 
     async def update_document(

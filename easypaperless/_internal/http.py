@@ -106,7 +106,13 @@ class HttpSession:
     async def delete(self, path: str) -> httpx.Response:
         return await self.request("DELETE", path)
 
-    async def get_all_pages(self, path: str, params: dict[str, Any] | None = None) -> list[dict]:
+    async def get_all_pages(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        *,
+        max_results: int | None = None,
+    ) -> list[dict]:
         results: list[dict] = []
         # First page — use path relative to base_url
         if params:
@@ -116,6 +122,10 @@ class HttpSession:
         response = await self.get(path, params=params)
         page = response.json()
         results.extend(page.get("results", []))
+
+        if max_results is not None and len(results) >= max_results:
+            logger.debug("max_results=%d reached after first page", max_results)
+            return results[:max_results]
 
         next_url: str | None = page.get("next")
         while next_url:
@@ -130,6 +140,13 @@ class HttpSession:
             page = response.json()
             results.extend(page.get("results", []))
             next_url = page.get("next")
+
+            if max_results is not None and len(results) >= max_results:
+                logger.debug("max_results=%d reached", max_results)
+                break
+
+        if max_results is not None:
+            results = results[:max_results]
 
         logger.debug("Pagination complete: %d items from %s", len(results), path)
         return results

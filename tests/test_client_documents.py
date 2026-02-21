@@ -104,3 +104,231 @@ async def test_update_document_with_correspondent_name(client, mock_router):
     )
     doc = await client.update_document(1, correspondent="ACME")
     assert doc.correspondent == 5
+
+
+# ---------------------------------------------------------------------------
+# Shared mock data for new-parameter tests
+# ---------------------------------------------------------------------------
+
+_CORR_RESP = {
+    "count": 2, "next": None, "previous": None,
+    "results": [{"id": 5, "name": "ACME"}, {"id": 6, "name": "Bank"}],
+}
+_DOCTYPE_RESP = {
+    "count": 2, "next": None, "previous": None,
+    "results": [{"id": 10, "name": "Invoice"}, {"id": 11, "name": "Receipt"}],
+}
+
+
+def _capturing_side_effect(captured: dict):
+    """Return a respx side-effect that stores the request URL params."""
+    def _side_effect(request):
+        captured["params"] = dict(request.url.params)
+        return Response(200, json=DOC_LIST)
+    return _side_effect
+
+
+# ---------------------------------------------------------------------------
+# any_correspondent
+# ---------------------------------------------------------------------------
+
+async def test_list_documents_any_correspondent_by_id(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(any_correspondent=[5, 6])
+    assert captured["params"]["correspondent__id__in"] == "5,6"
+
+
+async def test_list_documents_any_correspondent_by_name(client, mock_router):
+    mock_router.get("/correspondents/").mock(return_value=Response(200, json=_CORR_RESP))
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(any_correspondent=["ACME", "Bank"])
+    assert captured["params"]["correspondent__id__in"] == "5,6"
+
+
+async def test_list_documents_any_correspondent_overrides_correspondent(client, mock_router):
+    """When both are given, any_correspondent takes precedence."""
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(correspondent=99, any_correspondent=[5, 6])
+    assert captured["params"]["correspondent__id__in"] == "5,6"
+
+
+# ---------------------------------------------------------------------------
+# exclude_correspondents
+# ---------------------------------------------------------------------------
+
+async def test_list_documents_exclude_correspondents_by_id(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(exclude_correspondents=[5, 6])
+    assert captured["params"]["correspondent__id__none"] == "5,6"
+
+
+async def test_list_documents_exclude_correspondents_by_name(client, mock_router):
+    mock_router.get("/correspondents/").mock(return_value=Response(200, json=_CORR_RESP))
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(exclude_correspondents=["ACME"])
+    assert captured["params"]["correspondent__id__none"] == "5"
+
+
+# ---------------------------------------------------------------------------
+# any_document_type
+# ---------------------------------------------------------------------------
+
+async def test_list_documents_any_document_type_by_id(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(any_document_type=[10, 11])
+    assert captured["params"]["document_type__id__in"] == "10,11"
+
+
+async def test_list_documents_any_document_type_by_name(client, mock_router):
+    mock_router.get("/document_types/").mock(return_value=Response(200, json=_DOCTYPE_RESP))
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(any_document_type=["Invoice", "Receipt"])
+    assert captured["params"]["document_type__id__in"] == "10,11"
+
+
+async def test_list_documents_any_document_type_overrides_document_type(client, mock_router):
+    """When both are given, any_document_type takes precedence."""
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(document_type=99, any_document_type=[10, 11])
+    assert captured["params"]["document_type__id__in"] == "10,11"
+    assert "document_type" not in captured["params"]
+
+
+# ---------------------------------------------------------------------------
+# exclude_document_types
+# ---------------------------------------------------------------------------
+
+async def test_list_documents_exclude_document_types_by_id(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(exclude_document_types=[10, 11])
+    assert captured["params"]["document_type__id__none"] == "10,11"
+
+
+async def test_list_documents_exclude_document_types_by_name(client, mock_router):
+    mock_router.get("/document_types/").mock(return_value=Response(200, json=_DOCTYPE_RESP))
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(exclude_document_types=["Invoice"])
+    assert captured["params"]["document_type__id__none"] == "10"
+
+
+# ---------------------------------------------------------------------------
+# added_after / added_before
+# ---------------------------------------------------------------------------
+
+async def test_list_documents_added_date_range(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(added_after="2024-01-01", added_before="2024-12-31")
+    assert captured["params"]["added__date__gt"] == "2024-01-01"
+    assert captured["params"]["added__date__lt"] == "2024-12-31"
+
+
+async def test_list_documents_added_after_only(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(added_after="2024-06-01")
+    assert captured["params"]["added__date__gt"] == "2024-06-01"
+    assert "added__date__lt" not in captured["params"]
+
+
+# ---------------------------------------------------------------------------
+# modified_after / modified_before
+# ---------------------------------------------------------------------------
+
+async def test_list_documents_modified_date_range(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(modified_after="2024-03-01", modified_before="2024-09-30")
+    assert captured["params"]["modified__date__gt"] == "2024-03-01"
+    assert captured["params"]["modified__date__lt"] == "2024-09-30"
+
+
+# ---------------------------------------------------------------------------
+# page_size
+# ---------------------------------------------------------------------------
+
+async def test_list_documents_default_page_size(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents()
+    assert captured["params"]["page_size"] == "25"
+
+
+async def test_list_documents_custom_page_size(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/documents/").mock(side_effect=_capturing_side_effect(captured))
+    await client.list_documents(page_size=100)
+    assert captured["params"]["page_size"] == "100"
+
+
+# ---------------------------------------------------------------------------
+# max_results
+# ---------------------------------------------------------------------------
+
+async def test_list_documents_max_results_within_first_page(client, mock_router):
+    """max_results smaller than the page — returns only that many docs."""
+    many = {
+        "count": 5, "next": None, "previous": None,
+        "results": [{"id": i, "title": f"Doc{i}", "tags": []} for i in range(1, 6)],
+    }
+    mock_router.get("/documents/").mock(return_value=Response(200, json=many))
+    docs = await client.list_documents(max_results=3)
+    assert len(docs) == 3
+    assert [d.id for d in docs] == [1, 2, 3]
+
+
+async def test_list_documents_max_results_stops_pagination(client, mock_router):
+    """max_results spanning two pages — fetches second page then stops."""
+    page1 = {
+        "count": 4,
+        "next": "http://paperless.test/api/documents/?page=2",
+        "previous": None,
+        "results": [{"id": 1, "title": "A", "tags": []}, {"id": 2, "title": "B", "tags": []}],
+    }
+    page2 = {
+        "count": 4, "next": None, "previous": None,
+        "results": [{"id": 3, "title": "C", "tags": []}, {"id": 4, "title": "D", "tags": []}],
+    }
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        return Response(200, json=page1 if call_count == 1 else page2)
+
+    mock_router.get("/documents/").mock(side_effect=side_effect)
+    docs = await client.list_documents(max_results=3)
+    assert len(docs) == 3
+    assert [d.id for d in docs] == [1, 2, 3]
+    assert call_count == 2
+
+
+async def test_list_documents_max_results_exact_first_page(client, mock_router):
+    """max_results == first page count — second page must NOT be fetched."""
+    page1 = {
+        "count": 4,
+        "next": "http://paperless.test/api/documents/?page=2",
+        "previous": None,
+        "results": [{"id": 1, "title": "A", "tags": []}, {"id": 2, "title": "B", "tags": []}],
+    }
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        return Response(200, json=page1)
+
+    mock_router.get("/documents/").mock(side_effect=side_effect)
+    docs = await client.list_documents(max_results=2)
+    assert len(docs) == 2
+    assert call_count == 1
