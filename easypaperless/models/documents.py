@@ -98,6 +98,69 @@ class DocumentNote(BaseModel):
     user: int | None = None
 
 
+class FileMetadataEntry(BaseModel):
+    """A single embedded metadata key-value pair from a document file.
+
+    Paperless-ngx reads file-level metadata (e.g. PDF XMP/info tags) and
+    exposes each entry in this format.  ``namespace`` and ``prefix`` are
+    ``None`` for non-namespaced entries.
+
+    Attributes:
+        namespace: XML namespace URI, or ``None``.
+        prefix: Namespace prefix (e.g. ``"pdf"``), or ``None``.
+        key: Metadata key (e.g. ``"Producer"``).
+        value: Metadata value as a string.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    namespace: str | None = None
+    prefix: str | None = None
+    key: str
+    value: str
+
+
+class DocumentMetadata(BaseModel):
+    """Extended file-level metadata for a document.
+
+    Returned by ``GET /api/documents/{id}/metadata/`` and optionally attached
+    to a :class:`Document` when :meth:`~easypaperless.PaperlessClient.get_document`
+    is called with ``include_metadata=True``.
+
+    Because reading metadata requires disk I/O it is **not** included in
+    document list responses; it must be requested explicitly.
+
+    Attributes:
+        original_checksum: MD5 checksum of the original uploaded file.
+        original_size: Size of the original file in bytes.
+        original_mime_type: MIME type of the original file
+            (e.g. ``"application/pdf"``).
+        media_filename: Path of the archived file relative to the
+            paperless-ngx media root.
+        has_archive_version: ``True`` when paperless-ngx has produced an
+            archived (post-processed) PDF in addition to the original.
+        original_metadata: File-level metadata entries extracted from the
+            original document (PDF XMP/info tags, etc.).
+        archive_checksum: MD5 checksum of the archived file, or ``None`` if
+            no archive version exists.
+        archive_size: Size of the archived file in bytes, or ``None``.
+        archive_metadata: File-level metadata entries from the archived
+            document, or ``None``.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    original_checksum: str | None = None
+    original_size: int | None = None
+    original_mime_type: str | None = None
+    media_filename: str | None = None
+    has_archive_version: bool | None = None
+    original_metadata: list[FileMetadataEntry] = Field(default_factory=list)
+    archive_checksum: str | None = None
+    archive_size: int | None = None
+    archive_metadata: list[FileMetadataEntry] | None = None
+
+
 class Document(BaseModel):
     """A paperless-ngx document.
 
@@ -116,6 +179,10 @@ class Document(BaseModel):
         notes: User notes attached to this document.
         search_hit: Full-text search relevance metadata, populated only when
             the document was returned by a full-text search.
+        metadata: Extended file-level metadata (checksums, sizes, MIME type).
+            ``None`` unless the document was fetched with
+            ``include_metadata=True`` or enriched via
+            :meth:`~easypaperless.PaperlessClient.get_document_metadata`.
     """
 
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
@@ -140,3 +207,4 @@ class Document(BaseModel):
     notes: list[DocumentNote] = Field(default_factory=list)
     custom_fields: list[CustomFieldValue] = Field(default_factory=list)
     search_hit: SearchHit | None = Field(default=None, alias="__search_hit__")
+    metadata: DocumentMetadata | None = None

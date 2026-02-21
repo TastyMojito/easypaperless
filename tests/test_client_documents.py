@@ -6,7 +6,7 @@ import pytest
 import respx
 from httpx import Response
 
-from easypaperless.models.documents import Document
+from easypaperless.models.documents import Document, DocumentMetadata
 
 DOC_DATA = {"id": 1, "title": "Test Document", "tags": []}
 DOC_LIST = {
@@ -16,6 +16,20 @@ DOC_LIST = {
     "results": [DOC_DATA],
 }
 
+META_DATA = {
+    "original_checksum": "abc123",
+    "original_size": 204800,
+    "original_mime_type": "application/pdf",
+    "media_filename": "documents/archive/2024/invoice.pdf",
+    "has_archive_version": True,
+    "original_metadata": [
+        {"namespace": None, "prefix": None, "key": "Producer", "value": "FancyPDF"},
+    ],
+    "archive_checksum": "def456",
+    "archive_size": 102400,
+    "archive_metadata": [],
+}
+
 
 async def test_get_document(client, mock_router):
     mock_router.get("/documents/1/").mock(return_value=Response(200, json=DOC_DATA))
@@ -23,6 +37,57 @@ async def test_get_document(client, mock_router):
     assert isinstance(doc, Document)
     assert doc.id == 1
     assert doc.title == "Test Document"
+    assert doc.metadata is None
+
+
+async def test_get_document_without_metadata_does_not_call_metadata_endpoint(client, mock_router):
+    mock_router.get("/documents/1/").mock(return_value=Response(200, json=DOC_DATA))
+    # metadata endpoint is NOT registered — would raise if called
+    doc = await client.get_document(1)
+    assert doc.metadata is None
+
+
+async def test_get_document_with_metadata(client, mock_router):
+    mock_router.get("/documents/1/").mock(return_value=Response(200, json=DOC_DATA))
+    mock_router.get("/documents/1/metadata/").mock(return_value=Response(200, json=META_DATA))
+    doc = await client.get_document(1, include_metadata=True)
+    assert isinstance(doc, Document)
+    assert doc.metadata is not None
+    assert isinstance(doc.metadata, DocumentMetadata)
+    assert doc.metadata.original_checksum == "abc123"
+    assert doc.metadata.original_size == 204800
+    assert doc.metadata.original_mime_type == "application/pdf"
+    assert doc.metadata.has_archive_version is True
+    assert doc.metadata.archive_checksum == "def456"
+    assert len(doc.metadata.original_metadata) == 1
+    assert doc.metadata.original_metadata[0].key == "Producer"
+    assert doc.metadata.original_metadata[0].value == "FancyPDF"
+
+
+async def test_get_document_metadata_standalone(client, mock_router):
+    mock_router.get("/documents/1/metadata/").mock(return_value=Response(200, json=META_DATA))
+    meta = await client.get_document_metadata(1)
+    assert isinstance(meta, DocumentMetadata)
+    assert meta.original_checksum == "abc123"
+    assert meta.archive_checksum == "def456"
+    assert meta.archive_size == 102400
+    assert meta.media_filename == "documents/archive/2024/invoice.pdf"
+
+
+async def test_get_document_metadata_no_archive_version(client, mock_router):
+    no_archive = {
+        **META_DATA,
+        "has_archive_version": False,
+        "archive_checksum": None,
+        "archive_size": None,
+        "archive_metadata": None,
+    }
+    mock_router.get("/documents/1/metadata/").mock(return_value=Response(200, json=no_archive))
+    meta = await client.get_document_metadata(1)
+    assert meta.has_archive_version is False
+    assert meta.archive_checksum is None
+    assert meta.archive_size is None
+    assert meta.archive_metadata is None
 
 
 async def test_list_documents(client, mock_router):

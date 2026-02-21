@@ -16,7 +16,7 @@ from easypaperless.exceptions import TaskTimeoutError, UploadError
 from easypaperless.models.correspondents import Correspondent
 from easypaperless.models.custom_fields import CustomField
 from easypaperless.models.document_types import DocumentType
-from easypaperless.models.documents import Document, Task, TaskStatus
+from easypaperless.models.documents import Document, DocumentMetadata, Task, TaskStatus
 from easypaperless.models.storage_paths import StoragePath
 from easypaperless.models.tags import Tag
 
@@ -94,22 +94,59 @@ class PaperlessClient:
     # Documents
     # ------------------------------------------------------------------
 
-    async def get_document(self, id: int) -> Document:
+    async def get_document(self, id: int, *, include_metadata: bool = False) -> Document:
         """Fetch a single document by its ID.
 
         Args:
             id: Numeric paperless-ngx document ID.
+            include_metadata: When ``True``, the extended file-level metadata
+                (checksums, sizes, MIME type) is fetched concurrently from
+                ``/documents/{id}/metadata/`` and attached to
+                :attr:`~easypaperless.models.documents.Document.metadata`.
+                Default: ``False``.
 
         Returns:
             The :class:`~easypaperless.models.documents.Document` with the
-            given ID.
+            given ID.  When ``include_metadata=True`` the ``metadata``
+            attribute is populated; otherwise it is ``None``.
 
         Raises:
             ~easypaperless.exceptions.NotFoundError: If no document exists
                 with that ID.
         """
-        resp = await self._session.get(f"/documents/{id}/")
-        return Document.model_validate(resp.json())
+        if include_metadata:
+            doc_resp, meta_resp = await asyncio.gather(
+                self._session.get(f"/documents/{id}/"),
+                self._session.get(f"/documents/{id}/metadata/"),
+            )
+            data = doc_resp.json()
+            data["metadata"] = meta_resp.json()
+        else:
+            resp = await self._session.get(f"/documents/{id}/")
+            data = resp.json()
+        return Document.model_validate(data)
+
+    async def get_document_metadata(self, id: int) -> DocumentMetadata:
+        """Fetch the extended file-level metadata for a document.
+
+        This is a lower-overhead alternative to
+        ``get_document(id, include_metadata=True)`` when you only need the
+        metadata and not the full document object.
+
+        Args:
+            id: Numeric paperless-ngx document ID.
+
+        Returns:
+            A :class:`~easypaperless.models.documents.DocumentMetadata`
+            instance containing checksums, sizes, MIME type, and embedded
+            file metadata.
+
+        Raises:
+            ~easypaperless.exceptions.NotFoundError: If no document exists
+                with that ID.
+        """
+        resp = await self._session.get(f"/documents/{id}/metadata/")
+        return DocumentMetadata.model_validate(resp.json())
 
     async def list_documents(
         self,
@@ -558,8 +595,13 @@ class PaperlessClient:
     # Internal resource helpers
     # ------------------------------------------------------------------
 
-    async def _list_resource(self, resource: str, model_class: type) -> list:
-        items = await self._session.get_all_pages(f"/{resource}/")
+    async def _list_resource(
+        self,
+        resource: str,
+        model_class: type,
+        params: dict[str, Any] | None = None,
+    ) -> list:
+        items = await self._session.get_all_pages(f"/{resource}/", params)
         return [model_class.model_validate(item) for item in items]
 
     async def _get_resource(self, resource: str, id: int, model_class: type):
@@ -589,9 +631,28 @@ class PaperlessClient:
     # Tags
     # ------------------------------------------------------------------
 
-    async def list_tags(self) -> list[Tag]:
-        """Return all tags defined in paperless-ngx."""
-        return await self._list_resource("tags", Tag)
+    async def list_tags(
+        self,
+        *,
+        ids: list[int] | None = None,
+        name_contains: str | None = None,
+    ) -> list[Tag]:
+        """Return tags defined in paperless-ngx.
+
+        Args:
+            ids: Return only tags whose ID is in this list.
+            name_contains: Case-insensitive substring filter on tag name
+                (raw API ``name__icontains``).
+
+        Returns:
+            List of :class:`~easypaperless.models.tags.Tag` objects.
+        """
+        params: dict[str, Any] = {}
+        if ids is not None:
+            params["id__in"] = ",".join(str(i) for i in ids)
+        if name_contains is not None:
+            params["name__icontains"] = name_contains
+        return await self._list_resource("tags", Tag, params or None)
 
     async def get_tag(self, id: int) -> Tag:
         """Fetch a single tag by its ID.
@@ -639,9 +700,30 @@ class PaperlessClient:
     # Correspondents
     # ------------------------------------------------------------------
 
-    async def list_correspondents(self) -> list[Correspondent]:
-        """Return all correspondents defined in paperless-ngx."""
-        return await self._list_resource("correspondents", Correspondent)
+    async def list_correspondents(
+        self,
+        *,
+        ids: list[int] | None = None,
+        name_contains: str | None = None,
+    ) -> list[Correspondent]:
+        """Return correspondents defined in paperless-ngx.
+
+        Args:
+            ids: Return only correspondents whose ID is in this list.
+            name_contains: Case-insensitive substring filter on correspondent
+                name (raw API ``name__icontains``).
+
+        Returns:
+            List of
+            :class:`~easypaperless.models.correspondents.Correspondent`
+            objects.
+        """
+        params: dict[str, Any] = {}
+        if ids is not None:
+            params["id__in"] = ",".join(str(i) for i in ids)
+        if name_contains is not None:
+            params["name__icontains"] = name_contains
+        return await self._list_resource("correspondents", Correspondent, params or None)
 
     async def get_correspondent(self, id: int) -> Correspondent:
         """Fetch a single correspondent by its ID.
@@ -689,9 +771,30 @@ class PaperlessClient:
     # Document Types
     # ------------------------------------------------------------------
 
-    async def list_document_types(self) -> list[DocumentType]:
-        """Return all document types defined in paperless-ngx."""
-        return await self._list_resource("document_types", DocumentType)
+    async def list_document_types(
+        self,
+        *,
+        ids: list[int] | None = None,
+        name_contains: str | None = None,
+    ) -> list[DocumentType]:
+        """Return document types defined in paperless-ngx.
+
+        Args:
+            ids: Return only document types whose ID is in this list.
+            name_contains: Case-insensitive substring filter on document-type
+                name (raw API ``name__icontains``).
+
+        Returns:
+            List of
+            :class:`~easypaperless.models.document_types.DocumentType`
+            objects.
+        """
+        params: dict[str, Any] = {}
+        if ids is not None:
+            params["id__in"] = ",".join(str(i) for i in ids)
+        if name_contains is not None:
+            params["name__icontains"] = name_contains
+        return await self._list_resource("document_types", DocumentType, params or None)
 
     async def get_document_type(self, id: int) -> DocumentType:
         """Fetch a single document type by its ID.
@@ -739,9 +842,30 @@ class PaperlessClient:
     # Storage Paths
     # ------------------------------------------------------------------
 
-    async def list_storage_paths(self) -> list[StoragePath]:
-        """Return all storage paths defined in paperless-ngx."""
-        return await self._list_resource("storage_paths", StoragePath)
+    async def list_storage_paths(
+        self,
+        *,
+        ids: list[int] | None = None,
+        name_contains: str | None = None,
+    ) -> list[StoragePath]:
+        """Return storage paths defined in paperless-ngx.
+
+        Args:
+            ids: Return only storage paths whose ID is in this list.
+            name_contains: Case-insensitive substring filter on storage-path
+                name (raw API ``name__icontains``).
+
+        Returns:
+            List of
+            :class:`~easypaperless.models.storage_paths.StoragePath`
+            objects.
+        """
+        params: dict[str, Any] = {}
+        if ids is not None:
+            params["id__in"] = ",".join(str(i) for i in ids)
+        if name_contains is not None:
+            params["name__icontains"] = name_contains
+        return await self._list_resource("storage_paths", StoragePath, params or None)
 
     async def get_storage_path(self, id: int) -> StoragePath:
         """Fetch a single storage path by its ID.

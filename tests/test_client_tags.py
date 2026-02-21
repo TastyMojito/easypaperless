@@ -13,6 +13,14 @@ from easypaperless.models.storage_paths import StoragePath
 from easypaperless.models.custom_fields import CustomField
 
 
+def _capturing_side_effect(captured: dict, response_data: dict):
+    """Return a respx side-effect that stores URL params and returns response_data."""
+    def _side_effect(request):
+        captured["params"] = dict(request.url.params)
+        return Response(200, json=response_data)
+    return _side_effect
+
+
 TAG_DATA = {"id": 1, "name": "invoice"}
 TAG_LIST = {"count": 1, "next": None, "previous": None, "results": [TAG_DATA]}
 
@@ -119,3 +127,115 @@ async def test_create_custom_field(client, mock_router):
     mock_router.post("/custom_fields/").mock(return_value=Response(201, json=CF_DATA))
     cf = await client.create_custom_field(name="Amount", data_type="monetary")
     assert cf.data_type.value == "monetary"
+
+
+# ---------------------------------------------------------------------------
+# list_* filter parameters: ids and name_contains
+# ---------------------------------------------------------------------------
+
+# Tags
+
+async def test_list_tags_ids(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/tags/").mock(side_effect=_capturing_side_effect(captured, TAG_LIST))
+    tags = await client.list_tags(ids=[1, 2])
+    assert len(tags) == 1
+    assert captured["params"]["id__in"] == "1,2"
+
+
+async def test_list_tags_name_contains(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/tags/").mock(side_effect=_capturing_side_effect(captured, TAG_LIST))
+    await client.list_tags(name_contains="voice")
+    assert captured["params"]["name__icontains"] == "voice"
+
+
+async def test_list_tags_ids_and_name_contains(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/tags/").mock(side_effect=_capturing_side_effect(captured, TAG_LIST))
+    await client.list_tags(ids=[1], name_contains="inv")
+    assert captured["params"]["id__in"] == "1"
+    assert captured["params"]["name__icontains"] == "inv"
+
+
+async def test_list_tags_no_filter_sends_no_params(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/tags/").mock(side_effect=_capturing_side_effect(captured, TAG_LIST))
+    await client.list_tags()
+    assert "id__in" not in captured["params"]
+    assert "name__icontains" not in captured["params"]
+
+
+# Correspondents
+
+async def test_list_correspondents_ids(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/correspondents/").mock(side_effect=_capturing_side_effect(captured, CORR_LIST))
+    corrs = await client.list_correspondents(ids=[1, 2])
+    assert len(corrs) == 1
+    assert captured["params"]["id__in"] == "1,2"
+
+
+async def test_list_correspondents_name_contains(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/correspondents/").mock(side_effect=_capturing_side_effect(captured, CORR_LIST))
+    await client.list_correspondents(name_contains="ACM")
+    assert captured["params"]["name__icontains"] == "ACM"
+
+
+async def test_list_correspondents_ids_and_name_contains(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/correspondents/").mock(side_effect=_capturing_side_effect(captured, CORR_LIST))
+    await client.list_correspondents(ids=[1], name_contains="AC")
+    assert captured["params"]["id__in"] == "1"
+    assert captured["params"]["name__icontains"] == "AC"
+
+
+# Document Types
+
+async def test_list_document_types_ids(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/document_types/").mock(side_effect=_capturing_side_effect(captured, DT_LIST))
+    dts = await client.list_document_types(ids=[1, 2])
+    assert len(dts) == 1
+    assert captured["params"]["id__in"] == "1,2"
+
+
+async def test_list_document_types_name_contains(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/document_types/").mock(side_effect=_capturing_side_effect(captured, DT_LIST))
+    await client.list_document_types(name_contains="Inv")
+    assert captured["params"]["name__icontains"] == "Inv"
+
+
+async def test_list_document_types_ids_and_name_contains(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/document_types/").mock(side_effect=_capturing_side_effect(captured, DT_LIST))
+    await client.list_document_types(ids=[1], name_contains="Inv")
+    assert captured["params"]["id__in"] == "1"
+    assert captured["params"]["name__icontains"] == "Inv"
+
+
+# Storage Paths
+
+async def test_list_storage_paths_ids(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/storage_paths/").mock(side_effect=_capturing_side_effect(captured, SP_LIST))
+    sps = await client.list_storage_paths(ids=[1, 2])
+    assert len(sps) == 1
+    assert captured["params"]["id__in"] == "1,2"
+
+
+async def test_list_storage_paths_name_contains(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/storage_paths/").mock(side_effect=_capturing_side_effect(captured, SP_LIST))
+    await client.list_storage_paths(name_contains="Arch")
+    assert captured["params"]["name__icontains"] == "Arch"
+
+
+async def test_list_storage_paths_ids_and_name_contains(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/storage_paths/").mock(side_effect=_capturing_side_effect(captured, SP_LIST))
+    await client.list_storage_paths(ids=[1], name_contains="Arch")
+    assert captured["params"]["id__in"] == "1"
+    assert captured["params"]["name__icontains"] == "Arch"
