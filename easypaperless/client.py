@@ -468,7 +468,12 @@ class PaperlessClient:
             f"/documents/{document_id}/notes/",
             json={"note": note},
         )
-        return DocumentNote.model_validate(resp.json())
+        # paperless-ngx returns the full list of notes after creation;
+        # the newly created note is the last item in the list.
+        data = resp.json()
+        if isinstance(data, list):
+            return DocumentNote.model_validate(data[-1])
+        return DocumentNote.model_validate(data)
 
     async def delete_note(self, document_id: int, note_id: int) -> None:
         """Delete a note from a document.
