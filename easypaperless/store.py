@@ -10,7 +10,7 @@ import re
 import sqlite3
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from easypaperless.client import PaperlessClient
 from easypaperless.models.documents import Document, DocumentMetadata
@@ -185,13 +185,22 @@ class DocumentStore:
     # Sync
     # ------------------------------------------------------------------
 
-    async def sync(self) -> int:
+    async def sync(
+        self,
+        *,
+        on_doc_synced: Callable[[int, int], None] | None = None,
+    ) -> int:
         """Pull all documents and supporting metadata from the server and upsert locally.
 
         Fetches documents, tags, correspondents, document types, and storage
         paths in parallel, then upserts everything into SQLite.  Existing
         local records are replaced; documents no longer present on the server
         are *not* removed (incremental sync is not yet implemented).
+
+        Args:
+            on_doc_synced: Optional callback invoked after each document is
+                upserted.  Receives ``(synced_so_far, total)`` as positional
+                arguments.  Use this for progress reporting.
 
         Returns:
             Number of documents synced.
@@ -232,7 +241,8 @@ class DocumentStore:
         )
 
         # Upsert documents
-        for doc in docs:
+        total_docs = len(docs)
+        for i, doc in enumerate(docs, 1):
             created_date_str = doc.created_date.isoformat() if doc.created_date else None
             conn.execute(
                 """INSERT OR REPLACE INTO documents
@@ -253,6 +263,8 @@ class DocumentStore:
                 "INSERT OR IGNORE INTO document_tags (document_id, tag_id) VALUES (?, ?)",
                 [(doc.id, tag_id) for tag_id in doc.tags],
             )
+            if on_doc_synced is not None:
+                on_doc_synced(i, total_docs)
 
         from datetime import datetime, timezone
         conn.execute(
@@ -412,6 +424,7 @@ class DocumentStore:
         chunk_overlap: int = 64,
         batch_size: int = 32,
         force: bool = False,
+        on_chunk_embedded: Callable[[int, int], None] | None = None,
     ) -> int:
         """Embed all locally cached documents and store vectors in SQLite.
 
@@ -432,6 +445,10 @@ class DocumentStore:
             batch_size: Number of chunks sent to ``provider.embed()`` per call.
             force: If ``True``, re-embed documents that already have stored
                 embeddings.
+            on_chunk_embedded: Optional callback invoked after each batch of
+                chunks is embedded and stored.  Receives
+                ``(embedded_so_far, total)`` as positional arguments.  Use
+                this for progress reporting.
 
         Returns:
             Total number of chunks embedded and stored.
@@ -476,7 +493,8 @@ class DocumentStore:
         ]
 
         total = 0
-        for batch_start in range(0, len(all_items), batch_size):
+        total_chunks = len(all_items)
+        for batch_start in range(0, total_chunks, batch_size):
             batch = all_items[batch_start : batch_start + batch_size]
             texts = [item[2] for item in batch]
             embeddings = await provider.embed(texts)
@@ -489,6 +507,8 @@ class DocumentStore:
                     (doc_id, chunk_index, chunk_text_str, blob),
                 )
             total += len(batch)
+            if on_chunk_embedded is not None:
+                on_chunk_embedded(total, total_chunks)
 
         conn.commit()
         logger.info("embed_documents complete: %d chunks stored", total)
