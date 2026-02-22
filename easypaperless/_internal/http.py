@@ -24,7 +24,6 @@ class HttpSession:
         self._base_url = base_url.rstrip("/") + "/api"
         self._api_key = api_key
         self._client: httpx.AsyncClient | None = None
-        self._csrf_fetched: bool = False
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
@@ -35,30 +34,6 @@ class HttpSession:
                 follow_redirects=True,
             )
         return self._client
-
-    async def _ensure_csrf_token(self) -> None:
-        """Ensure a CSRF cookie is present in the session cookie jar.
-
-        Some paperless-ngx endpoints (e.g. notes DELETE) require a CSRF token
-        even with token authentication.  Django's CSRF middleware sets the
-        ``csrftoken`` cookie on any GET response; we trigger that here with a
-        cheap request to the API root so subsequent mutating requests can
-        include the matching ``X-CSRFToken`` header.
-        """
-        if self._csrf_fetched:
-            return
-        self._csrf_fetched = True
-        client = self._get_client()
-        if not client.cookies.get("csrftoken"):
-            try:
-                await client.request("GET", "/")
-            except Exception:
-                pass
-
-    def _csrf_headers(self) -> dict[str, str]:
-        """Return an ``X-CSRFToken`` header if a CSRF cookie is available."""
-        token = self._get_client().cookies.get("csrftoken")
-        return {"X-CSRFToken": token} if token else {}
 
     async def close(self) -> None:
         if self._client is not None:
@@ -95,7 +70,6 @@ class HttpSession:
         json: Any = None,
         data: dict[str, Any] | None = None,
         files: Any = None,
-        headers: dict[str, str] | None = None,
     ) -> httpx.Response:
         client = self._get_client()
         logger.debug("%s %s", method.upper(), path)
@@ -107,7 +81,6 @@ class HttpSession:
                 json=json,
                 data=data,
                 files=files,
-                headers=headers,
             )
         except httpx.HTTPError as exc:
             raise ServerError(str(exc)) from exc
@@ -161,9 +134,8 @@ class HttpSession:
     async def patch(self, path: str, *, json: Any = None) -> httpx.Response:
         return await self.request("PATCH", path, json=json)
 
-    async def delete(self, path: str) -> httpx.Response:
-        await self._ensure_csrf_token()
-        return await self.request("DELETE", path, headers=self._csrf_headers())
+    async def delete(self, path: str, *, params: dict[str, Any] | None = None) -> httpx.Response:
+        return await self.request("DELETE", path, params=params)
 
     async def get_all_pages(
         self,

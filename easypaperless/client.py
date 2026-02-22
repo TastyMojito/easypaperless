@@ -487,7 +487,7 @@ class PaperlessClient:
                 exists with the given IDs.
         """
         logger.debug("Deleting note id=%d from document id=%d", note_id, document_id)
-        await self._session.delete(f"/documents/{document_id}/notes/{note_id}/")
+        await self._session.delete(f"/documents/{document_id}/notes/", params={"id": note_id})
 
     # ------------------------------------------------------------------
     # Upload

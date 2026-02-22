@@ -56,25 +56,17 @@ async def test_get_notes_nested_user(client, mock_router):
 
 
 async def test_delete_note(client, mock_router):
-    mock_router.delete("/documents/42/notes/1/").mock(return_value=Response(204))
-    result = await client.delete_note(42, 1)
-    assert result is None
-
-
-async def test_delete_note_sends_csrf_token(client, mock_router):
-    # Simulate the server having set a csrftoken cookie on a prior GET.
-    client._session._get_client().cookies.set("csrftoken", "testcsrf")
-    client._session._csrf_fetched = True  # skip preflight GET
-
+    # paperless-ngx DELETE uses ?id= on the list endpoint, not a detail URL.
     captured: dict = {}
 
     def _capture(request):
-        captured["x-csrftoken"] = request.headers.get("x-csrftoken")
-        return Response(204)
+        captured["params"] = dict(request.url.params)
+        return Response(200, json=[])
 
-    mock_router.delete("/documents/42/notes/1/").mock(side_effect=_capture)
-    await client.delete_note(42, 1)
-    assert captured["x-csrftoken"] == "testcsrf"
+    mock_router.delete("/documents/42/notes/").mock(side_effect=_capture)
+    result = await client.delete_note(42, 1)
+    assert result is None
+    assert captured["params"]["id"] == "1"
 
 
 async def test_get_notes_not_found(client, mock_router):
@@ -90,6 +82,6 @@ async def test_create_note_not_found(client, mock_router):
 
 
 async def test_delete_note_not_found(client, mock_router):
-    mock_router.delete("/documents/42/notes/999/").mock(return_value=Response(404, json={"detail": "Not found."}))
+    mock_router.delete("/documents/42/notes/").mock(return_value=Response(404, json={"detail": "Not found."}))
     with pytest.raises(NotFoundError):
         await client.delete_note(42, 999)
