@@ -61,6 +61,22 @@ async def test_delete_note(client, mock_router):
     assert result is None
 
 
+async def test_delete_note_sends_csrf_token(client, mock_router):
+    # Simulate the server having set a csrftoken cookie on a prior GET.
+    client._session._get_client().cookies.set("csrftoken", "testcsrf")
+    client._session._csrf_fetched = True  # skip preflight GET
+
+    captured: dict = {}
+
+    def _capture(request):
+        captured["x-csrftoken"] = request.headers.get("x-csrftoken")
+        return Response(204)
+
+    mock_router.delete("/documents/42/notes/1/").mock(side_effect=_capture)
+    await client.delete_note(42, 1)
+    assert captured["x-csrftoken"] == "testcsrf"
+
+
 async def test_get_notes_not_found(client, mock_router):
     mock_router.get("/documents/999/notes/").mock(return_value=Response(404, json={"detail": "Not found."}))
     with pytest.raises(NotFoundError):
