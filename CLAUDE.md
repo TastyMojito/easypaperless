@@ -96,8 +96,8 @@ All standard paperless-ngx API resources:
 - `DocumentStore` is a separate class, backed by SQLite
 - It wraps a `PaperlessClient` and mirrors document metadata locally
 - Sync is **manual/explicit**: call `store.sync()` to pull fresh data from the server
+- **Incremental sync**: `sync()` reads `last_sync` from `sync_metadata` and passes `modified_after` (cutoff = last sync date − 1 day) to `list_documents`; the first call (no `last_sync`) performs a full fetch; pass `force_full=True` to always fetch all documents
 - Supports extended search not possible via the API (regex, date ranges, name-based filters)
-- Search interface TBD — will be specified before implementation
 
 ### Error Handling
 Custom exception hierarchy in `exceptions.py`:

@@ -188,16 +188,24 @@ class DocumentStore:
     async def sync(
         self,
         *,
+        force_full: bool = False,
         on_doc_fetched: Callable[[int, int | None], None] | None = None,
     ) -> int:
-        """Pull all documents and supporting metadata from the server and upsert locally.
+        """Pull documents and supporting metadata from the server and upsert locally.
+
+        On the first call (no ``last_sync`` recorded) a full fetch is performed.
+        On subsequent calls only documents modified after the previous sync date
+        are fetched (incremental sync), which is much faster for large archives.
 
         Fetches documents, tags, correspondents, document types, and storage
         paths in parallel, then upserts everything into SQLite.  Existing
         local records are replaced; documents no longer present on the server
-        are *not* removed (incremental sync is not yet implemented).
+        are *not* removed by incremental syncs.
 
         Args:
+            force_full: If ``True``, ignore ``last_sync`` and fetch all
+                documents regardless.  Use this to pick up deleted documents
+                or to rebuild the store from scratch.
             on_doc_fetched: Optional callback invoked after each API page of
                 documents is fetched.  Receives ``(fetched_so_far, total)``
                 where ``total`` is the server-reported document count (may be
@@ -207,9 +215,33 @@ class DocumentStore:
         Returns:
             Number of documents synced.
         """
+        from datetime import datetime, timedelta
+
+        modified_after: str | None = None
+        if not force_full:
+            conn = self._get_conn()
+            row = conn.execute(
+                "SELECT value FROM sync_metadata WHERE key = 'last_sync'"
+            ).fetchone()
+            if row is not None:
+                last_sync_dt = datetime.fromisoformat(row["value"])
+                # Subtract 1 day: modified__date__gt is date-only (strictly >),
+                # so subtracting 1 day ensures docs modified on the sync day are included.
+                cutoff = (last_sync_dt.date() - timedelta(days=1)).isoformat()
+                modified_after = cutoff
+                logger.info("Incremental sync: fetching documents modified after %s", cutoff)
+            else:
+                logger.info("No previous sync found — performing full sync")
+        else:
+            logger.info("Force full sync requested")
+
         logger.info("Starting sync from server")
         docs, tags, correspondents, doc_types, storage_paths = await asyncio.gather(
-            self._client.list_documents(page_size=500, on_page=on_doc_fetched),
+            self._client.list_documents(
+                page_size=500,
+                modified_after=modified_after,
+                on_page=on_doc_fetched,
+            ),
             self._client.list_tags(),
             self._client.list_correspondents(),
             self._client.list_document_types(),
@@ -265,7 +297,7 @@ class DocumentStore:
                 [(doc.id, tag_id) for tag_id in doc.tags],
             )
 
-        from datetime import datetime, timezone
+        from datetime import timezone
         conn.execute(
             "INSERT OR REPLACE INTO sync_metadata (key, value) VALUES ('last_sync', ?)",
             (datetime.now(timezone.utc).isoformat(),),

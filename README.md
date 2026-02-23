@@ -66,9 +66,12 @@ from easypaperless import PaperlessClient, DocumentStore
 async with PaperlessClient(url="http://localhost:8000", api_key="YOUR_TOKEN") as client:
     store = DocumentStore(client, db_path="paperless.db")
 
-    # Pull all data from the server into SQLite
+    # First call: full fetch. Subsequent calls: incremental (only modified documents).
     count = await store.sync()
     print(f"Synced {count} documents")
+
+    # Force a full re-fetch (e.g. to pick up deleted documents):
+    # count = await store.sync(force_full=True)
 
     # Search locally — no network request
     results = store.search_documents(
