@@ -6,7 +6,7 @@ import asyncio
 import logging
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +176,7 @@ class PaperlessClient:
         ordering: str | None = None,
         descending: bool = False,
         max_results: int | None = None,
+        on_page: Callable[[int, int | None], None] | None = None,
     ) -> list[Document]:
         """Return a filtered list of documents.
 
@@ -250,6 +251,10 @@ class PaperlessClient:
             max_results: Stop fetching pages once this many documents have
                 been collected and return at most this many results.
                 ``None`` *(default)* returns everything.
+            on_page: Optional callback invoked after each API page is fetched.
+                Receives ``(fetched_so_far, total)`` where ``total`` is the
+                server-reported document count from the first page response
+                (``None`` if not reported).  Ignored when ``page`` is set.
 
         Returns:
             List of :class:`~easypaperless.models.documents.Document`
@@ -330,7 +335,9 @@ class PaperlessClient:
                 items = items[:max_results]
             return [Document.model_validate(item) for item in items]
 
-        items = await self._session.get_all_pages("/documents/", params, max_results=max_results)
+        items = await self._session.get_all_pages(
+            "/documents/", params, max_results=max_results, on_page=on_page
+        )
         return [Document.model_validate(item) for item in items]
 
     async def update_document(

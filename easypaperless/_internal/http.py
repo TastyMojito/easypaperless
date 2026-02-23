@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 
@@ -143,6 +143,7 @@ class HttpSession:
         params: dict[str, Any] | None = None,
         *,
         max_results: int | None = None,
+        on_page: Callable[[int, int | None], None] | None = None,
     ) -> list[dict]:
         results: list[dict] = []
         # First page — use path relative to base_url
@@ -152,7 +153,10 @@ class HttpSession:
             logger.debug("Fetching %s", path)
         response = await self.get(path, params=params)
         page = response.json()
+        total_count: int | None = page.get("count")
         results.extend(page.get("results", []))
+        if on_page is not None:
+            on_page(len(results), total_count)
 
         if max_results is not None and len(results) >= max_results:
             logger.debug("max_results=%d reached after first page", max_results)
@@ -170,6 +174,8 @@ class HttpSession:
             self._raise_for_status(response, "GET", next_url)
             page = response.json()
             results.extend(page.get("results", []))
+            if on_page is not None:
+                on_page(len(results), total_count)
             next_url = page.get("next")
 
             if max_results is not None and len(results) >= max_results:

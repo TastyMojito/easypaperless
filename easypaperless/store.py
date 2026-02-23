@@ -188,7 +188,7 @@ class DocumentStore:
     async def sync(
         self,
         *,
-        on_doc_synced: Callable[[int, int], None] | None = None,
+        on_doc_fetched: Callable[[int, int | None], None] | None = None,
     ) -> int:
         """Pull all documents and supporting metadata from the server and upsert locally.
 
@@ -198,16 +198,18 @@ class DocumentStore:
         are *not* removed (incremental sync is not yet implemented).
 
         Args:
-            on_doc_synced: Optional callback invoked after each document is
-                upserted.  Receives ``(synced_so_far, total)`` as positional
-                arguments.  Use this for progress reporting.
+            on_doc_fetched: Optional callback invoked after each API page of
+                documents is fetched.  Receives ``(fetched_so_far, total)``
+                where ``total`` is the server-reported document count (may be
+                ``None`` if the server does not report it).  Use this for
+                progress reporting during the slow initial fetch.
 
         Returns:
             Number of documents synced.
         """
         logger.info("Starting sync from server")
         docs, tags, correspondents, doc_types, storage_paths = await asyncio.gather(
-            self._client.list_documents(),
+            self._client.list_documents(page_size=500, on_page=on_doc_fetched),
             self._client.list_tags(),
             self._client.list_correspondents(),
             self._client.list_document_types(),
@@ -241,8 +243,7 @@ class DocumentStore:
         )
 
         # Upsert documents
-        total_docs = len(docs)
-        for i, doc in enumerate(docs, 1):
+        for doc in docs:
             created_date_str = doc.created_date.isoformat() if doc.created_date else None
             conn.execute(
                 """INSERT OR REPLACE INTO documents
@@ -263,8 +264,6 @@ class DocumentStore:
                 "INSERT OR IGNORE INTO document_tags (document_id, tag_id) VALUES (?, ?)",
                 [(doc.id, tag_id) for tag_id in doc.tags],
             )
-            if on_doc_synced is not None:
-                on_doc_synced(i, total_docs)
 
         from datetime import datetime, timezone
         conn.execute(
