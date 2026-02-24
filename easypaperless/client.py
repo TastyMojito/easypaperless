@@ -630,7 +630,9 @@ class PaperlessClient:
                 the ``parameters`` object.
         """
         payload = {"documents": document_ids, "method": method, "parameters": parameters}
-        await self._session.post("/documents/bulk_edit/", json=payload)
+        # Use a longer timeout for bulk operations — large batches can take
+        # considerably more than the default 30 s on the paperless-ngx side.
+        await self._session.post("/documents/bulk_edit/", json=payload, timeout=120.0)
 
     async def bulk_add_tag(self, document_ids: list[int], tag: int | str) -> None:
         """Add a tag to multiple documents in a single request.

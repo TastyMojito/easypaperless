@@ -70,6 +70,7 @@ class HttpSession:
         json: Any = None,
         data: dict[str, Any] | None = None,
         files: Any = None,
+        timeout: float | None = None,
     ) -> httpx.Response:
         client = self._get_client()
         logger.debug("%s %s", method.upper(), path)
@@ -81,9 +82,16 @@ class HttpSession:
                 json=json,
                 data=data,
                 files=files,
+                timeout=timeout,
             )
+        except httpx.TimeoutException as exc:
+            raise ServerError(
+                f"Request timed out ({method.upper()} {path}). "
+                "The operation may have completed on the server despite this error."
+            ) from exc
         except httpx.HTTPError as exc:
-            raise ServerError(str(exc)) from exc
+            msg = str(exc) or f"HTTP error on {method.upper()} {path}"
+            raise ServerError(msg) from exc
         logger.debug("%s %s %s", response.status_code, method.upper(), path)
         self._raise_for_status(response, method, path)
         return response
@@ -104,8 +112,10 @@ class HttpSession:
         logger.debug("GET (download) %s", path)
         try:
             resp = await client.request("GET", path, follow_redirects=False)
+        except httpx.TimeoutException as exc:
+            raise ServerError(f"Request timed out (GET {path})") from exc
         except httpx.HTTPError as exc:
-            raise ServerError(str(exc)) from exc
+            raise ServerError(str(exc) or f"HTTP error on GET {path}") from exc
 
         hops = 0
         while resp.is_redirect and hops < 5:
@@ -113,8 +123,10 @@ class HttpSession:
             logger.debug("Redirect %d -> %s", resp.status_code, location)
             try:
                 resp = await client.request("GET", location, follow_redirects=False)
+            except httpx.TimeoutException as exc:
+                raise ServerError(f"Request timed out (GET {location})") from exc
             except httpx.HTTPError as exc:
-                raise ServerError(str(exc)) from exc
+                raise ServerError(str(exc) or f"HTTP error on GET {location}") from exc
             hops += 1
 
         logger.debug("%d GET %s", resp.status_code, path)
@@ -128,8 +140,9 @@ class HttpSession:
         json: Any = None,
         data: dict[str, Any] | None = None,
         files: Any = None,
+        timeout: float | None = None,
     ) -> httpx.Response:
-        return await self.request("POST", path, json=json, data=data, files=files)
+        return await self.request("POST", path, json=json, data=data, files=files, timeout=timeout)
 
     async def patch(self, path: str, *, json: Any = None) -> httpx.Response:
         return await self.request("PATCH", path, json=json)
@@ -169,8 +182,10 @@ class HttpSession:
             client = self._get_client()
             try:
                 response = await client.get(next_url)
+            except httpx.TimeoutException as exc:
+                raise ServerError(f"Request timed out (GET {next_url})") from exc
             except httpx.HTTPError as exc:
-                raise ServerError(str(exc)) from exc
+                raise ServerError(str(exc) or f"HTTP error on GET {next_url}") from exc
             self._raise_for_status(response, "GET", next_url)
             page = response.json()
             results.extend(page.get("results", []))
