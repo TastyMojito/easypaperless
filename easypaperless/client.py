@@ -346,6 +346,7 @@ class PaperlessClient:
         id: int,
         *,
         title: str | None = None,
+        content: str | None = None,
         date: str | None = None,
         correspondent: int | str | None = None,
         document_type: int | str | None = None,
@@ -359,6 +360,7 @@ class PaperlessClient:
         Args:
             id: Numeric ID of the document to update.
             title: New document title.
+            content: OCR text content of the document.
             date: Creation date as an ISO-8601 string (``"YYYY-MM-DD"``).
             correspondent: Correspondent to assign, as an ID or name.
                 Pass ``0`` to clear.
@@ -380,6 +382,8 @@ class PaperlessClient:
 
         if title is not None:
             payload["title"] = title
+        if content is not None:
+            payload["content"] = content
         if date is not None:
             payload["created"] = date
         if correspondent is not None:
