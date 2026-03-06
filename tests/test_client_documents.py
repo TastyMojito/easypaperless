@@ -8,6 +8,7 @@ import pytest
 import respx
 from httpx import Response
 
+from easypaperless.exceptions import NotFoundError, ServerError
 from easypaperless.models.documents import Document, DocumentMetadata
 from easypaperless.models.permissions import PermissionSet, SetPermissions
 
@@ -147,6 +148,40 @@ async def test_download_document_original(client, mock_router):
     mock_router.get("/documents/1/download/").mock(return_value=Response(200, content=b"ORIG"))
     content = await client.download_document(1, original=True)
     assert content == b"ORIG"
+
+
+async def test_download_document_not_found(client, mock_router):
+    mock_router.get("/documents/999/archive/").mock(
+        return_value=Response(404, json={"detail": "Not found."})
+    )
+    with pytest.raises(NotFoundError):
+        await client.download_document(999)
+
+
+async def test_download_document_html_content_type(client, mock_router):
+    """HTML content-type indicates a login-page redirect — should raise ServerError."""
+    mock_router.get("/documents/1/archive/").mock(
+        return_value=Response(
+            200,
+            content=b"<html><body>Login</body></html>",
+            headers={"content-type": "text/html; charset=utf-8"},
+        )
+    )
+    with pytest.raises(ServerError, match="HTML page"):
+        await client.download_document(1)
+
+
+async def test_download_document_html_body_prefix(client, mock_router):
+    """Body starting with <!doctype should raise ServerError even without HTML content-type."""
+    mock_router.get("/documents/1/archive/").mock(
+        return_value=Response(
+            200,
+            content=b"<!DOCTYPE html><html><body>Login</body></html>",
+            headers={"content-type": "application/octet-stream"},
+        )
+    )
+    with pytest.raises(ServerError, match="HTML page"):
+        await client.download_document(1)
 
 
 async def test_list_documents_with_tag_id(client, mock_router):
