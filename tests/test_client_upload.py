@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import pytest
-import respx
 from httpx import Response
 
 from easypaperless.exceptions import TaskTimeoutError, UploadError
 from easypaperless.models.documents import Document
-
 
 DOC_DATA = {"id": 10, "title": "Uploaded", "tags": []}
 
@@ -37,6 +35,7 @@ async def test_upload_wait_true_polls_and_returns_document(client, mock_router, 
     )
     # First poll returns PENDING, second returns SUCCESS
     call_count = 0
+
     def task_side_effect(request):
         nonlocal call_count
         call_count += 1
@@ -52,12 +51,108 @@ async def test_upload_wait_true_polls_and_returns_document(client, mock_router, 
     assert result.id == 10
 
 
+async def test_upload_file_not_found_raises(client):
+    with pytest.raises(FileNotFoundError):
+        await client.upload_document("/nonexistent/path/doc.pdf")
+
+
+async def test_upload_sends_metadata_fields(client, mock_router, tmp_path):
+    pdf = tmp_path / "scan.pdf"
+    pdf.write_bytes(b"%PDF-1.4 test")
+
+    route = mock_router.post("/documents/post_document/").mock(
+        return_value=Response(200, text='"meta-task"')
+    )
+    result = await client.upload_document(
+        pdf,
+        title="My Doc",
+        created="2024-01-15",
+        correspondent=5,
+        document_type=3,
+        storage_path=2,
+        tags=[1, 7],
+        asn=42,
+    )
+    assert result == "meta-task"
+
+    request = route.calls.last.request
+    body = request.content.decode("utf-8", errors="replace")
+    assert "My Doc" in body
+    assert "2024-01-15" in body
+    assert "42" in body
+
+
+async def test_upload_resolves_names(client, mock_router, tmp_path):
+    pdf = tmp_path / "scan.pdf"
+    pdf.write_bytes(b"%PDF-1.4 test")
+
+    # The resolver fetches all items for each resource, then looks up locally
+    def _page(items):
+        return {"count": len(items), "next": None, "results": items}
+
+    mock_router.get("/correspondents/").mock(
+        return_value=Response(200, json=_page([{"id": 10, "name": "Acme"}]))
+    )
+    mock_router.get("/document_types/").mock(
+        return_value=Response(200, json=_page([{"id": 20, "name": "Invoice"}]))
+    )
+    mock_router.get("/storage_paths/").mock(
+        return_value=Response(200, json=_page([{"id": 30, "name": "Archive"}]))
+    )
+    mock_router.get("/tags/").mock(
+        return_value=Response(200, json=_page([{"id": 40, "name": "Important"}]))
+    )
+
+    route = mock_router.post("/documents/post_document/").mock(
+        return_value=Response(200, text='"resolve-task"')
+    )
+
+    result = await client.upload_document(
+        pdf,
+        correspondent="Acme",
+        document_type="Invoice",
+        storage_path="Archive",
+        tags=["Important"],
+    )
+    assert result == "resolve-task"
+
+    # Verify the resolved IDs were sent in the request body
+    request = route.calls.last.request
+    body = request.content.decode("utf-8", errors="replace")
+    assert "10" in body  # correspondent ID
+    assert "20" in body  # document_type ID
+    assert "30" in body  # storage_path ID
+    assert "40" in body  # tag ID
+
+
+async def test_upload_omits_none_metadata(client, mock_router, tmp_path):
+    """Only explicitly passed metadata is included in the request body."""
+    pdf = tmp_path / "scan.pdf"
+    pdf.write_bytes(b"%PDF-1.4 test")
+
+    route = mock_router.post("/documents/post_document/").mock(
+        return_value=Response(200, text='"none-task"')
+    )
+    await client.upload_document(pdf, title="Only Title")
+
+    request = route.calls.last.request
+    body = request.content.decode("utf-8", errors="replace")
+    assert "Only Title" in body
+    # These fields were not passed, so they should not appear
+    assert "correspondent" not in body
+    assert "document_type" not in body
+    assert "storage_path" not in body
+    assert "archive_serial_number" not in body
+
+
 async def test_upload_wait_true_failure_raises_upload_error(client, mock_router, tmp_path):
     pdf = tmp_path / "scan.pdf"
     pdf.write_bytes(b"%PDF-1.4 test")
 
     task_id = "fail-task"
-    task_failure = [{"task_id": task_id, "status": "FAILURE", "result": "OCR failed", "related_document": None}]
+    task_failure = [
+        {"task_id": task_id, "status": "FAILURE", "result": "OCR failed", "related_document": None}
+    ]
 
     mock_router.post("/documents/post_document/").mock(
         return_value=Response(200, text=f'"{task_id}"')
@@ -94,12 +189,16 @@ async def test_upload_empty_task_response_keeps_polling(client, mock_router, tmp
         return_value=Response(200, text=f'"{task_id}"')
     )
     call_count = 0
+
     def task_side_effect(request):
         nonlocal call_count
         call_count += 1
         if call_count < 2:
             return Response(200, json=[])  # empty — not yet known
-        return Response(200, json=[{"task_id": task_id, "status": "SUCCESS", "related_document": "10"}])
+        return Response(
+            200,
+            json=[{"task_id": task_id, "status": "SUCCESS", "related_document": "10"}],
+        )
 
     mock_router.get("/tasks/").mock(side_effect=task_side_effect)
     mock_router.get("/documents/10/").mock(return_value=Response(200, json=DOC_DATA))
