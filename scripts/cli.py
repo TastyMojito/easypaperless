@@ -211,7 +211,7 @@ def documents_list(
                 document_type=_id_or_name(document_type) if document_type else None,
                 any_document_type=[_id_or_name(d) for d in any_document_type] or None,
                 exclude_document_types=[_id_or_name(d) for d in exclude_document_types] or None,
-                asn=asn,
+                archive_serial_number=asn,
                 created_after=created_after,
                 created_before=created_before,
                 added_after=added_after,
@@ -275,7 +275,7 @@ def documents_update(ctx, id, title, date, correspondent, document_type, storage
                 document_type=_id_or_name(document_type) if document_type else None,
                 storage_path=_id_or_name(storage_path) if storage_path else None,
                 tags=[_id_or_name(t) for t in tags] or None,
-                asn=asn,
+                archive_serial_number=asn,
             )
 
     _run(_go(), compact=_compact(ctx))
@@ -363,7 +363,7 @@ def documents_upload(
                 document_type=_id_or_name(document_type) if document_type else None,
                 storage_path=_id_or_name(storage_path) if storage_path else None,
                 tags=[_id_or_name(t) for t in tags] or None,
-                asn=asn,
+                archive_serial_number=asn,
                 wait=wait,
                 poll_interval=poll_interval,
                 poll_timeout=poll_timeout,

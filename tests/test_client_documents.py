@@ -111,7 +111,7 @@ async def test_list_documents_with_title_or_text_search(client, mock_router):
 
 async def test_list_documents_with_asn(client, mock_router):
     mock_router.get("/documents/").mock(return_value=Response(200, json=DOC_LIST))
-    docs = await client.list_documents(asn=42)
+    docs = await client.list_documents(archive_serial_number=42)
     assert len(docs) == 1
 
 
