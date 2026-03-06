@@ -222,6 +222,18 @@ async def test_delete_tag_invalidates_cache(client, mock_router):
 
 # Correspondents
 CORR_DATA = {"id": 1, "name": "ACME"}
+CORR_DATA_FULL = {
+    "id": 1,
+    "name": "ACME",
+    "slug": "acme",
+    "match": "acme corp",
+    "matching_algorithm": 3,
+    "is_insensitive": True,
+    "document_count": 15,
+    "last_correspondence": "2026-01-15",
+    "owner": 1,
+    "user_can_change": True,
+}
 CORR_LIST = {"count": 1, "next": None, "previous": None, "results": [CORR_DATA]}
 
 
@@ -231,10 +243,154 @@ async def test_list_correspondents(client, mock_router):
     assert isinstance(corrs[0], Correspondent)
 
 
+async def test_get_correspondent(client, mock_router):
+    mock_router.get("/correspondents/1/").mock(return_value=Response(200, json=CORR_DATA))
+    c = await client.get_correspondent(1)
+    assert c.id == 1
+    assert c.name == "ACME"
+
+
 async def test_create_correspondent(client, mock_router):
     mock_router.post("/correspondents/").mock(return_value=Response(201, json=CORR_DATA))
     c = await client.create_correspondent(name="ACME")
     assert c.name == "ACME"
+
+
+async def test_update_correspondent(client, mock_router):
+    mock_router.patch("/correspondents/1/").mock(return_value=Response(200, json={**CORR_DATA, "name": "ACME Inc."}))
+    c = await client.update_correspondent(1, name="ACME Inc.")
+    assert c.name == "ACME Inc."
+
+
+async def test_delete_correspondent(client, mock_router):
+    mock_router.delete("/correspondents/1/").mock(return_value=Response(204))
+    await client.delete_correspondent(1)
+
+
+# ---------------------------------------------------------------------------
+# Correspondent model – all fields
+# ---------------------------------------------------------------------------
+
+async def test_correspondent_model_all_fields(client, mock_router):
+    mock_router.get("/correspondents/1/").mock(return_value=Response(200, json=CORR_DATA_FULL))
+    c = await client.get_correspondent(1)
+    assert c.id == 1
+    assert c.name == "ACME"
+    assert c.slug == "acme"
+    assert c.match == "acme corp"
+    assert c.matching_algorithm == MatchingAlgorithm.EXACT
+    assert c.is_insensitive is True
+    assert c.document_count == 15
+    assert c.last_correspondence is not None
+    assert c.last_correspondence.isoformat() == "2026-01-15"
+    assert c.owner == 1
+    assert c.user_can_change is True
+
+
+# ---------------------------------------------------------------------------
+# Correspondent 404 / NotFoundError tests
+# ---------------------------------------------------------------------------
+
+async def test_get_correspondent_not_found(client, mock_router):
+    mock_router.get("/correspondents/999/").mock(return_value=Response(404, json={"detail": "Not found."}))
+    with pytest.raises(NotFoundError):
+        await client.get_correspondent(999)
+
+
+async def test_update_correspondent_not_found(client, mock_router):
+    mock_router.patch("/correspondents/999/").mock(return_value=Response(404, json={"detail": "Not found."}))
+    with pytest.raises(NotFoundError):
+        await client.update_correspondent(999, name="gone")
+
+
+async def test_delete_correspondent_not_found(client, mock_router):
+    mock_router.delete("/correspondents/999/").mock(return_value=Response(404, json={"detail": "Not found."}))
+    with pytest.raises(NotFoundError):
+        await client.delete_correspondent(999)
+
+
+# ---------------------------------------------------------------------------
+# create_correspondent – full payload with all optional parameters
+# ---------------------------------------------------------------------------
+
+async def test_create_correspondent_all_params(client, mock_router):
+    captured: dict = {}
+    mock_router.post("/correspondents/").mock(side_effect=_json_capturing_side_effect(
+        captured, CORR_DATA_FULL, status=201,
+    ))
+    perms = SetPermissions(
+        view=PermissionSet(users=[2], groups=[]),
+        change=PermissionSet(users=[], groups=[1]),
+    )
+    c = await client.create_correspondent(
+        name="ACME",
+        match="acme corp",
+        matching_algorithm=MatchingAlgorithm.EXACT,
+        is_insensitive=True,
+        owner=1,
+        set_permissions=perms,
+    )
+    body = captured["body"]
+    assert body["name"] == "ACME"
+    assert body["match"] == "acme corp"
+    assert body["matching_algorithm"] == 3
+    assert body["is_insensitive"] is True
+    assert body["owner"] == 1
+    assert body["set_permissions"]["view"]["users"] == [2]
+    assert body["set_permissions"]["change"]["groups"] == [1]
+    assert isinstance(c, Correspondent)
+
+
+# ---------------------------------------------------------------------------
+# update_correspondent – PATCH semantics (only non-None fields sent)
+# ---------------------------------------------------------------------------
+
+async def test_update_correspondent_only_sends_provided_fields(client, mock_router):
+    captured: dict = {}
+    mock_router.patch("/correspondents/1/").mock(side_effect=_json_capturing_side_effect(
+        captured, {**CORR_DATA, "name": "ACME Inc."},
+    ))
+    await client.update_correspondent(1, name="ACME Inc.")
+    body = captured["body"]
+    assert body == {"name": "ACME Inc."}
+
+
+async def test_update_correspondent_empty_patch(client, mock_router):
+    captured: dict = {}
+    mock_router.patch("/correspondents/1/").mock(side_effect=_json_capturing_side_effect(
+        captured, CORR_DATA,
+    ))
+    await client.update_correspondent(1)
+    assert captured["body"] == {}
+
+
+# ---------------------------------------------------------------------------
+# Correspondent cache invalidation
+# ---------------------------------------------------------------------------
+
+async def test_create_correspondent_invalidates_cache(client, mock_router):
+    mock_router.get("/correspondents/").mock(return_value=Response(200, json=CORR_LIST))
+    mock_router.post("/correspondents/").mock(return_value=Response(201, json={"id": 2, "name": "NewCorp"}))
+    await client.list_correspondents()
+    await client.create_correspondent(name="NewCorp")
+    assert "correspondents" not in client._resolver._cache
+
+
+async def test_update_correspondent_invalidates_cache(client, mock_router):
+    mock_router.get("/correspondents/").mock(return_value=Response(200, json=CORR_LIST))
+    updated = {**CORR_DATA, "name": "ACME Inc."}
+    mock_router.patch("/correspondents/1/").mock(return_value=Response(200, json=updated))
+    await client.list_correspondents()
+    await client.update_correspondent(1, name="ACME Inc.")
+    assert "correspondents" not in client._resolver._cache
+
+
+async def test_delete_correspondent_invalidates_cache(client, mock_router):
+    mock_router.get("/correspondents/").mock(return_value=Response(200, json=CORR_LIST))
+    mock_router.delete("/correspondents/1/").mock(return_value=Response(204))
+    await client.list_correspondents()
+    await client.delete_correspondent(1)
+    assert "correspondents" not in client._resolver._cache
 
 
 # Document Types
