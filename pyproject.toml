@@ -5,12 +5,31 @@ build-backend = "hatchling.build"
 [project]
 name = "easypaperless"
 version = "0.1.0"
-description = "A Python API wrapper for paperless-ngx with optional SQLite-backed local cache"
+description = "A Python API wrapper for paperless-ngx"
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.11"
+authors = [
+    { name = "Moritz Grenke", email = "your@email.com" },
+]
+keywords = ["paperless", "paperless-ngx", "api", "wrapper", "document management"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 dependencies = [
     "httpx>=0.27",
     "pydantic>=2.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/TastyMojito/easypaperless"
+Repository = "https://github.com/TastyMojito/easypaperless"
+Issues = "https://github.com/TastyMojito/easypaperless/issues"
 
 [project.optional-dependencies]
 scripts = [
@@ -19,23 +38,27 @@ scripts = [
 docs = [
     "pdoc>=14",
 ]
-embeddings = [
-    "numpy>=1.26",
-]
-embeddings-st = [
-    "easypaperless[embeddings]",
-    "sentence-transformers>=2.7",
-]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
     "respx>=0.21",
     "pytest-cov",
-    "numpy>=1.26",
+    "ruff>=0.4",
+    "mypy>=1.10",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/easypaperless"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 
-[tool.hatch.build.targets.wheel]
-packages = ["easypaperless"]
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # pycodestyle errors, pyflakes, isort
+
+[tool.mypy]
+python_version = "3.11"
+strict = true

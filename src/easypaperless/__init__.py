@@ -30,8 +30,6 @@ from easypaperless.models import (
     Task,
     TaskStatus,
 )
-from easypaperless._embedding import OllamaProvider, SentenceTransformerProvider
-from easypaperless.store import DocumentStore
 from easypaperless.sync import SyncPaperlessClient
 
 logging.getLogger("easypaperless").addHandler(logging.NullHandler())
@@ -40,10 +38,6 @@ __all__ = [
     # Clients
     "PaperlessClient",
     "SyncPaperlessClient",
-    "DocumentStore",
-    # Embedding providers
-    "OllamaProvider",
-    "SentenceTransformerProvider",
     # Models
     "Correspondent",
     "CustomField",

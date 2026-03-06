@@ -31,12 +31,7 @@ class AuthError(PaperlessError):
 
 
 class NotFoundError(PaperlessError):
-    """Raised on 404 responses or when a local name lookup fails.
-
-    Also raised by
-    :meth:`~easypaperless.store.DocumentStore.search_documents` when a tag
-    or correspondent name is not found in the local SQLite cache.
-    """
+    """Raised on 404 responses or when a name lookup fails."""
 
 
 class ValidationError(PaperlessError):
