@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-import respx
 from httpx import Response
+
+from easypaperless.models.permissions import PermissionSet, SetPermissions
 
 
 async def test_bulk_edit_raw(client, mock_router):
@@ -23,7 +23,12 @@ async def test_bulk_add_tag_by_id(client, mock_router):
 
 
 async def test_bulk_add_tag_by_name(client, mock_router):
-    tags_resp = {"count": 1, "next": None, "previous": None, "results": [{"id": 5, "name": "urgent"}]}
+    tags_resp = {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [{"id": 5, "name": "urgent"}],
+    }
     mock_router.get("/tags/").mock(return_value=Response(200, json=tags_resp))
     mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
     await client.bulk_add_tag([1], "urgent")
@@ -37,6 +42,100 @@ async def test_bulk_remove_tag(client, mock_router):
 async def test_bulk_modify_tags(client, mock_router):
     mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
     await client.bulk_modify_tags([1, 2], add_tags=[3], remove_tags=[4])
+
+
+async def test_bulk_set_correspondent_by_id(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_correspondent([1, 2], 10)
+
+
+async def test_bulk_set_correspondent_by_name(client, mock_router):
+    cors_resp = {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [{"id": 10, "name": "Acme Corp"}],
+    }
+    mock_router.get("/correspondents/").mock(return_value=Response(200, json=cors_resp))
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_correspondent([1, 2], "Acme Corp")
+
+
+async def test_bulk_set_correspondent_none(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_correspondent([1, 2], None)
+
+
+async def test_bulk_set_document_type_by_id(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_document_type([1, 2], 3)
+
+
+async def test_bulk_set_document_type_by_name(client, mock_router):
+    dt_resp = {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [{"id": 3, "name": "Invoice"}],
+    }
+    mock_router.get("/document_types/").mock(return_value=Response(200, json=dt_resp))
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_document_type([1, 2], "Invoice")
+
+
+async def test_bulk_set_document_type_none(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_document_type([1, 2], None)
+
+
+async def test_bulk_set_storage_path_by_id(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_storage_path([1, 2], 7)
+
+
+async def test_bulk_set_storage_path_by_name(client, mock_router):
+    sp_resp = {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [{"id": 7, "name": "Archive/2024"}],
+    }
+    mock_router.get("/storage_paths/").mock(return_value=Response(200, json=sp_resp))
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_storage_path([1, 2], "Archive/2024")
+
+
+async def test_bulk_set_storage_path_none(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_storage_path([1, 2], None)
+
+
+async def test_bulk_modify_custom_fields(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_modify_custom_fields(
+        [1, 2],
+        add_fields=[{"field": 1, "value": "hello"}],
+        remove_fields=[2],
+    )
+
+
+async def test_bulk_modify_custom_fields_defaults(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_modify_custom_fields([1, 2])
+
+
+async def test_bulk_set_permissions(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    perms = SetPermissions(
+        view=PermissionSet(users=[1, 2], groups=[]),
+        change=PermissionSet(users=[1], groups=[]),
+    )
+    await client.bulk_set_permissions([1, 2], set_permissions=perms, owner=1)
+
+
+async def test_bulk_set_permissions_merge(client, mock_router):
+    mock_router.post("/documents/bulk_edit/").mock(return_value=Response(200, json={}))
+    await client.bulk_set_permissions([1, 2], owner=5, merge=True)
 
 
 async def test_bulk_edit_objects(client, mock_router):

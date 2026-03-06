@@ -821,6 +821,97 @@ class PaperlessClient:
         """
         await self.bulk_edit(document_ids, "delete")
 
+    async def bulk_set_correspondent(
+        self, document_ids: list[int], correspondent: int | str | None
+    ) -> None:
+        """Assign a correspondent to multiple documents in a single request.
+
+        Args:
+            document_ids: List of document IDs to modify.
+            correspondent: Correspondent to assign, as an ID or name.
+                Pass ``None`` to clear the assignment.
+        """
+        cor_id: int | None = None
+        if correspondent is not None:
+            cor_id = await self._resolver.resolve("correspondents", correspondent)
+        await self.bulk_edit(document_ids, "set_correspondent", correspondent=cor_id)
+
+    async def bulk_set_document_type(
+        self, document_ids: list[int], document_type: int | str | None
+    ) -> None:
+        """Assign a document type to multiple documents in a single request.
+
+        Args:
+            document_ids: List of document IDs to modify.
+            document_type: Document type to assign, as an ID or name.
+                Pass ``None`` to clear the assignment.
+        """
+        dt_id: int | None = None
+        if document_type is not None:
+            dt_id = await self._resolver.resolve("document_types", document_type)
+        await self.bulk_edit(document_ids, "set_document_type", document_type=dt_id)
+
+    async def bulk_set_storage_path(
+        self, document_ids: list[int], storage_path: int | str | None
+    ) -> None:
+        """Assign a storage path to multiple documents in a single request.
+
+        Args:
+            document_ids: List of document IDs to modify.
+            storage_path: Storage path to assign, as an ID or name.
+                Pass ``None`` to clear the assignment.
+        """
+        sp_id: int | None = None
+        if storage_path is not None:
+            sp_id = await self._resolver.resolve("storage_paths", storage_path)
+        await self.bulk_edit(document_ids, "set_storage_path", storage_path=sp_id)
+
+    async def bulk_modify_custom_fields(
+        self,
+        document_ids: list[int],
+        *,
+        add_fields: list[dict[str, Any]] | None = None,
+        remove_fields: list[int] | None = None,
+    ) -> None:
+        """Add and/or remove custom field values on multiple documents.
+
+        Args:
+            document_ids: List of document IDs to modify.
+            add_fields: Custom-field value dicts to add (each must contain
+                ``"field"`` and ``"value"`` keys).
+            remove_fields: Custom-field IDs whose values should be removed.
+        """
+        await self.bulk_edit(
+            document_ids,
+            "modify_custom_fields",
+            add_custom_fields=add_fields or [],
+            remove_custom_fields=remove_fields or [],
+        )
+
+    async def bulk_set_permissions(
+        self,
+        document_ids: list[int],
+        *,
+        set_permissions: SetPermissions | None = None,
+        owner: int | None = None,
+        merge: bool = False,
+    ) -> None:
+        """Set permissions and/or owner on multiple documents.
+
+        Args:
+            document_ids: List of document IDs to modify.
+            set_permissions: Explicit view/change permission sets to apply.
+            owner: Numeric user ID to assign as document owner.
+            merge: When ``True``, new permissions are merged with existing
+                ones rather than replacing them.
+        """
+        params: dict[str, Any] = {"merge": merge}
+        if set_permissions is not None:
+            params["set_permissions"] = set_permissions.model_dump()
+        if owner is not None:
+            params["owner"] = owner
+        await self.bulk_edit(document_ids, "set_permissions", **params)
+
     async def bulk_edit_objects(
         self,
         object_type: str,
