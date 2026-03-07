@@ -62,7 +62,86 @@
 _To be added by /architecture_
 
 ## QA Test Results
-_To be added by /qa_
+**QA Date:** 2026-03-07
+**Tested by:** QA Engineer
+**Branch:** master (commit 2e886b8)
+
+### Environment
+- Python 3.13.12, pytest 9.0.2, mypy strict, ruff
+- All 346 tests pass, 95% coverage overall
+- mypy: 0 errors across 38 source files
+
+### Acceptance Criteria Results
+
+#### High-level helpers
+| # | Criterion | Result | Notes |
+|---|-----------|--------|-------|
+| 1 | `bulk_add_tag(document_ids, tag)` adds a tag; accepts ID or name | PASS | Tested with int ID and string name resolution |
+| 2 | `bulk_remove_tag(document_ids, tag)` removes a tag; accepts ID or name | PASS | Tested with int ID |
+| 3 | `bulk_modify_tags(document_ids, *, add_tags, remove_tags)` atomically adds/removes multiple tags | PASS | Both params optional, defaults to empty lists |
+| 4 | `bulk_delete(document_ids)` permanently deletes listed documents | PASS | Delegates to `bulk_edit` with method `"delete"` |
+| 5 | All helpers accept string tag names and resolve via `NameResolver` | PASS | `resolve()` and `resolve_list()` used correctly |
+| 6 | All methods return `None` on success | PASS | No return value from any helper |
+
+#### Metadata assignment helpers
+| # | Criterion | Result | Notes |
+|---|-----------|--------|-------|
+| 7 | `bulk_set_correspondent(document_ids, correspondent)` — accepts ID, name, or None | PASS | Tested by ID, by name, and with None |
+| 8 | `bulk_set_document_type(document_ids, document_type)` — accepts ID, name, or None | PASS | Tested by ID, by name, and with None |
+| 9 | `bulk_set_storage_path(document_ids, storage_path)` — accepts ID, name, or None | PASS | Tested by ID, by name, and with None |
+| 10 | `bulk_modify_custom_fields(document_ids, *, add_fields, remove_fields)` | PASS | Tested with values and with defaults (empty) |
+| 11 | `bulk_set_permissions(document_ids, *, set_permissions, owner, merge)` | PASS | Tested with full perms+owner and with merge=True |
+| 12 | `bulk_set_correspondent/document_type/storage_path` resolve string names | PASS | Name resolution tested for all three |
+
+#### Low-level primitive
+| # | Criterion | Result | Notes |
+|---|-----------|--------|-------|
+| 13 | `bulk_edit(document_ids, method, **parameters)` sends POST to `/documents/bulk_edit/` | PASS | Payload structure: `{"documents": ..., "method": ..., "parameters": ...}` |
+| 14 | `bulk_edit` uses extended timeout of 120 seconds | PASS | `timeout=120.0` passed to `self._session.post()` |
+| 15 | All high-level helpers are implemented on top of `bulk_edit` | PASS | Every helper calls `self.bulk_edit(...)` internally |
+
+#### General
+| # | Criterion | Result | Notes |
+|---|-----------|--------|-------|
+| 16 | All methods available on `SyncPaperlessClient` with same signatures | PASS | Full method parity confirmed (10 methods each) |
+
+**Acceptance Criteria: 16/16 PASSED**
+
+### Edge Cases Tested
+
+| Edge Case | Result | Notes |
+|-----------|--------|-------|
+| Empty `document_ids` list | PASS | No guard; sent as-is (API treats as no-op per spec) |
+| `bulk_modify_tags` with both params None | PASS | Defaults to empty lists, sends `modify_tags` with `[]` |
+| String name not found in resolver | PASS | `NameResolver.resolve()` raises `NotFoundError` before HTTP call |
+| 120s timeout on `bulk_edit` | PASS | Verified in source; `HttpSession.post` accepts and forwards `timeout` kwarg |
+| `bulk_delete` irreversibility | N/A | By design — no confirmation mechanism, documented in spec |
+| Unknown `method` to `bulk_edit` | PASS | Forwarded to API as-is; caller responsible |
+
+### Observations (Low Severity)
+
+| # | Severity | Description |
+|---|----------|-------------|
+| O1 | Low | **No payload assertion in tests.** All 20 async bulk tests mock the POST endpoint and assert success, but none verify the JSON body sent to the API. A `side_effect` or `request.content` assertion would catch payload-structure regressions (e.g., wrong parameter names like `add_custom_fields` vs `add_fields`). |
+| O2 | Low | **Sync test coverage gap.** `test_sync.py` covers `bulk_add_tag` and `bulk_delete` for the sync client, but does not cover `bulk_remove_tag`, `bulk_modify_tags`, `bulk_set_correspondent`, `bulk_set_document_type`, `bulk_set_storage_path`, `bulk_modify_custom_fields`, or `bulk_set_permissions`. The sync wrappers are thin delegation, so risk is minimal, but coverage is incomplete. |
+| O3 | Low | **`sync_mixins/document_bulk.py` coverage at 69%.** The uncovered sync methods correspond to the missing sync tests in O2 above. |
+
+### Regression Testing
+- Full test suite: **346 passed**, 39 deselected (integration)
+- mypy strict: **0 errors** in 38 source files
+- Ruff lint on `src/`: clean (lint issues are only in `scripts/` and `tests/integration/`, unrelated to PROJ-9)
+- No regressions detected in PROJ-1 through PROJ-8 functionality
+
+### Security Audit
+- `bulk_delete` is permanent and irreversible — this is documented and by design
+- `bulk_edit` accepts arbitrary `method` strings — low risk since it is documented as a low-level escape hatch
+- No injection vectors: all parameters are serialized as JSON via httpx
+- Authentication enforced via `HttpSession` headers on all requests
+
+### Production-Ready Recommendation
+**YES** — Production-ready.
+
+All 16 acceptance criteria pass. No Critical or High severity bugs found. The three Low-severity observations (O1-O3) are test coverage improvements that do not affect runtime correctness. The implementation is clean, well-structured, and follows project conventions.
 
 ## Deployment
 _To be added by /deploy_
