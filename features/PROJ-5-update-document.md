@@ -1,6 +1,6 @@
 # PROJ-5: Update Document
 
-## Status: Partially Implemented
+## Status: QA Passed
 **Created:** 2026-03-06
 **Last Updated:** 2026-03-06
 
@@ -56,7 +56,59 @@
 _To be added by /architecture_
 
 ## QA Test Results
-_To be added by /qa_
+**Tested:** 2026-03-07
+**Tester:** QA Engineer (Claude)
+**Branch:** master (commit 31e67ec)
+
+### Environment
+- Python 3.13.12, pytest 9.0.2, respx 0.22.0, mypy (strict), ruff
+- Full test suite: **340 passed**, 0 failed
+- Mypy: **Success, no issues found** (38 source files)
+- Coverage for `mixins/documents.py`: **94%** (10 missed lines are in unrelated `list_documents` filter branches)
+
+### Acceptance Criteria Results
+
+| # | Criterion | Result | Evidence |
+|---|-----------|--------|----------|
+| AC1 | `update_document` sends PATCH `/documents/{id}/` and returns `Document` | **PASS** | Code line 466; `test_update_document` |
+| AC2 | Accepts all specified keyword-only fields (`title`, `content`, `date`, `correspondent`, `document_type`, `storage_path`, `tags`, `asn`, `custom_fields`, `owner`, `set_permissions`) | **PASS** | Method signature lines 400-415 |
+| AC3 | Only explicitly passed fields (not `None`) included in payload | **PASS** | `test_update_document_owner_and_permissions_not_sent_when_omitted` |
+| AC4 | `correspondent`, `document_type`, `storage_path` accept int ID or string name | **PASS** | `test_update_document_with_correspondent_name`, `test_update_document_document_type_with_name_resolution`, `test_update_document_storage_path_with_name_resolution` |
+| AC5 | Passing `0` clears `correspondent`/`document_type`/`storage_path` | **PASS** | `test_update_document_correspondent_zero_clears`; resolver returns int 0 directly |
+| AC6 | `tags` accepts list of int/str, full replacement (not merge) | **PASS** | `test_update_document_tags_with_name_resolution` |
+| AC7 | `date` sent as `created` in payload | **PASS** | `test_update_document_date_mapped_to_created` |
+| AC8 | `asn` sent as `archive_serial_number` | **PASS** | `test_update_document_asn_mapped_to_archive_serial_number` |
+| AC9 | `custom_fields` accepts list of dicts, replaces existing | **PASS** | `test_update_document_custom_fields_sent_in_payload` |
+| AC10 | Returned object is validated `Document` instance | **PASS** | `Document.model_validate(resp.json())` at line 467 |
+| AC11 | `owner` accepts numeric user ID | **PASS** | `test_update_document_with_owner` |
+| AC12 | `set_permissions` accepts `SetPermissions` model | **PASS** | `test_update_document_with_set_permissions` |
+| AC13 | Raises `NotFoundError` on HTTP 404 | **PASS** | `test_update_document_not_found` |
+| AC14 | Available on `SyncPaperlessClient` with same signature | **PASS** | `sync_mixins/documents.py` lines 119-148; `test_sync_update_document` |
+
+### Edge Cases
+
+| Edge Case | Result | Evidence |
+|-----------|--------|----------|
+| No kwargs sends empty PATCH payload | **PASS** | `test_update_document_empty_kwargs_sends_empty_body` |
+| `correspondent=0` not treated as falsy | **PASS** | `test_update_document_correspondent_zero_clears` |
+| Nonexistent tag name raises resolver error before HTTP | **PASS** | `test_update_document_nonexistent_tag_name_raises_resolver_error` |
+| Document ID not found raises `NotFoundError` | **PASS** | `test_update_document_not_found` |
+
+### Regression Testing
+- Full test suite (340 tests): all passing
+- Type checking (mypy strict): clean
+- Related features (PROJ-1 HTTP core, PROJ-2 resolver, PROJ-4 get_document): no regressions
+
+### Bugs Found
+**None.**
+
+### Test Coverage Observations (non-blocking)
+- No dedicated test for `update_document(id, content="...")` — the `content` field follows the identical pattern as `title` (simple string pass-through), so this is cosmetic only.
+- No dedicated tests for `document_type=0` or `storage_path=0` clearing — same code path as `correspondent=0` (resolver returns int directly).
+- Ruff warnings exist in `scripts/cli.py` and test files (unused imports, line length) but are pre-existing and unrelated to PROJ-5.
+
+### Production-Ready Decision
+**READY** — All 14 acceptance criteria pass, all documented edge cases pass, no bugs found, no regressions. Zero Critical or High issues.
 
 ## Deployment
 _To be added by /deploy_
