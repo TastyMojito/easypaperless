@@ -9,24 +9,66 @@ from __future__ import annotations
 import asyncio
 import threading
 from collections.abc import Coroutine
-from datetime import date, datetime
-from pathlib import Path
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
+
+from easypaperless._internal.sync_mixins import (
+    SyncCorrespondentsMixin,
+    SyncCustomFieldsMixin,
+    SyncDocumentBulkMixin,
+    SyncDocumentsMixin,
+    SyncDocumentTypesMixin,
+    SyncNonDocumentBulkMixin,
+    SyncNotesMixin,
+    SyncStoragePathsMixin,
+    SyncTagsMixin,
+    SyncUploadMixin,
+)
+from easypaperless.client import PaperlessClient
 
 _T = TypeVar("_T")
 
-from easypaperless.client import PaperlessClient
-from easypaperless.models._base import MatchingAlgorithm
-from easypaperless.models.correspondents import Correspondent
-from easypaperless.models.custom_fields import CustomField
-from easypaperless.models.document_types import DocumentType
-from easypaperless.models.documents import Document, DocumentMetadata, DocumentNote
-from easypaperless.models.permissions import SetPermissions
-from easypaperless.models.storage_paths import StoragePath
-from easypaperless.models.tags import Tag
+
+class _SyncCore:
+    """Background event loop, _run() helper, and context manager."""
+
+    def __init__(self, url: str, api_key: str, **kwargs: Any) -> None:
+        self._loop = asyncio.new_event_loop()
+        self._thread = threading.Thread(target=self._loop.run_forever, daemon=True)
+        self._thread.start()
+        self._async_client = PaperlessClient(url, api_key, **kwargs)
+
+    def _run(self, coro: Coroutine[Any, Any, _T]) -> _T:
+        """Submit a coroutine to the background event loop and block until done."""
+        future = asyncio.run_coroutine_threadsafe(coro, self._loop)
+        return future.result()
+
+    def close(self) -> None:
+        """Close the underlying HTTP connection pool and stop the event loop."""
+        self._run(self._async_client.close())
+        self._loop.call_soon_threadsafe(self._loop.stop)
+        self._thread.join()
+        self._loop.close()
+
+    def __enter__(self) -> SyncPaperlessClient:
+        return self  # type: ignore[return-value]
+
+    def __exit__(self, *args: Any) -> None:
+        self.close()
 
 
-class SyncPaperlessClient:
+class SyncPaperlessClient(
+    SyncDocumentsMixin,
+    SyncNotesMixin,
+    SyncUploadMixin,
+    SyncDocumentBulkMixin,
+    SyncNonDocumentBulkMixin,
+    SyncTagsMixin,
+    SyncCorrespondentsMixin,
+    SyncDocumentTypesMixin,
+    SyncStoragePathsMixin,
+    SyncCustomFieldsMixin,
+    _SyncCore,
+):
     """Synchronous interface to paperless-ngx.
 
     Exposes the same methods as
@@ -64,628 +106,10 @@ class SyncPaperlessClient:
                 :class:`~easypaperless.client.PaperlessClient` (e.g.
                 ``poll_interval``, ``poll_timeout``).
         """
-        self._loop = asyncio.new_event_loop()
-        self._thread = threading.Thread(target=self._loop.run_forever, daemon=True)
-        self._thread.start()
-        self._async_client = PaperlessClient(url, api_key, **kwargs)
-
-    def _run(self, coro: Coroutine[Any, Any, _T]) -> _T:
-        """Submit a coroutine to the background event loop and block until done."""
-        future = asyncio.run_coroutine_threadsafe(coro, self._loop)
-        return future.result()
-
-    def close(self) -> None:
-        """Close the underlying HTTP connection pool and stop the event loop.
-
-        Called automatically when used as a context manager.
-        """
-        self._run(self._async_client.close())
-        self._loop.call_soon_threadsafe(self._loop.stop)
-        self._thread.join()
-        self._loop.close()
+        super().__init__(url, api_key, **kwargs)
 
     def __enter__(self) -> SyncPaperlessClient:
         return self
 
     def __exit__(self, *args: Any) -> None:
         self.close()
-
-    # ------------------------------------------------------------------
-    # Documents
-    # ------------------------------------------------------------------
-
-    def get_document(self, id: int, *, include_metadata: bool = False) -> Document:
-        return self._run(self._async_client.get_document(id, include_metadata=include_metadata))
-
-    def get_document_metadata(self, id: int) -> DocumentMetadata:
-        return self._run(self._async_client.get_document_metadata(id))
-
-    def list_documents(
-        self,
-        *,
-        search: str | None = None,
-        search_mode: str = "title_or_text",
-        ids: list[int] | None = None,
-        tags: list[int | str] | None = None,
-        any_tags: list[int | str] | None = None,
-        exclude_tags: list[int | str] | None = None,
-        correspondent: int | str | None = None,
-        any_correspondent: list[int | str] | None = None,
-        exclude_correspondents: list[int | str] | None = None,
-        document_type: int | str | None = None,
-        any_document_type: list[int | str] | None = None,
-        exclude_document_types: list[int | str] | None = None,
-        storage_path: int | str | None = None,
-        any_storage_paths: list[int | str] | None = None,
-        exclude_storage_paths: list[int | str] | None = None,
-        owner: int | None = None,
-        exclude_owners: list[int] | None = None,
-        custom_fields: list[int | str] | None = None,
-        any_custom_fields: list[int | str] | None = None,
-        exclude_custom_fields: list[int | str] | None = None,
-        custom_field_query: list[Any] | None = None,
-        archive_serial_number: int | None = None,
-        archive_serial_number_from: int | None = None,
-        archive_serial_number_till: int | None = None,
-        created_after: date | str | None = None,
-        created_before: date | str | None = None,
-        added_after: date | datetime | str | None = None,
-        added_from: date | datetime | str | None = None,
-        added_before: date | datetime | str | None = None,
-        added_until: date | datetime | str | None = None,
-        modified_after: date | datetime | str | None = None,
-        modified_from: date | datetime | str | None = None,
-        modified_before: date | datetime | str | None = None,
-        modified_until: date | datetime | str | None = None,
-        checksum: str | None = None,
-        page_size: int = 25,
-        page: int | None = None,
-        ordering: str | None = None,
-        descending: bool = False,
-        max_results: int | None = None,
-        on_page: Callable[[int, int | None], None] | None = None,
-    ) -> list[Document]:
-        return self._run(self._async_client.list_documents(
-            search=search,
-            search_mode=search_mode,
-            ids=ids,
-            tags=tags,
-            any_tags=any_tags,
-            exclude_tags=exclude_tags,
-            correspondent=correspondent,
-            any_correspondent=any_correspondent,
-            exclude_correspondents=exclude_correspondents,
-            document_type=document_type,
-            any_document_type=any_document_type,
-            exclude_document_types=exclude_document_types,
-            storage_path=storage_path,
-            any_storage_paths=any_storage_paths,
-            exclude_storage_paths=exclude_storage_paths,
-            owner=owner,
-            exclude_owners=exclude_owners,
-            custom_fields=custom_fields,
-            any_custom_fields=any_custom_fields,
-            exclude_custom_fields=exclude_custom_fields,
-            custom_field_query=custom_field_query,
-            archive_serial_number=archive_serial_number,
-            archive_serial_number_from=archive_serial_number_from,
-            archive_serial_number_till=archive_serial_number_till,
-            created_after=created_after,
-            created_before=created_before,
-            added_after=added_after,
-            added_from=added_from,
-            added_before=added_before,
-            added_until=added_until,
-            modified_after=modified_after,
-            modified_from=modified_from,
-            modified_before=modified_before,
-            modified_until=modified_until,
-            checksum=checksum,
-            page_size=page_size,
-            page=page,
-            ordering=ordering,
-            descending=descending,
-            max_results=max_results,
-            on_page=on_page,
-        ))
-
-    def update_document(
-        self,
-        id: int,
-        *,
-        title: str | None = None,
-        content: str | None = None,
-        date: str | None = None,
-        correspondent: int | str | None = None,
-        document_type: int | str | None = None,
-        storage_path: int | str | None = None,
-        tags: list[int | str] | None = None,
-        asn: int | None = None,
-        custom_fields: list[dict[str, Any]] | None = None,
-        owner: int | None = None,
-        set_permissions: SetPermissions | None = None,
-    ) -> Document:
-        return self._run(self._async_client.update_document(
-            id,
-            title=title,
-            content=content,
-            date=date,
-            correspondent=correspondent,
-            document_type=document_type,
-            storage_path=storage_path,
-            tags=tags,
-            asn=asn,
-            custom_fields=custom_fields,
-            owner=owner,
-            set_permissions=set_permissions,
-        ))
-
-    def delete_document(self, id: int) -> None:
-        return self._run(self._async_client.delete_document(id))
-
-    def download_document(self, id: int, *, original: bool = False) -> bytes:
-        return self._run(self._async_client.download_document(id, original=original))
-
-    # ------------------------------------------------------------------
-    # Notes
-    # ------------------------------------------------------------------
-
-    def get_notes(self, document_id: int) -> list[DocumentNote]:
-        return self._run(self._async_client.get_notes(document_id))
-
-    def create_note(self, document_id: int, *, note: str) -> DocumentNote:
-        return self._run(self._async_client.create_note(document_id, note=note))
-
-    def delete_note(self, document_id: int, note_id: int) -> None:
-        return self._run(self._async_client.delete_note(document_id, note_id))
-
-    # ------------------------------------------------------------------
-    # Upload
-    # ------------------------------------------------------------------
-
-    def upload_document(
-        self,
-        file: str | Path,
-        *,
-        title: str | None = None,
-        created: str | None = None,
-        correspondent: int | str | None = None,
-        document_type: int | str | None = None,
-        storage_path: int | str | None = None,
-        tags: list[int | str] | None = None,
-        asn: int | None = None,
-        wait: bool = False,
-        poll_interval: float | None = None,
-        poll_timeout: float | None = None,
-    ) -> str | Document:
-        return self._run(self._async_client.upload_document(
-            file,
-            title=title,
-            created=created,
-            correspondent=correspondent,
-            document_type=document_type,
-            storage_path=storage_path,
-            tags=tags,
-            asn=asn,
-            wait=wait,
-            poll_interval=poll_interval,
-            poll_timeout=poll_timeout,
-        ))
-
-    # ------------------------------------------------------------------
-    # Bulk operations
-    # ------------------------------------------------------------------
-
-    def bulk_edit(self, document_ids: list[int], method: str, **parameters: Any) -> None:
-        return self._run(self._async_client.bulk_edit(document_ids, method, **parameters))
-
-    def bulk_add_tag(self, document_ids: list[int], tag: int | str) -> None:
-        return self._run(self._async_client.bulk_add_tag(document_ids, tag))
-
-    def bulk_remove_tag(self, document_ids: list[int], tag: int | str) -> None:
-        return self._run(self._async_client.bulk_remove_tag(document_ids, tag))
-
-    def bulk_modify_tags(
-        self,
-        document_ids: list[int],
-        *,
-        add_tags: list[int | str] | None = None,
-        remove_tags: list[int | str] | None = None,
-    ) -> None:
-        return self._run(self._async_client.bulk_modify_tags(
-            document_ids, add_tags=add_tags, remove_tags=remove_tags
-        ))
-
-    def bulk_delete(self, document_ids: list[int]) -> None:
-        return self._run(self._async_client.bulk_delete(document_ids))
-
-    def bulk_set_correspondent(
-        self, document_ids: list[int], correspondent: int | str | None
-    ) -> None:
-        return self._run(
-            self._async_client.bulk_set_correspondent(document_ids, correspondent)
-        )
-
-    def bulk_set_document_type(
-        self, document_ids: list[int], document_type: int | str | None
-    ) -> None:
-        return self._run(
-            self._async_client.bulk_set_document_type(document_ids, document_type)
-        )
-
-    def bulk_set_storage_path(
-        self, document_ids: list[int], storage_path: int | str | None
-    ) -> None:
-        return self._run(
-            self._async_client.bulk_set_storage_path(document_ids, storage_path)
-        )
-
-    def bulk_modify_custom_fields(
-        self,
-        document_ids: list[int],
-        *,
-        add_fields: list[dict[str, Any]] | None = None,
-        remove_fields: list[int] | None = None,
-    ) -> None:
-        return self._run(
-            self._async_client.bulk_modify_custom_fields(
-                document_ids, add_fields=add_fields, remove_fields=remove_fields
-            )
-        )
-
-    def bulk_set_permissions(
-        self,
-        document_ids: list[int],
-        *,
-        set_permissions: SetPermissions | None = None,
-        owner: int | None = None,
-        merge: bool = False,
-    ) -> None:
-        return self._run(
-            self._async_client.bulk_set_permissions(
-                document_ids,
-                set_permissions=set_permissions,
-                owner=owner,
-                merge=merge,
-            )
-        )
-
-    def bulk_edit_objects(
-        self,
-        object_type: str,
-        object_ids: list[int],
-        operation: str,
-        **parameters: Any,
-    ) -> None:
-        return self._run(
-            self._async_client.bulk_edit_objects(object_type, object_ids, operation, **parameters)
-        )
-
-    # ------------------------------------------------------------------
-    # Tags
-    # ------------------------------------------------------------------
-
-    def list_tags(
-        self,
-        *,
-        ids: list[int] | None = None,
-        name_contains: str | None = None,
-        page: int | None = None,
-        page_size: int | None = None,
-        ordering: str | None = None,
-        descending: bool = False,
-    ) -> list[Tag]:
-        return self._run(self._async_client.list_tags(
-            ids=ids,
-            name_contains=name_contains,
-            page=page,
-            page_size=page_size,
-            ordering=ordering,
-            descending=descending,
-        ))
-
-    def get_tag(self, id: int) -> Tag:
-        return self._run(self._async_client.get_tag(id))
-
-    def create_tag(
-        self,
-        *,
-        name: str,
-        color: str | None = None,
-        is_inbox_tag: bool | None = None,
-        match: str | None = None,
-        matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
-        parent: int | None = None,
-        owner: int | None = None,
-        set_permissions: SetPermissions | None = None,
-    ) -> Tag:
-        return self._run(self._async_client.create_tag(
-            name=name,
-            color=color,
-            is_inbox_tag=is_inbox_tag,
-            match=match,
-            matching_algorithm=matching_algorithm,
-            is_insensitive=is_insensitive,
-            parent=parent,
-            owner=owner,
-            set_permissions=set_permissions,
-        ))
-
-    def update_tag(
-        self,
-        id: int,
-        *,
-        name: str | None = None,
-        color: str | None = None,
-        is_inbox_tag: bool | None = None,
-        match: str | None = None,
-        matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
-        parent: int | None = None,
-    ) -> Tag:
-        return self._run(self._async_client.update_tag(
-            id,
-            name=name,
-            color=color,
-            is_inbox_tag=is_inbox_tag,
-            match=match,
-            matching_algorithm=matching_algorithm,
-            is_insensitive=is_insensitive,
-            parent=parent,
-        ))
-
-    def delete_tag(self, id: int) -> None:
-        return self._run(self._async_client.delete_tag(id))
-
-    # ------------------------------------------------------------------
-    # Correspondents
-    # ------------------------------------------------------------------
-
-    def list_correspondents(
-        self,
-        *,
-        ids: list[int] | None = None,
-        name_contains: str | None = None,
-        page: int | None = None,
-        page_size: int | None = None,
-        ordering: str | None = None,
-        descending: bool = False,
-    ) -> list[Correspondent]:
-        return self._run(self._async_client.list_correspondents(
-            ids=ids,
-            name_contains=name_contains,
-            page=page,
-            page_size=page_size,
-            ordering=ordering,
-            descending=descending,
-        ))
-
-    def get_correspondent(self, id: int) -> Correspondent:
-        return self._run(self._async_client.get_correspondent(id))
-
-    def create_correspondent(
-        self,
-        *,
-        name: str,
-        match: str | None = None,
-        matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
-        owner: int | None = None,
-        set_permissions: SetPermissions | None = None,
-    ) -> Correspondent:
-        return self._run(self._async_client.create_correspondent(
-            name=name,
-            match=match,
-            matching_algorithm=matching_algorithm,
-            is_insensitive=is_insensitive,
-            owner=owner,
-            set_permissions=set_permissions,
-        ))
-
-    def update_correspondent(
-        self,
-        id: int,
-        *,
-        name: str | None = None,
-        match: str | None = None,
-        matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
-    ) -> Correspondent:
-        return self._run(self._async_client.update_correspondent(
-            id,
-            name=name,
-            match=match,
-            matching_algorithm=matching_algorithm,
-            is_insensitive=is_insensitive,
-        ))
-
-    def delete_correspondent(self, id: int) -> None:
-        return self._run(self._async_client.delete_correspondent(id))
-
-    # ------------------------------------------------------------------
-    # Document Types
-    # ------------------------------------------------------------------
-
-    def list_document_types(
-        self,
-        *,
-        ids: list[int] | None = None,
-        name_contains: str | None = None,
-        page: int | None = None,
-        page_size: int | None = None,
-        ordering: str | None = None,
-        descending: bool = False,
-    ) -> list[DocumentType]:
-        return self._run(self._async_client.list_document_types(
-            ids=ids,
-            name_contains=name_contains,
-            page=page,
-            page_size=page_size,
-            ordering=ordering,
-            descending=descending,
-        ))
-
-    def get_document_type(self, id: int) -> DocumentType:
-        return self._run(self._async_client.get_document_type(id))
-
-    def create_document_type(
-        self,
-        *,
-        name: str,
-        match: str | None = None,
-        matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
-        owner: int | None = None,
-        set_permissions: SetPermissions | None = None,
-    ) -> DocumentType:
-        return self._run(self._async_client.create_document_type(
-            name=name,
-            match=match,
-            matching_algorithm=matching_algorithm,
-            is_insensitive=is_insensitive,
-            owner=owner,
-            set_permissions=set_permissions,
-        ))
-
-    def update_document_type(
-        self,
-        id: int,
-        *,
-        name: str | None = None,
-        match: str | None = None,
-        matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
-    ) -> DocumentType:
-        return self._run(self._async_client.update_document_type(
-            id,
-            name=name,
-            match=match,
-            matching_algorithm=matching_algorithm,
-            is_insensitive=is_insensitive,
-        ))
-
-    def delete_document_type(self, id: int) -> None:
-        return self._run(self._async_client.delete_document_type(id))
-
-    # ------------------------------------------------------------------
-    # Storage Paths
-    # ------------------------------------------------------------------
-
-    def list_storage_paths(
-        self,
-        *,
-        ids: list[int] | None = None,
-        name_contains: str | None = None,
-        page: int | None = None,
-        page_size: int | None = None,
-        ordering: str | None = None,
-        descending: bool = False,
-    ) -> list[StoragePath]:
-        return self._run(self._async_client.list_storage_paths(
-            ids=ids,
-            name_contains=name_contains,
-            page=page,
-            page_size=page_size,
-            ordering=ordering,
-            descending=descending,
-        ))
-
-    def get_storage_path(self, id: int) -> StoragePath:
-        return self._run(self._async_client.get_storage_path(id))
-
-    def create_storage_path(
-        self,
-        *,
-        name: str,
-        path: str | None = None,
-        match: str | None = None,
-        matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
-        owner: int | None = None,
-        set_permissions: SetPermissions | None = None,
-    ) -> StoragePath:
-        return self._run(self._async_client.create_storage_path(
-            name=name,
-            path=path,
-            match=match,
-            matching_algorithm=matching_algorithm,
-            is_insensitive=is_insensitive,
-            owner=owner,
-            set_permissions=set_permissions,
-        ))
-
-    def update_storage_path(
-        self,
-        id: int,
-        *,
-        name: str | None = None,
-        path: str | None = None,
-        match: str | None = None,
-        matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
-    ) -> StoragePath:
-        return self._run(self._async_client.update_storage_path(
-            id,
-            name=name,
-            path=path,
-            match=match,
-            matching_algorithm=matching_algorithm,
-            is_insensitive=is_insensitive,
-        ))
-
-    def delete_storage_path(self, id: int) -> None:
-        return self._run(self._async_client.delete_storage_path(id))
-
-    # ------------------------------------------------------------------
-    # Custom Fields
-    # ------------------------------------------------------------------
-
-    def list_custom_fields(
-        self,
-        *,
-        page: int | None = None,
-        page_size: int | None = None,
-        ordering: str | None = None,
-        descending: bool = False,
-    ) -> list[CustomField]:
-        return self._run(self._async_client.list_custom_fields(
-            page=page,
-            page_size=page_size,
-            ordering=ordering,
-            descending=descending,
-        ))
-
-    def get_custom_field(self, id: int) -> CustomField:
-        return self._run(self._async_client.get_custom_field(id))
-
-    def create_custom_field(
-        self,
-        *,
-        name: str,
-        data_type: str,
-        extra_data: Any | None = None,
-        owner: int | None = None,
-        set_permissions: SetPermissions | None = None,
-    ) -> CustomField:
-        return self._run(self._async_client.create_custom_field(
-            name=name,
-            data_type=data_type,
-            extra_data=extra_data,
-            owner=owner,
-            set_permissions=set_permissions,
-        ))
-
-    def update_custom_field(
-        self,
-        id: int,
-        *,
-        name: str | None = None,
-        extra_data: Any | None = None,
-    ) -> CustomField:
-        return self._run(self._async_client.update_custom_field(
-            id, name=name, extra_data=extra_data
-        ))
-
-    def delete_custom_field(self, id: int) -> None:
-        return self._run(self._async_client.delete_custom_field(id))
