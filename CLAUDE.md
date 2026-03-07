@@ -15,8 +15,8 @@
 src/
 └── easypaperless/
     ├── __init__.py          # public API: PaperlessClient, SyncPaperlessClient
-    ├── client.py            # async PaperlessClient
-    ├── sync.py              # SyncPaperlessClient (asyncio.run wrapper, no business logic)
+    ├── client.py            # async PaperlessClient (composes from async mixins)
+    ├── sync.py              # SyncPaperlessClient (composes from sync mixins)
     ├── exceptions.py        # custom exception hierarchy
     ├── models/
     │   ├── __init__.py
@@ -29,7 +29,31 @@ src/
     │   └── permissions.py
     └── _internal/
         ├── http.py          # httpx session, auth, request helpers
-        └── resolvers.py     # name-to-ID resolution and caching
+        ├── resolvers.py     # name-to-ID resolution and caching
+        ├── mixins/          # one async mixin per resource group
+        │   ├── __init__.py
+        │   ├── documents.py
+        │   ├── notes.py
+        │   ├── upload.py
+        │   ├── document_bulk.py
+        │   ├── non_document_bulk.py
+        │   ├── tags.py
+        │   ├── correspondents.py
+        │   ├── document_types.py
+        │   ├── storage_paths.py
+        │   └── custom_fields.py
+        └── sync_mixins/     # one sync mixin per resource group (mirrors mixins/)
+            ├── __init__.py
+            ├── documents.py
+            ├── notes.py
+            ├── upload.py
+            ├── document_bulk.py
+            ├── non_document_bulk.py
+            ├── tags.py
+            ├── correspondents.py
+            ├── document_types.py
+            ├── storage_paths.py
+            └── custom_fields.py
 tests/                       # mirrors src/easypaperless/ structure
 features/                    # one spec file per feature (PROJ-X-name.md)
 docs/
@@ -50,10 +74,11 @@ CHANGELOG.md
 ## Key Conventions
 - **Feature IDs:** PROJ-1, PROJ-2, etc. (sequential)
 - **Commits:** `feat(PROJ-X): description`, `fix(PROJ-X): description`
-- **Single Responsibility:** One feature per spec file
+- **Single Responsibility:** One feature per spec file; one resource group per mixin file
 - **No private leakage:** `__init__.py` defines exactly what is public
 - **Human-in-the-loop:** All workflows have user approval checkpoints
 - **naming conventions:** @docs/api-conventions.md
+- **File size:** Keep files small and focused. Split any file that grows beyond ~200 lines into logical sub-modules (e.g. per-resource mixins). Prefer many small files over one large file.
 
 ## Build & Test Commands
 ```bash
