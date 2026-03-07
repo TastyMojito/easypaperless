@@ -95,6 +95,22 @@ async def test_get_document_metadata_no_archive_version(client, mock_router):
     assert meta.archive_metadata is None
 
 
+async def test_get_document_not_found(client, mock_router):
+    mock_router.get("/documents/999/").mock(
+        return_value=Response(404, json={"detail": "Not found."})
+    )
+    with pytest.raises(NotFoundError):
+        await client.get_document(999)
+
+
+async def test_get_document_metadata_not_found(client, mock_router):
+    mock_router.get("/documents/999/metadata/").mock(
+        return_value=Response(404, json={"detail": "Not found."})
+    )
+    with pytest.raises(NotFoundError):
+        await client.get_document_metadata(999)
+
+
 async def test_list_documents(client, mock_router):
     mock_router.get("/documents/").mock(return_value=Response(200, json=DOC_LIST))
     docs = await client.list_documents()
