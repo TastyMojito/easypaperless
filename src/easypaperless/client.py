@@ -8,7 +8,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 from easypaperless._internal.http import HttpSession
-from easypaperless._internal.mixins import (
+from ._internal.mixins import (
     CorrespondentsMixin,
     CustomFieldsMixin,
     DocumentBulkMixin,
@@ -101,7 +101,6 @@ class _ClientCore:
         await self._session.delete(f"/{resource}/{id}/")
         self._resolver.invalidate(resource)
 
-
 class PaperlessClient(
     DocumentsMixin,
     NotesMixin,
@@ -128,6 +127,74 @@ class PaperlessClient(
         async with PaperlessClient(url="http://localhost:8000", api_key="abc") as client:
             docs = await client.list_documents()
     """
+
+    # Explicit assignments so pdoc documents these inherited methods.
+    # Documents
+    list_documents = DocumentsMixin.list_documents
+    get_document = DocumentsMixin.get_document
+    get_document_metadata = DocumentsMixin.get_document_metadata
+    update_document = DocumentsMixin.update_document
+    delete_document = DocumentsMixin.delete_document
+    download_document = DocumentsMixin.download_document
+    # Notes
+    get_notes = NotesMixin.get_notes
+    create_note = NotesMixin.create_note
+    delete_note = NotesMixin.delete_note
+    # Upload
+    upload_document = UploadMixin.upload_document
+    # Document bulk operations
+    bulk_edit = DocumentBulkMixin.bulk_edit
+    bulk_add_tag = DocumentBulkMixin.bulk_add_tag
+    bulk_remove_tag = DocumentBulkMixin.bulk_remove_tag
+    bulk_modify_tags = DocumentBulkMixin.bulk_modify_tags
+    bulk_delete = DocumentBulkMixin.bulk_delete
+    bulk_set_correspondent = DocumentBulkMixin.bulk_set_correspondent
+    bulk_set_document_type = DocumentBulkMixin.bulk_set_document_type
+    bulk_set_storage_path = DocumentBulkMixin.bulk_set_storage_path
+    bulk_modify_custom_fields = DocumentBulkMixin.bulk_modify_custom_fields
+    bulk_set_permissions = DocumentBulkMixin.bulk_set_permissions
+    # Non-document bulk operations
+    bulk_edit_objects = NonDocumentBulkMixin.bulk_edit_objects
+    bulk_delete_tags = NonDocumentBulkMixin.bulk_delete_tags
+    bulk_delete_correspondents = NonDocumentBulkMixin.bulk_delete_correspondents
+    bulk_delete_document_types = NonDocumentBulkMixin.bulk_delete_document_types
+    bulk_delete_storage_paths = NonDocumentBulkMixin.bulk_delete_storage_paths
+    bulk_set_permissions_tags = NonDocumentBulkMixin.bulk_set_permissions_tags
+    bulk_set_permissions_correspondents = NonDocumentBulkMixin.bulk_set_permissions_correspondents
+    bulk_set_permissions_document_types = NonDocumentBulkMixin.bulk_set_permissions_document_types
+    bulk_set_permissions_storage_paths = NonDocumentBulkMixin.bulk_set_permissions_storage_paths
+    # Tags
+    list_tags = TagsMixin.list_tags
+    get_tag = TagsMixin.get_tag
+    create_tag = TagsMixin.create_tag
+    update_tag = TagsMixin.update_tag
+    delete_tag = TagsMixin.delete_tag
+    # Correspondents
+    list_correspondents = CorrespondentsMixin.list_correspondents
+    get_correspondent = CorrespondentsMixin.get_correspondent
+    create_correspondent = CorrespondentsMixin.create_correspondent
+    update_correspondent = CorrespondentsMixin.update_correspondent
+    delete_correspondent = CorrespondentsMixin.delete_correspondent
+    # Document types
+    list_document_types = DocumentTypesMixin.list_document_types
+    get_document_type = DocumentTypesMixin.get_document_type
+    create_document_type = DocumentTypesMixin.create_document_type
+    update_document_type = DocumentTypesMixin.update_document_type
+    delete_document_type = DocumentTypesMixin.delete_document_type
+    # Storage paths
+    list_storage_paths = StoragePathsMixin.list_storage_paths
+    get_storage_path = StoragePathsMixin.get_storage_path
+    create_storage_path = StoragePathsMixin.create_storage_path
+    update_storage_path = StoragePathsMixin.update_storage_path
+    delete_storage_path = StoragePathsMixin.delete_storage_path
+    # Custom fields
+    list_custom_fields = CustomFieldsMixin.list_custom_fields
+    get_custom_field = CustomFieldsMixin.get_custom_field
+    create_custom_field = CustomFieldsMixin.create_custom_field
+    update_custom_field = CustomFieldsMixin.update_custom_field
+    delete_custom_field = CustomFieldsMixin.delete_custom_field
+
+
 
     def __init__(
         self,
@@ -164,3 +231,4 @@ class PaperlessClient(
 
     async def __aexit__(self, *args: Any) -> None:
         await self.close()
+

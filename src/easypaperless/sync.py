@@ -99,6 +99,72 @@ class SyncPaperlessClient(
         directly in those environments.
     """
 
+    # Explicit assignments so pdoc documents these inherited methods.
+    # Documents
+    list_documents = SyncDocumentsMixin.list_documents
+    get_document = SyncDocumentsMixin.get_document
+    get_document_metadata = SyncDocumentsMixin.get_document_metadata
+    update_document = SyncDocumentsMixin.update_document
+    delete_document = SyncDocumentsMixin.delete_document
+    download_document = SyncDocumentsMixin.download_document
+    # Notes
+    get_notes = SyncNotesMixin.get_notes
+    create_note = SyncNotesMixin.create_note
+    delete_note = SyncNotesMixin.delete_note
+    # Upload
+    upload_document = SyncUploadMixin.upload_document
+    # Document bulk operations
+    bulk_edit = SyncDocumentBulkMixin.bulk_edit
+    bulk_add_tag = SyncDocumentBulkMixin.bulk_add_tag
+    bulk_remove_tag = SyncDocumentBulkMixin.bulk_remove_tag
+    bulk_modify_tags = SyncDocumentBulkMixin.bulk_modify_tags
+    bulk_delete = SyncDocumentBulkMixin.bulk_delete
+    bulk_set_correspondent = SyncDocumentBulkMixin.bulk_set_correspondent
+    bulk_set_document_type = SyncDocumentBulkMixin.bulk_set_document_type
+    bulk_set_storage_path = SyncDocumentBulkMixin.bulk_set_storage_path
+    bulk_modify_custom_fields = SyncDocumentBulkMixin.bulk_modify_custom_fields
+    bulk_set_permissions = SyncDocumentBulkMixin.bulk_set_permissions
+    # Non-document bulk operations
+    bulk_edit_objects = SyncNonDocumentBulkMixin.bulk_edit_objects
+    bulk_delete_tags = SyncNonDocumentBulkMixin.bulk_delete_tags
+    bulk_delete_correspondents = SyncNonDocumentBulkMixin.bulk_delete_correspondents
+    bulk_delete_document_types = SyncNonDocumentBulkMixin.bulk_delete_document_types
+    bulk_delete_storage_paths = SyncNonDocumentBulkMixin.bulk_delete_storage_paths
+    bulk_set_permissions_tags = SyncNonDocumentBulkMixin.bulk_set_permissions_tags
+    bulk_set_permissions_correspondents = SyncNonDocumentBulkMixin.bulk_set_permissions_correspondents
+    bulk_set_permissions_document_types = SyncNonDocumentBulkMixin.bulk_set_permissions_document_types
+    bulk_set_permissions_storage_paths = SyncNonDocumentBulkMixin.bulk_set_permissions_storage_paths
+    # Tags
+    list_tags = SyncTagsMixin.list_tags
+    get_tag = SyncTagsMixin.get_tag
+    create_tag = SyncTagsMixin.create_tag
+    update_tag = SyncTagsMixin.update_tag
+    delete_tag = SyncTagsMixin.delete_tag
+    # Correspondents
+    list_correspondents = SyncCorrespondentsMixin.list_correspondents
+    get_correspondent = SyncCorrespondentsMixin.get_correspondent
+    create_correspondent = SyncCorrespondentsMixin.create_correspondent
+    update_correspondent = SyncCorrespondentsMixin.update_correspondent
+    delete_correspondent = SyncCorrespondentsMixin.delete_correspondent
+    # Document types
+    list_document_types = SyncDocumentTypesMixin.list_document_types
+    get_document_type = SyncDocumentTypesMixin.get_document_type
+    create_document_type = SyncDocumentTypesMixin.create_document_type
+    update_document_type = SyncDocumentTypesMixin.update_document_type
+    delete_document_type = SyncDocumentTypesMixin.delete_document_type
+    # Storage paths
+    list_storage_paths = SyncStoragePathsMixin.list_storage_paths
+    get_storage_path = SyncStoragePathsMixin.get_storage_path
+    create_storage_path = SyncStoragePathsMixin.create_storage_path
+    update_storage_path = SyncStoragePathsMixin.update_storage_path
+    delete_storage_path = SyncStoragePathsMixin.delete_storage_path
+    # Custom fields
+    list_custom_fields = SyncCustomFieldsMixin.list_custom_fields
+    get_custom_field = SyncCustomFieldsMixin.get_custom_field
+    create_custom_field = SyncCustomFieldsMixin.create_custom_field
+    update_custom_field = SyncCustomFieldsMixin.update_custom_field
+    delete_custom_field = SyncCustomFieldsMixin.delete_custom_field
+
     def __init__(self, url: str, api_key: str, **kwargs: Any) -> None:
         """Create a synchronous paperless-ngx client.
 
@@ -118,3 +184,4 @@ class SyncPaperlessClient(
 
     def __exit__(self, *args: Any) -> None:
         self.close()
+
