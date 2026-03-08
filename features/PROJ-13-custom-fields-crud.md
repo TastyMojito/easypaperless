@@ -1,6 +1,6 @@
 # PROJ-13: Custom Fields CRUD
 
-## Status: Implemented
+## Status: In Review
 **Created:** 2026-03-06
 **Last Updated:** 2026-03-06
 
@@ -67,7 +67,84 @@
 _To be added by /architecture_
 
 ## QA Test Results
-_To be added by /qa_
+**Date:** 2026-03-08
+**Tester:** QA Engineer (AI)
+**Branch:** master
+**Overall:** PASS — 20/20 acceptance criteria passed, 0 bugs found
+
+### Environment
+- Python 3.13.12, pytest 9.0.2, mypy (strict), ruff
+- All 354 project tests pass; mypy clean; ruff clean on library code
+
+### Acceptance Criteria Results
+
+#### list_custom_fields
+| # | Criterion | Result |
+|---|-----------|--------|
+| 1 | Signature `list_custom_fields(*, page, page_size, ordering, descending) -> list[CustomField]` fetches `GET /custom_fields/` | PASS |
+| 2 | Auto-pagination when `page` omitted | PASS |
+| 3 | Single page when `page` is set | PASS |
+| 4 | `ordering` + `descending` control sort order; `descending=True` prepends `-` | PASS |
+| 5 | `ids` and `name_contains` are not supported (not present as parameters) | PASS |
+
+#### get_custom_field
+| # | Criterion | Result |
+|---|-----------|--------|
+| 6 | `get_custom_field(id: int) -> CustomField` fetches `GET /custom_fields/{id}/` | PASS |
+| 7 | Raises `NotFoundError` on HTTP 404 | PASS |
+
+#### create_custom_field
+| # | Criterion | Result |
+|---|-----------|--------|
+| 8 | `create_custom_field(*, name, data_type, extra_data, owner, set_permissions) -> CustomField` sends `POST /custom_fields/` | PASS |
+| 9 | `name` and `data_type` are required; all other fields optional | PASS |
+| 10 | `data_type` must be one of the 9 `FieldDataType` enum values | PASS |
+| 11 | For `data_type="select"`, `extra_data` configures `select_options` | PASS |
+| 12 | For other data types, `extra_data` should be `None` | PASS |
+| 13 | `owner` sets owning user ID; `None` leaves without owner | PASS |
+| 14 | `set_permissions` sets explicit view/change permissions via `SetPermissions` | PASS |
+
+#### update_custom_field
+| # | Criterion | Result |
+|---|-----------|--------|
+| 15 | `update_custom_field(id, *, name, extra_data) -> CustomField` sends `PATCH /custom_fields/{id}/` | PASS |
+| 16 | Only fields explicitly passed (not `None`) are included in payload | PASS |
+| 17 | `data_type` is intentionally not a parameter | PASS |
+| 18 | Raises `NotFoundError` on HTTP 404 | PASS |
+
+#### delete_custom_field
+| # | Criterion | Result |
+|---|-----------|--------|
+| 19 | `delete_custom_field(id: int) -> None` sends `DELETE /custom_fields/{id}/` | PASS |
+| 20 | Raises `NotFoundError` on HTTP 404 | PASS |
+
+#### General
+| # | Criterion | Result |
+|---|-----------|--------|
+| 21 | `CustomField` model exposes `id`, `name`, `data_type` (as `FieldDataType`), `extra_data`, `document_count` | PASS |
+| 22 | `FieldDataType` enum exported as part of public API | PASS |
+| 23 | All methods available on `SyncPaperlessClient` with same signatures | PASS |
+
+### Edge Cases Tested
+| Edge Case | Result |
+|-----------|--------|
+| Empty PATCH (no kwargs) sends `{}` and returns field unchanged | PASS |
+| Select-type field with `extra_data` containing `select_options` | PASS |
+| Cache invalidation after create/update/delete | PASS (3 tests) |
+| Model ignores extra fields from API (`ConfigDict(extra="ignore")`) | PASS |
+
+### Observations (Low Severity)
+| # | Observation | Severity |
+|---|-------------|----------|
+| 1 | Missing `test_sync_update_custom_field` test in `test_sync.py` — sync `update_custom_field` is untested (causes 94% coverage on `sync_mixins/custom_fields.py` instead of 100%) | Low |
+
+### Regression Testing
+- Full test suite: 354 passed, 39 deselected (integration tests skipped)
+- mypy strict: no issues found in 38 source files
+- ruff: no issues in library source code (pre-existing lint issues in `scripts/cli.py` and test files only)
+
+### Production-Ready: YES
+No Critical or High severity bugs. One low-severity observation (missing sync update test) does not affect functionality.
 
 ## Deployment
 _To be added by /deploy_

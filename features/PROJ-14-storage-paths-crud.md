@@ -1,6 +1,6 @@
 # PROJ-14: Storage Paths CRUD
 
-## Status: Implemented
+## Status: In Review
 **Created:** 2026-03-06
 **Last Updated:** 2026-03-06
 
@@ -64,7 +64,71 @@
 _To be added by /architecture_
 
 ## QA Test Results
-_To be added by /qa_
+**Date:** 2026-03-08
+**Tester:** QA Engineer (Claude)
+**Verdict:** NOT READY — 1 low-severity observation
+
+### Acceptance Criteria Results
+
+#### list_storage_paths (6/6 passed)
+- [x] Signature matches spec; fetches `GET /storage_paths/`; returns validated `StoragePath` instances — `test_list_storage_paths`
+- [x] `ids` filters via `id__in` query param — `test_list_storage_paths_ids`
+- [x] `name_contains` uses `name__icontains` — `test_list_storage_paths_name_contains`
+- [x] Auto-pagination when `page` is omitted — verified via `_list_resource` shared helper (uses `get_all_pages`)
+- [x] Single page when `page` is set — `test_list_storage_paths_page_size_ordering` (page=2)
+- [x] `ordering` + `descending` control sort; `descending=True` prepends `-` — `test_list_storage_paths_page_size_ordering`
+
+#### get_storage_path (2/2 passed)
+- [x] Fetches `GET /storage_paths/{id}/` and returns validated `StoragePath` — `test_get_storage_path`
+- [x] Raises `NotFoundError` on 404 — `test_get_storage_path_not_found`
+
+#### create_storage_path (5/5 passed)
+- [x] Sends `POST /storage_paths/` with correct payload and returns `StoragePath` — `test_create_storage_path`
+- [x] `name` is required; all other fields optional — verified via signature (keyword-only, `name: str`)
+- [x] `path` template string supported — `test_create_storage_path_all_params` sends `path="{created_year}/{correspondent}/{title}"`
+- [x] `matching_algorithm` uses `MatchingAlgorithm` IntEnum (values 0-6) — `test_create_storage_path_all_params`
+- [x] `owner` and `set_permissions` sent in payload — `test_create_storage_path_all_params` verifies body contains both
+
+#### update_storage_path (4/4 passed)
+- [x] Sends `PATCH /storage_paths/{id}/` and returns updated `StoragePath` — `test_update_storage_path`
+- [x] Only non-`None` fields included in payload — `test_update_storage_path_only_sends_provided_fields`
+- [x] Raises `NotFoundError` on 404 — `test_update_storage_path_not_found`
+- [x] `owner`/`set_permissions` intentionally excluded (consistent with other update methods) — verified in signature
+
+#### delete_storage_path (2/2 passed)
+- [x] Sends `DELETE /storage_paths/{id}/` and returns `None` — `test_delete_storage_path`
+- [x] Raises `NotFoundError` on 404 — `test_delete_storage_path_not_found`
+
+#### General (2/2 passed)
+- [x] `StoragePath` model exposes all required fields: `id`, `name`, `slug`, `path`, `match`, `matching_algorithm`, `is_insensitive`, `document_count`, `owner`, `user_can_change` — `test_storage_path_model_all_fields`
+- [x] All methods available on `SyncPaperlessClient` — `test_sync_list/get/create/delete_storage_path` all pass
+
+### Edge Cases Tested
+- [x] Empty PATCH payload — `test_update_storage_path_empty_patch` sends `{}`, server returns unchanged
+- [x] Updating only `path` field — `test_update_storage_path_path_field` verifies only `{"path": "{title}"}` sent
+- [x] Cache invalidation on create — `test_create_storage_path_invalidates_cache`
+- [x] Cache invalidation on update — `test_update_storage_path_invalidates_cache`
+- [x] Cache invalidation on delete — `test_delete_storage_path_invalidates_cache`
+
+### Code Quality
+- **mypy:** 0 errors (strict mode, all 3 source files)
+- **ruff:** 0 violations
+- **Test coverage:** 98% (60 statements, 1 miss — sync `update_storage_path` uncovered)
+- **Full test suite:** 354 passed, 0 failed
+
+### Observations
+
+| # | Severity | Description |
+|---|----------|-------------|
+| 1 | Low | Missing `test_sync_update_storage_path` in `tests/test_sync.py`. All other sync methods (list, get, create, delete) have sync wrapper tests, but `update_storage_path` does not. This leaves line 77 of `sync_mixins/storage_paths.py` uncovered (94% vs 100% on the other files). |
+
+### Regression Testing
+- Full test suite (354 tests) passes with no failures
+- Related CRUD features (PROJ-10 Tags, PROJ-11 Correspondents, PROJ-12 Document Types) unaffected
+- Shared `_ClientCore` helpers (`_list_resource`, `_create_resource`, `_update_resource`, `_delete_resource`) work correctly across all resources
+
+### Recommendation
+**NOT READY** — 1 low-severity observation (missing sync update test) should be fixed for consistency with all other CRUD resources before promoting to QA Passed. No critical or high bugs.
 
 ## Deployment
 _To be added by /deploy_

@@ -52,7 +52,69 @@
 _To be added by /architecture_
 
 ## QA Test Results
-_To be added by /qa_
+**Date:** 2026-03-08
+**Tester:** QA Engineer (Claude)
+**Result:** PASS — Production-ready
+
+### Acceptance Criteria Results
+
+#### Low-level primitive
+- [x] **AC-1**: `bulk_edit_objects()` sends `POST /bulk_edit_objects/` with correct payload structure `{"objects": ..., "object_type": ..., "operation": ..., ...parameters}` and returns `None`. **PASS** — Verified in code (`non_document_bulk.py` lines 38-44) and test `test_bulk_edit_objects`.
+- [x] **AC-2**: Valid `object_type` values: `"tags"`, `"correspondents"`, `"document_types"`, `"storage_paths"`. Custom fields not supported. **PASS** — All four types used by high-level helpers; method accepts any string and forwards to API.
+- [x] **AC-3**: Supported operations `"delete"` and `"set_permissions"` with correct parameter handling (`permissions` object, optional `owner`, optional `merge` with default `False`). **PASS** — Verified in both delete helpers and set_permissions helpers. `merge` defaults to `False`, `permissions` is serialised via `model_dump()`, `owner` is optional.
+- [x] **AC-4**: Invalid `object_type` or `operation` strings are forwarded as-is; server error propagates. **PASS** — No client-side validation; raw strings pass through to the API payload.
+
+#### High-level helpers
+- [x] **AC-5**: `bulk_delete_tags(ids)` implemented. **PASS** — Delegates to `bulk_edit_objects("tags", ids, "delete")`.
+- [x] **AC-6**: `bulk_delete_correspondents(ids)` implemented. **PASS** — Delegates to `bulk_edit_objects("correspondents", ids, "delete")`.
+- [x] **AC-7**: `bulk_delete_document_types(ids)` implemented. **PASS** — Delegates to `bulk_edit_objects("document_types", ids, "delete")`.
+- [x] **AC-8**: `bulk_delete_storage_paths(ids)` implemented. **PASS** — Delegates to `bulk_edit_objects("storage_paths", ids, "delete")`.
+- [x] **AC-9**: `bulk_set_permissions_tags(ids, *, set_permissions, owner, merge)` implemented. **PASS** — Builds params dict and delegates to `bulk_edit_objects`.
+- [x] **AC-10**: `bulk_set_permissions_correspondents(ids, *, set_permissions, owner, merge)` implemented. **PASS**.
+- [x] **AC-11**: `bulk_set_permissions_document_types(ids, *, set_permissions, owner, merge)` implemented. **PASS**.
+- [x] **AC-12**: `bulk_set_permissions_storage_paths(ids, *, set_permissions, owner, merge)` implemented. **PASS**.
+- [x] **AC-13**: All high-level helpers are implemented on top of `bulk_edit_objects`. **PASS** — Every helper calls `self.bulk_edit_objects(...)` directly.
+
+#### General
+- [x] **AC-14**: `bulk_edit_objects` available on `SyncPaperlessClient` with same signature. **PASS** — `SyncNonDocumentBulkMixin` wraps all methods including `bulk_edit_objects` and all 8 high-level helpers.
+
+### Edge Cases Tested
+- [x] Empty `object_ids` list: request is sent as-is (no client-side guard). **PASS**.
+- [x] `object_type="custom_fields"` not blocked client-side; server error propagates. **PASS**.
+- [x] `set_permissions` with `merge=False` (default) replaces permissions. **PASS** — `merge` defaults to `False` in all helpers.
+- [x] `set_permissions` with `merge=True` merges additively. **PASS** — `merge` parameter forwarded to payload.
+
+### Code Quality
+- Ruff lint: **PASS** (0 issues)
+- Mypy strict: **PASS** (0 issues)
+- All 354 tests pass (0 failures, 39 deselected integration tests)
+
+### Observations (Low Severity)
+
+1. **Test coverage gap — `test_bulk_edit_objects` does not assert payload**: The async test for `bulk_edit_objects` only verifies no exception is raised but does not inspect the JSON payload sent to the mock. All other bulk tests in the same file assert payload contents. Severity: **Low**.
+
+2. **Missing async tests for high-level helpers**: No async unit tests exist for `bulk_delete_tags`, `bulk_delete_correspondents`, `bulk_delete_document_types`, `bulk_delete_storage_paths`, or any `bulk_set_permissions_*` helper. Only the low-level `bulk_edit_objects` has an async test. Severity: **Low** — the helpers are trivial one-line delegations, but payload verification would increase confidence.
+
+3. **Missing sync tests for most helpers**: Sync tests only cover `bulk_delete_tags` and `bulk_delete_correspondents`. Missing sync tests for `bulk_delete_document_types`, `bulk_delete_storage_paths`, `bulk_edit_objects`, and all four `bulk_set_permissions_*` wrappers. Severity: **Low** — sync wrappers are mechanical delegations.
+
+4. **Spec vs. implementation parameter name**: The spec says `permissions` but the implementation uses `set_permissions` (matching the project's `api-conventions.md`). The implementation is correct per conventions; the spec wording should be updated. Severity: **Low** — cosmetic, no functional impact.
+
+### Regression Testing
+- Full test suite: 354 passed, 39 deselected (integration)
+- PROJ-9 (Document Bulk Operations) tests: all passing
+- PROJ-10 (Tags CRUD) tests: all passing
+- PROJ-11 (Correspondents CRUD) tests: all passing
+- Sync client tests: all passing
+
+### Summary
+| Category | Count |
+|----------|-------|
+| Acceptance criteria | 14/14 passed |
+| Edge cases | 4/4 passed |
+| Bugs (Critical/High) | 0 |
+| Observations (Low) | 4 |
+
+**Production-ready: YES** — All acceptance criteria pass. The 4 low-severity observations are test coverage improvements and a cosmetic spec clarification; none affect runtime behavior.
 
 ## Deployment
 _To be added by /deploy_

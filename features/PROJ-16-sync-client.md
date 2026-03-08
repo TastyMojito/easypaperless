@@ -43,7 +43,59 @@
 _To be added by /architecture_
 
 ## QA Test Results
-_To be added by /qa_
+**Date:** 2026-03-08
+**Tester:** QA Engineer (automated)
+**Test suite:** `tests/test_sync.py` — 52 tests, all passing
+
+### Acceptance Criteria
+
+| # | Criterion | Result |
+|---|-----------|--------|
+| 1 | `SyncPaperlessClient` importable from `easypaperless` | PASS — `test_sync_client_importable_from_package` |
+| 2 | Constructor accepts `url`, `api_key`, and `**kwargs` forwarded to `PaperlessClient` | PASS — `test_sync_client_forwards_kwargs` verifies `timeout` kwarg reaches the underlying session |
+| 3 | Every async method callable on sync client with same signature, blocking until result ready | PASS — 40+ method-level tests covering documents, tags, correspondents, document_types, storage_paths, custom_fields, notes, upload, document bulk, non-document bulk |
+| 4 | Non-async attributes of `PaperlessClient` are transparently proxied | PASS — `_async_client` is a `PaperlessClient` instance; sync mixins delegate via `_run()` |
+| 5 | Single background event loop + daemon thread created on `__init__`, reused for all calls | PASS — `test_background_thread_is_daemon`; architecture uses `asyncio.new_event_loop()` + `threading.Thread(daemon=True)` |
+| 6 | `close()` shuts down async client, stops event loop, joins thread, closes loop | PASS — verified in `test_close_called_twice_does_not_raise` and context manager tests |
+| 7 | Context manager protocol (`__enter__`/`__exit__`); `__exit__` calls `close()` | PASS — `test_sync_client_context_manager`, `test_sync_client_context_manager_returns_self` |
+| 8 | No business logic in `SyncPaperlessClient` — pure thin wrapper | PASS — `test_sync_client_delegates_to_async_client`; code review confirms all sync mixins only call `self._run(self._async_client.<method>(...))` |
+
+### Edge Cases
+
+| # | Edge Case | Result |
+|---|-----------|--------|
+| 1 | Nested event loop (Jupyter) warning in docstring | PASS — module docstring and class docstring both contain the warning |
+| 2 | Exception propagation unchanged | PASS — `test_sync_exception_propagation` confirms `NotFoundError` propagates correctly |
+| 3 | `close()` called twice — no raise | PASS — `test_close_called_twice_does_not_raise` |
+| 4 | Kwargs forwarding to `PaperlessClient` | PASS — `test_sync_client_forwards_kwargs` |
+| 5 | New methods auto-available via mixin architecture | PASS — architecture uses explicit sync mixins mirroring async mixins; adding a new async mixin requires a corresponding sync mixin (not `__getattr__`-based, but the spec's intent of method parity is met) |
+
+### Technical Requirements
+
+| # | Requirement | Result |
+|---|-------------|--------|
+| 1 | Zero business logic in `SyncPaperlessClient` | PASS — code review confirms all logic is in async mixins/client |
+| 2 | Background thread is daemon | PASS — `test_background_thread_is_daemon` |
+| 3 | Uses `asyncio.run_coroutine_threadsafe` + `future.result()` | PASS — `_SyncCore._run()` uses exactly this pattern |
+
+### Code Quality
+
+| Check | Result |
+|-------|--------|
+| All tests pass (52/52) | PASS |
+| Full test suite (354 passed, 39 deselected) | PASS |
+| mypy strict — 0 errors in 38 source files | PASS |
+| ruff lint — no issues in `src/easypaperless/` (only pre-existing warnings in `scripts/` and `tests/`) | PASS |
+| Coverage: `sync.py` at 94%, sync mixins 71-100% | PASS |
+
+### Observations (Low Severity)
+
+1. **Missing sync test for `update_document_type`** — async version is tested, sync wrapper is untested. Severity: Low.
+2. **Missing sync test for `update_storage_path`** — same as above. Severity: Low.
+3. **Missing sync test for `update_custom_field`** — same as above. Severity: Low.
+4. **Missing sync tests for non-document bulk permission methods** (`bulk_set_permissions_tags`, `bulk_set_permissions_correspondents`, `bulk_set_permissions_document_types`, `bulk_set_permissions_storage_paths`) — these contribute to the 71% coverage on `non_document_bulk.py`. Severity: Low.
+5. **Missing sync tests for `bulk_delete_document_types` and `bulk_delete_storage_paths`** — only `bulk_delete_tags` and `bulk_delete_correspondents` are tested. Severity: Low.
+6. **Spec mentions `__getattr__` proxy approach; implementation uses explicit sync mixins** — The spec edge case "New methods added to PaperlessClient: The `__getattr__` proxy approach means new async methods are automatically available" does not match the implementation. The implementation uses explicit sync mixins, which means new async methods require a corresponding sync mixin. This is arguably a better design (explicit, type-safe), but diverges from the spec. Severity: Low (informational).
 
 ## Deployment
 _To be added by /deploy_

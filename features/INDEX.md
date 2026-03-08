@@ -15,9 +15,9 @@
 | PROJ-9 | Document Bulk Operations | QA Passed | [PROJ-9-document-bulk-operations.md](PROJ-9-document-bulk-operations.md) |
 | PROJ-10 | Tags CRUD | QA Passed | [PROJ-10-tags-crud.md](PROJ-10-tags-crud.md) |
 | PROJ-11 | Correspondents CRUD | QA Passed | [PROJ-11-correspondents-crud.md](PROJ-11-correspondents-crud.md) |
-| PROJ-12 | Document Types CRUD | Implemented | [PROJ-12-document-types-crud.md](PROJ-12-document-types-crud.md) |
-| PROJ-13 | Custom Fields CRUD | Implemented | [PROJ-13-custom-fields-crud.md](PROJ-13-custom-fields-crud.md) |
-| PROJ-14 | Storage Paths CRUD | Implemented | [PROJ-14-storage-paths-crud.md](PROJ-14-storage-paths-crud.md) |
-| PROJ-15 | Non-Document Bulk Operations | Implemented | [PROJ-15-non-document-bulk-operations.md](PROJ-15-non-document-bulk-operations.md) |
-| PROJ-16 | SyncPaperlessClient | Implemented | [PROJ-16-sync-client.md](PROJ-16-sync-client.md) |
-| PROJ-17 | Document Notes | Implemented | [PROJ-17-document-notes.md](PROJ-17-document-notes.md) |
+| PROJ-12 | Document Types CRUD | In Review | [PROJ-12-document-types-crud.md](PROJ-12-document-types-crud.md) |
+| PROJ-13 | Custom Fields CRUD | In Review | [PROJ-13-custom-fields-crud.md](PROJ-13-custom-fields-crud.md) |
+| PROJ-14 | Storage Paths CRUD | In Review | [PROJ-14-storage-paths-crud.md](PROJ-14-storage-paths-crud.md) |
+| PROJ-15 | Non-Document Bulk Operations | In Review | [PROJ-15-non-document-bulk-operations.md](PROJ-15-non-document-bulk-operations.md) |
+| PROJ-16 | SyncPaperlessClient | In Review | [PROJ-16-sync-client.md](PROJ-16-sync-client.md) |
+| PROJ-17 | Document Notes | In Review | [PROJ-17-document-notes.md](PROJ-17-document-notes.md) |

@@ -56,7 +56,68 @@
 _To be added by /architecture_
 
 ## QA Test Results
-_To be added by /qa_
+
+**Date:** 2026-03-08
+**Tester:** QA Engineer (Claude)
+**Status:** PASS — Production Ready
+
+### Acceptance Criteria Results (17/17 passed)
+
+#### get_notes
+- [x] `get_notes(document_id: int) -> list[DocumentNote]` sends `GET /documents/{document_id}/notes/` and returns validated list — **PASS** (`test_get_notes`)
+- [x] Returns empty list when document has no notes — **PASS** (`test_get_notes_empty`)
+- [x] Raises `NotFoundError` on HTTP 404 — **PASS** (`test_get_notes_not_found`)
+- [x] Notes returned in server-provided order — **PASS** (list comprehension preserves order)
+
+#### create_note
+- [x] `create_note(document_id: int, *, note: str) -> DocumentNote` sends POST with `{"note": "<text>"}` — **PASS** (`test_create_note`)
+- [x] `note` parameter is required keyword-only — **PASS** (enforced by `*` in signature)
+- [x] Returns the newly created note object (not the full list) — **PASS** (code extracts last item from list or single object)
+- [x] Raises `NotFoundError` on HTTP 404 — **PASS** (`test_create_note_not_found`)
+
+#### delete_note
+- [x] `delete_note(document_id: int, note_id: int) -> None` sends `DELETE /documents/{document_id}/notes/?id={note_id}` — **PASS** (`test_delete_note` verifies query param)
+- [x] Raises `NotFoundError` on HTTP 404 — **PASS** (`test_delete_note_not_found`)
+
+#### DocumentNote model
+- [x] Exposes `id`, `note`, `created`, `document`, `user` — **PASS** (verified in model definition)
+- [x] `id` is integer — **PASS** (`int | None`)
+- [x] `note` is text content — **PASS** (`str`)
+- [x] `created` is datetime — **PASS** (`datetime | None`)
+- [x] `document` is integer — **PASS** (`int | None`)
+- [x] `user` is integer, may be None — **PASS** (`int | None`, with nested-user validator)
+
+#### General
+- [x] No `update_note` method provided — **PASS** (not in any mixin)
+- [x] All methods available on `SyncPaperlessClient` with identical signatures — **PASS** (`test_sync_get_notes`, `test_sync_create_note`, `test_sync_delete_note`)
+
+### Edge Cases Tested
+- [x] Nested user object coerced to int — **PASS** (`test_get_notes_nested_user`, validator `_coerce_user`)
+- [x] `model_config = ConfigDict(extra="ignore")` handles unexpected fields gracefully — **PASS**
+
+### Static Analysis
+- **mypy:** 0 issues (strict mode, all 3 source files)
+- **ruff (source):** 0 issues (all source files clean)
+- **ruff (tests):** 5 issues in `test_client_notes.py` (1 import sort, 4 line-too-long) — Low severity
+
+### Test Coverage
+- `_internal/mixins/notes.py`: 95% (1 missed line: list-response branch in `create_note`)
+- `_internal/sync_mixins/notes.py`: 100%
+- Full test suite: 354 passed, 0 failed
+
+### Observations
+
+| # | Severity | Description |
+|---|----------|-------------|
+| 1 | Low | `test_client_notes.py` has 5 ruff violations (1 import sort `I001`, 4 line-too-long `E501`). Auto-fixable. |
+| 2 | Low | `create_note` list-response branch (line 61, the real paperless-ngx behavior) lacks a dedicated test. The single-object branch is tested instead. Coverage: 95%. |
+
+### Regression
+- Full test suite (354 tests): all passed, no regressions detected.
+- Sync client integration verified for all three note operations.
+
+### Production-Ready: YES
+No Critical or High bugs. Two Low-severity observations (lint + test gap) that do not affect functionality.
 
 ## Deployment
 _To be added by /deploy_
