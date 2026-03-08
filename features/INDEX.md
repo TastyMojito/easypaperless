@@ -10,14 +10,14 @@
 | PROJ-4 | Get Document by ID | QA Passed | [PROJ-4-get-document.md](PROJ-4-get-document.md) |
 | PROJ-5 | Update Document | QA Passed | [PROJ-5-update-document.md](PROJ-5-update-document.md) |
 | PROJ-6 | Delete Document | QA Passed | [PROJ-6-delete-document.md](PROJ-6-delete-document.md) |
-| PROJ-7 | Download Document | In Review | [PROJ-7-download-document.md](PROJ-7-download-document.md) |
+| PROJ-7 | Download Document | QA Passed | [PROJ-7-download-document.md](PROJ-7-download-document.md) |
 | PROJ-8 | Upload Document | QA Passed | [PROJ-8-upload-document.md](PROJ-8-upload-document.md) |
 | PROJ-9 | Document Bulk Operations | QA Passed | [PROJ-9-document-bulk-operations.md](PROJ-9-document-bulk-operations.md) |
 | PROJ-10 | Tags CRUD | QA Passed | [PROJ-10-tags-crud.md](PROJ-10-tags-crud.md) |
 | PROJ-11 | Correspondents CRUD | QA Passed | [PROJ-11-correspondents-crud.md](PROJ-11-correspondents-crud.md) |
-| PROJ-12 | Document Types CRUD | In Review | [PROJ-12-document-types-crud.md](PROJ-12-document-types-crud.md) |
-| PROJ-13 | Custom Fields CRUD | In Review | [PROJ-13-custom-fields-crud.md](PROJ-13-custom-fields-crud.md) |
-| PROJ-14 | Storage Paths CRUD | In Review | [PROJ-14-storage-paths-crud.md](PROJ-14-storage-paths-crud.md) |
-| PROJ-15 | Non-Document Bulk Operations | In Review | [PROJ-15-non-document-bulk-operations.md](PROJ-15-non-document-bulk-operations.md) |
-| PROJ-16 | SyncPaperlessClient | In Review | [PROJ-16-sync-client.md](PROJ-16-sync-client.md) |
-| PROJ-17 | Document Notes | In Review | [PROJ-17-document-notes.md](PROJ-17-document-notes.md) |
+| PROJ-12 | Document Types CRUD | QA Passed | [PROJ-12-document-types-crud.md](PROJ-12-document-types-crud.md) |
+| PROJ-13 | Custom Fields CRUD | QA Passed | [PROJ-13-custom-fields-crud.md](PROJ-13-custom-fields-crud.md) |
+| PROJ-14 | Storage Paths CRUD | QA Passed | [PROJ-14-storage-paths-crud.md](PROJ-14-storage-paths-crud.md) |
+| PROJ-15 | Non-Document Bulk Operations | QA Passed | [PROJ-15-non-document-bulk-operations.md](PROJ-15-non-document-bulk-operations.md) |
+| PROJ-16 | SyncPaperlessClient | QA Passed | [PROJ-16-sync-client.md](PROJ-16-sync-client.md) |
+| PROJ-17 | Document Notes | QA Passed | [PROJ-17-document-notes.md](PROJ-17-document-notes.md) |

@@ -1,6 +1,6 @@
 # PROJ-16: SyncPaperlessClient
 
-## Status: Implemented
+## Status: QA Passed
 **Created:** 2026-03-06
 **Last Updated:** 2026-03-06
 
@@ -29,7 +29,6 @@
 - **Exception propagation:** Exceptions raised inside the coroutine must propagate to the caller unchanged.
 - **`close()` called twice:** Should not raise; loop is already stopped.
 - **Kwargs forwarding:** Unknown kwargs must be passed through to `PaperlessClient`, not silently dropped.
-- **New methods added to `PaperlessClient`:** The `__getattr__` proxy approach means new async methods are automatically available without updating `SyncPaperlessClient`.
 
 ## Technical Requirements
 - Zero business logic in `SyncPaperlessClient` — all logic stays in `PaperlessClient`
@@ -90,12 +89,12 @@ _To be added by /architecture_
 
 ### Observations (Low Severity)
 
-1. **Missing sync test for `update_document_type`** — async version is tested, sync wrapper is untested. Severity: Low.
-2. **Missing sync test for `update_storage_path`** — same as above. Severity: Low.
-3. **Missing sync test for `update_custom_field`** — same as above. Severity: Low.
-4. **Missing sync tests for non-document bulk permission methods** (`bulk_set_permissions_tags`, `bulk_set_permissions_correspondents`, `bulk_set_permissions_document_types`, `bulk_set_permissions_storage_paths`) — these contribute to the 71% coverage on `non_document_bulk.py`. Severity: Low.
-5. **Missing sync tests for `bulk_delete_document_types` and `bulk_delete_storage_paths`** — only `bulk_delete_tags` and `bulk_delete_correspondents` are tested. Severity: Low.
-6. **Spec mentions `__getattr__` proxy approach; implementation uses explicit sync mixins** — The spec edge case "New methods added to PaperlessClient: The `__getattr__` proxy approach means new async methods are automatically available" does not match the implementation. The implementation uses explicit sync mixins, which means new async methods require a corresponding sync mixin. This is arguably a better design (explicit, type-safe), but diverges from the spec. Severity: Low (informational).
+1. **Missing sync test for `update_document_type`** — async version is tested, sync wrapper is untested. Severity: Low. **FIXED** — `test_sync_update_document_type` added in commit `4454b35`.
+2. **Missing sync test for `update_storage_path`** — same as above. Severity: Low. **FIXED** — `test_sync_update_storage_path` added in commit `4454b35`.
+3. **Missing sync test for `update_custom_field`** — same as above. Severity: Low. **FIXED** — `test_sync_update_custom_field` added in commit `4454b35`.
+4. **Missing sync tests for non-document bulk permission methods** (`bulk_set_permissions_tags`, `bulk_set_permissions_correspondents`, `bulk_set_permissions_document_types`, `bulk_set_permissions_storage_paths`) — these contribute to the 71% coverage on `non_document_bulk.py`. Severity: Low. **FIXED** — all four sync tests added in commit `4454b35`.
+5. **Missing sync tests for `bulk_delete_document_types` and `bulk_delete_storage_paths`** — only `bulk_delete_tags` and `bulk_delete_correspondents` are tested. Severity: Low. **FIXED** — both tests added in commit `4454b35`.
+6. **Spec mentions `__getattr__` proxy approach; implementation uses explicit sync mixins** — The spec edge case "New methods added to PaperlessClient: The `__getattr__` proxy approach means new async methods are automatically available" does not match the implementation. The implementation uses explicit sync mixins, which means new async methods require a corresponding sync mixin. This is arguably a better design (explicit, type-safe), but diverges from the spec. Severity: Low (informational). FIXED in the spec by human user. I want explicit sync mixins.
 
 ## Deployment
 _To be added by /deploy_

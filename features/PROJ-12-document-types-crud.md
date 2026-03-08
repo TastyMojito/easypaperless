@@ -1,6 +1,6 @@
 # PROJ-12: Document Types CRUD
 
-## Status: In Review
+## Status: QA Passed
 **Created:** 2026-03-06
 **Last Updated:** 2026-03-06
 
@@ -127,10 +127,10 @@ _To be added by /architecture_
 ### Observations (Low Severity)
 
 1. **Missing sync `update_document_type` test** (Low)
-   - Tags and correspondents both have `test_sync_update_tag` / `test_sync_update_correspondent`, but there is no `test_sync_update_document_type`. The sync mixin code exists and is correct (verified by code review), but this leaves one uncovered line in `sync_mixins/document_types.py` (94% vs 100%).
+   - Tags and correspondents both have `test_sync_update_tag` / `test_sync_update_correspondent`, but there is no `test_sync_update_document_type`. The sync mixin code exists and is correct (verified by code review), but this leaves one uncovered line in `sync_mixins/document_types.py` (94% vs 100%). **FIXED** — `test_sync_update_document_type` added in commit `4454b35`.
 
 2. **No dedicated `descending=True` test for document types** (Low)
-   - `test_list_document_types_page_size_ordering` tests `ordering="id"` but not `descending=True`. The storage paths test covers this pattern, and the code is identical via shared `_list_resource`, so the risk is negligible.
+   - `test_list_document_types_page_size_ordering` tests `ordering="id"` but not `descending=True`. The storage paths test covers this pattern, and the code is identical via shared `_list_resource`, so the risk is negligible. **FIXED** — `test_list_document_types_descending` added in commit `4454b35`.
 
 ### Regression Testing
 - Full test suite: **354 passed**, 0 failed
@@ -143,7 +143,7 @@ _To be added by /architecture_
 - API key handled by existing `HttpSession` (PROJ-1, QA Passed)
 
 ### Production-Ready Recommendation
-**READY** — All 20 acceptance criteria pass. No Critical or High bugs. Two Low-severity observations related to test coverage gaps (not code defects).
+**READY** — All 20 acceptance criteria pass. No Critical or High bugs. Two Low-severity observations fixed in commit `4454b35`.
 
 ## Deployment
 _To be added by /deploy_

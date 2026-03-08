@@ -115,13 +115,13 @@ _To be added by /architecture_
 - [x] `extra="ignore"` on model (unknown API fields silently dropped) — **PASS** (ConfigDict verified)
 
 ### Observations (Low Severity)
-1. **Missing sync test for `update_correspondent`:** The `test_sync.py` file tests `list`, `get`, `create`, and `delete` for correspondents but omits `update_correspondent`. The async version is thoroughly tested and the sync wrapper is a trivial delegation, so risk is minimal. Severity: **Low**.
+1. **Missing sync test for `update_correspondent`:** The `test_sync.py` file tests `list`, `get`, `create`, and `delete` for correspondents but omits `update_correspondent`. The async version is thoroughly tested and the sync wrapper is a trivial delegation, so risk is minimal. Severity: **Low**. **FIXED** — `test_sync_update_correspondent` added in commit `55044d0`.
 
 ### Summary
 - **Acceptance criteria:** 20/20 passed
 - **Edge cases:** 4/4 passed
 - **Bugs found:** 0
-- **Observations:** 1 (low severity)
+- **Observations:** 1 (low severity, fixed)
 - **Production-ready:** YES
 
 ## Deployment

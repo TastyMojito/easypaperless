@@ -1,6 +1,6 @@
 # PROJ-15: Non-Document Bulk Operations
 
-## Status: Implemented
+## Status: QA Passed
 **Created:** 2026-03-06
 **Last Updated:** 2026-03-06
 
@@ -19,7 +19,7 @@
 - [ ] Valid `object_type` values: `"tags"`, `"correspondents"`, `"document_types"`, `"storage_paths"`. Custom fields are **not** supported by this endpoint.
 - [ ] Supported `operation` values:
   - `"delete"` — no additional parameters required.
-  - `"set_permissions"` — requires a `permissions` object (`{"view": {"users": [], "groups": []}, "change": {"users": [], "groups": []}}`), optional `owner` (user ID or `None`), and optional `merge` (boolean, default `False`; when `True`, new permissions are merged with existing ones rather than replacing them).
+  - `"set_permissions"` — requires a `set_permissions` object (`{"view": {"users": [], "groups": []}, "change": {"users": [], "groups": []}}`), optional `owner` (user ID or `None`), and optional `merge` (boolean, default `False`; when `True`, new permissions are merged with existing ones rather than replacing them).
 - [ ] Invalid `object_type` or `operation` strings are forwarded to the API as-is; the server returns an error which propagates to the caller.
 
 ### High-level helpers (implemented)
@@ -27,10 +27,10 @@
 - [ ] `bulk_delete_correspondents(ids: list[int]) -> None`
 - [ ] `bulk_delete_document_types(ids: list[int]) -> None`
 - [ ] `bulk_delete_storage_paths(ids: list[int]) -> None`
-- [ ] `bulk_set_permissions_tags(ids, *, permissions, owner, merge) -> None`
-- [ ] `bulk_set_permissions_correspondents(ids, *, permissions, owner, merge) -> None`
-- [ ] `bulk_set_permissions_document_types(ids, *, permissions, owner, merge) -> None`
-- [ ] `bulk_set_permissions_storage_paths(ids, *, permissions, owner, merge) -> None`
+- [ ] `bulk_set_permissions_tags(ids, *, set_permissions, owner, merge) -> None`
+- [ ] `bulk_set_permissions_correspondents(ids, *, set_permissions, owner, merge) -> None`
+- [ ] `bulk_set_permissions_document_types(ids, *, set_permissions, owner, merge) -> None`
+- [ ] `bulk_set_permissions_storage_paths(ids, *, set_permissions, owner, merge) -> None`
 - [ ] All high-level helpers are implemented on top of `bulk_edit_objects`.
 
 ### General
@@ -91,13 +91,13 @@ _To be added by /architecture_
 
 ### Observations (Low Severity)
 
-1. **Test coverage gap — `test_bulk_edit_objects` does not assert payload**: The async test for `bulk_edit_objects` only verifies no exception is raised but does not inspect the JSON payload sent to the mock. All other bulk tests in the same file assert payload contents. Severity: **Low**.
+1. **Test coverage gap — `test_bulk_edit_objects` does not assert payload**: The async test for `bulk_edit_objects` only verifies no exception is raised but does not inspect the JSON payload sent to the mock. All other bulk tests in the same file assert payload contents. Severity: **Low**. **FIXED** — payload assertion added in commit `4454b35`.
 
-2. **Missing async tests for high-level helpers**: No async unit tests exist for `bulk_delete_tags`, `bulk_delete_correspondents`, `bulk_delete_document_types`, `bulk_delete_storage_paths`, or any `bulk_set_permissions_*` helper. Only the low-level `bulk_edit_objects` has an async test. Severity: **Low** — the helpers are trivial one-line delegations, but payload verification would increase confidence.
+2. **Missing async tests for high-level helpers**: No async unit tests exist for `bulk_delete_tags`, `bulk_delete_correspondents`, `bulk_delete_document_types`, `bulk_delete_storage_paths`, or any `bulk_set_permissions_*` helper. Only the low-level `bulk_edit_objects` has an async test. Severity: **Low** — the helpers are trivial one-line delegations, but payload verification would increase confidence. **FIXED** — async tests added for all helpers in commit `4454b35`.
 
-3. **Missing sync tests for most helpers**: Sync tests only cover `bulk_delete_tags` and `bulk_delete_correspondents`. Missing sync tests for `bulk_delete_document_types`, `bulk_delete_storage_paths`, `bulk_edit_objects`, and all four `bulk_set_permissions_*` wrappers. Severity: **Low** — sync wrappers are mechanical delegations.
+3. **Missing sync tests for most helpers**: Sync tests only cover `bulk_delete_tags` and `bulk_delete_correspondents`. Missing sync tests for `bulk_delete_document_types`, `bulk_delete_storage_paths`, `bulk_edit_objects`, and all four `bulk_set_permissions_*` wrappers. Severity: **Low** — sync wrappers are mechanical delegations. **FIXED** — all missing sync tests added in commit `4454b35`.
 
-4. **Spec vs. implementation parameter name**: The spec says `permissions` but the implementation uses `set_permissions` (matching the project's `api-conventions.md`). The implementation is correct per conventions; the spec wording should be updated. Severity: **Low** — cosmetic, no functional impact.
+4. **Spec vs. implementation parameter name**: The spec said `permissions` but the implementation uses `set_permissions` (matching the project's `api-conventions.md`). Severity: **Low** — cosmetic, no functional impact. **FIXED** — spec updated to use `set_permissions`.
 
 ### Regression Testing
 - Full test suite: 354 passed, 39 deselected (integration)
@@ -112,9 +112,9 @@ _To be added by /architecture_
 | Acceptance criteria | 14/14 passed |
 | Edge cases | 4/4 passed |
 | Bugs (Critical/High) | 0 |
-| Observations (Low) | 4 |
+| Observations (Low) | 4 (all fixed) |
 
-**Production-ready: YES** — All acceptance criteria pass. The 4 low-severity observations are test coverage improvements and a cosmetic spec clarification; none affect runtime behavior.
+**Production-ready: YES** — All acceptance criteria pass. All 4 low-severity observations fixed in commit `4454b35`.
 
 ## Deployment
 _To be added by /deploy_

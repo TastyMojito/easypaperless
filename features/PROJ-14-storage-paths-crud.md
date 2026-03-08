@@ -1,6 +1,6 @@
 # PROJ-14: Storage Paths CRUD
 
-## Status: In Review
+## Status: QA Passed
 **Created:** 2026-03-06
 **Last Updated:** 2026-03-06
 
@@ -66,7 +66,7 @@ _To be added by /architecture_
 ## QA Test Results
 **Date:** 2026-03-08
 **Tester:** QA Engineer (Claude)
-**Verdict:** NOT READY — 1 low-severity observation
+**Verdict:** READY — 1 low-severity observation fixed in commit `4454b35`
 
 ### Acceptance Criteria Results
 
@@ -120,7 +120,7 @@ _To be added by /architecture_
 
 | # | Severity | Description |
 |---|----------|-------------|
-| 1 | Low | Missing `test_sync_update_storage_path` in `tests/test_sync.py`. All other sync methods (list, get, create, delete) have sync wrapper tests, but `update_storage_path` does not. This leaves line 77 of `sync_mixins/storage_paths.py` uncovered (94% vs 100% on the other files). |
+| 1 | Low | Missing `test_sync_update_storage_path` in `tests/test_sync.py`. All other sync methods (list, get, create, delete) have sync wrapper tests, but `update_storage_path` does not. This leaves line 77 of `sync_mixins/storage_paths.py` uncovered (94% vs 100% on the other files). **FIXED** in commit `4454b35`. |
 
 ### Regression Testing
 - Full test suite (354 tests) passes with no failures
@@ -128,7 +128,7 @@ _To be added by /architecture_
 - Shared `_ClientCore` helpers (`_list_resource`, `_create_resource`, `_update_resource`, `_delete_resource`) work correctly across all resources
 
 ### Recommendation
-**NOT READY** — 1 low-severity observation (missing sync update test) should be fixed for consistency with all other CRUD resources before promoting to QA Passed. No critical or high bugs.
+**READY** — All acceptance criteria pass. 1 low-severity observation (missing sync update test) fixed in commit `4454b35`. No critical or high bugs.
 
 ## Deployment
 _To be added by /deploy_

@@ -1,6 +1,6 @@
 # PROJ-17: Document Notes
 
-## Status: Implemented
+## Status: QA Passed
 **Created:** 2026-03-06
 **Last Updated:** 2026-03-06
 
@@ -109,15 +109,15 @@ _To be added by /architecture_
 
 | # | Severity | Description |
 |---|----------|-------------|
-| 1 | Low | `test_client_notes.py` has 5 ruff violations (1 import sort `I001`, 4 line-too-long `E501`). Auto-fixable. |
-| 2 | Low | `create_note` list-response branch (line 61, the real paperless-ngx behavior) lacks a dedicated test. The single-object branch is tested instead. Coverage: 95%. |
+| 1 | Low | `test_client_notes.py` has 5 ruff violations (1 import sort `I001`, 4 line-too-long `E501`). Auto-fixable. **FIXED** in commit `4454b35`. |
+| 2 | Low | `create_note` list-response branch (line 61, the real paperless-ngx behavior) lacks a dedicated test. The single-object branch is tested instead. Coverage: 95%. **FIXED** — `test_create_note_list_response` added in commit `4454b35`. |
 
 ### Regression
 - Full test suite (354 tests): all passed, no regressions detected.
 - Sync client integration verified for all three note operations.
 
 ### Production-Ready: YES
-No Critical or High bugs. Two Low-severity observations (lint + test gap) that do not affect functionality.
+No Critical or High bugs. Two Low-severity observations fixed in commit `4454b35`.
 
 ## Deployment
 _To be added by /deploy_
