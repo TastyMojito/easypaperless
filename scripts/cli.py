@@ -691,6 +691,12 @@ _MATCHING_ALGORITHM_HELP = (
     help="Case-insensitive substring filter on name.",
 )
 @click.option(
+    "--name-exact",
+    default=None,
+    metavar="TEXT",
+    help="Case-insensitive exact match on name.",
+)
+@click.option(
     "--page",
     type=int,
     default=None,
@@ -700,7 +706,7 @@ _MATCHING_ALGORITHM_HELP = (
 @click.option("--ordering", default=None, help="Field name to sort by.")
 @click.option("--descending", is_flag=True, default=False, help="Reverse sort direction.")
 @click.pass_context
-def tags_list(ctx, ids, name_contains, page, page_size, ordering, descending):
+def tags_list(ctx, ids, name_contains, name_exact, page, page_size, ordering, descending):
     """List tags."""
 
     async def _go():
@@ -708,6 +714,7 @@ def tags_list(ctx, ids, name_contains, page, page_size, ordering, descending):
             return await client.list_tags(
                 ids=list(ids) or None,
                 name_contains=name_contains,
+                name_exact=name_exact,
                 page=page,
                 page_size=page_size,
                 ordering=ordering,
@@ -863,6 +870,12 @@ def correspondents() -> None:
     help="Case-insensitive substring filter on name.",
 )
 @click.option(
+    "--name-exact",
+    default=None,
+    metavar="TEXT",
+    help="Case-insensitive exact match on name.",
+)
+@click.option(
     "--page",
     type=int,
     default=None,
@@ -872,7 +885,7 @@ def correspondents() -> None:
 @click.option("--ordering", default=None, help="Field name to sort by.")
 @click.option("--descending", is_flag=True, default=False, help="Reverse sort direction.")
 @click.pass_context
-def correspondents_list(ctx, ids, name_contains, page, page_size, ordering, descending):
+def correspondents_list(ctx, ids, name_contains, name_exact, page, page_size, ordering, descending):
     """List correspondents."""
 
     async def _go():
@@ -880,6 +893,7 @@ def correspondents_list(ctx, ids, name_contains, page, page_size, ordering, desc
             return await client.list_correspondents(
                 ids=list(ids) or None,
                 name_contains=name_contains,
+                name_exact=name_exact,
                 page=page,
                 page_size=page_size,
                 ordering=ordering,
@@ -1008,6 +1022,12 @@ def document_types() -> None:
     help="Case-insensitive substring filter on name.",
 )
 @click.option(
+    "--name-exact",
+    default=None,
+    metavar="TEXT",
+    help="Case-insensitive exact match on name.",
+)
+@click.option(
     "--page",
     type=int,
     default=None,
@@ -1017,7 +1037,7 @@ def document_types() -> None:
 @click.option("--ordering", default=None, help="Field name to sort by.")
 @click.option("--descending", is_flag=True, default=False, help="Reverse sort direction.")
 @click.pass_context
-def document_types_list(ctx, ids, name_contains, page, page_size, ordering, descending):
+def document_types_list(ctx, ids, name_contains, name_exact, page, page_size, ordering, descending):
     """List document types."""
 
     async def _go():
@@ -1025,6 +1045,7 @@ def document_types_list(ctx, ids, name_contains, page, page_size, ordering, desc
             return await client.list_document_types(
                 ids=list(ids) or None,
                 name_contains=name_contains,
+                name_exact=name_exact,
                 page=page,
                 page_size=page_size,
                 ordering=ordering,
@@ -1153,6 +1174,12 @@ def storage_paths() -> None:
     help="Case-insensitive substring filter on name.",
 )
 @click.option(
+    "--name-exact",
+    default=None,
+    metavar="TEXT",
+    help="Case-insensitive exact match on name.",
+)
+@click.option(
     "--page",
     type=int,
     default=None,
@@ -1162,7 +1189,7 @@ def storage_paths() -> None:
 @click.option("--ordering", default=None, help="Field name to sort by.")
 @click.option("--descending", is_flag=True, default=False, help="Reverse sort direction.")
 @click.pass_context
-def storage_paths_list(ctx, ids, name_contains, page, page_size, ordering, descending):
+def storage_paths_list(ctx, ids, name_contains, name_exact, page, page_size, ordering, descending):
     """List storage paths."""
 
     async def _go():
@@ -1170,6 +1197,7 @@ def storage_paths_list(ctx, ids, name_contains, page, page_size, ordering, desce
             return await client.list_storage_paths(
                 ids=list(ids) or None,
                 name_contains=name_contains,
+                name_exact=name_exact,
                 page=page,
                 page_size=page_size,
                 ordering=ordering,
