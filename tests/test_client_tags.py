@@ -1028,6 +1028,13 @@ async def test_list_tags_no_filter_sends_no_params(client, mock_router):
     assert "name__icontains" not in captured["params"]
 
 
+async def test_list_tags_name_exact(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/tags/").mock(side_effect=_capturing_side_effect(captured, TAG_LIST))
+    await client.list_tags(name_exact="invoice")
+    assert captured["params"]["name__iexact"] == "invoice"
+
+
 # Correspondents
 
 async def test_list_correspondents_ids(client, mock_router):
@@ -1051,6 +1058,13 @@ async def test_list_correspondents_ids_and_name_contains(client, mock_router):
     await client.list_correspondents(ids=[1], name_contains="AC")
     assert captured["params"]["id__in"] == "1"
     assert captured["params"]["name__icontains"] == "AC"
+
+
+async def test_list_correspondents_name_exact(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/correspondents/").mock(side_effect=_capturing_side_effect(captured, CORR_LIST))
+    await client.list_correspondents(name_exact="ACME Corp")
+    assert captured["params"]["name__iexact"] == "ACME Corp"
 
 
 # Document Types
@@ -1078,6 +1092,13 @@ async def test_list_document_types_ids_and_name_contains(client, mock_router):
     assert captured["params"]["name__icontains"] == "Inv"
 
 
+async def test_list_document_types_name_exact(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/document_types/").mock(side_effect=_capturing_side_effect(captured, DT_LIST))
+    await client.list_document_types(name_exact="Invoice")
+    assert captured["params"]["name__iexact"] == "Invoice"
+
+
 # Storage Paths
 
 async def test_list_storage_paths_ids(client, mock_router):
@@ -1101,6 +1122,13 @@ async def test_list_storage_paths_ids_and_name_contains(client, mock_router):
     await client.list_storage_paths(ids=[1], name_contains="Arch")
     assert captured["params"]["id__in"] == "1"
     assert captured["params"]["name__icontains"] == "Arch"
+
+
+async def test_list_storage_paths_name_exact(client, mock_router):
+    captured: dict = {}
+    mock_router.get("/storage_paths/").mock(side_effect=_capturing_side_effect(captured, SP_LIST))
+    await client.list_storage_paths(name_exact="Archive")
+    assert captured["params"]["name__iexact"] == "Archive"
 
 
 # ---------------------------------------------------------------------------

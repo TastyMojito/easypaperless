@@ -47,6 +47,7 @@ class StoragePathsMixin:
         *,
         ids: list[int] | None = None,
         name_contains: str | None = None,
+        name_exact: str | None = None,
         page: int | None = None,
         page_size: int | None = None,
         ordering: str | None = None,
@@ -58,6 +59,8 @@ class StoragePathsMixin:
             ids: Return only storage paths whose ID is in this list.
             name_contains: Case-insensitive substring filter on storage-path
                 name (raw API ``name__icontains``).
+            name_exact: Case-insensitive exact match on storage-path name
+                (raw API ``name__iexact``).
             page: Return only this specific page (1-based). Disables
                 auto-pagination. Default: ``None`` (return all).
             page_size: Number of results per page. When omitted, the server
@@ -76,6 +79,8 @@ class StoragePathsMixin:
             params["id__in"] = ",".join(str(i) for i in ids)
         if name_contains is not None:
             params["name__icontains"] = name_contains
+        if name_exact is not None:
+            params["name__iexact"] = name_exact
         if page is not None:
             params["page"] = page
         if page_size is not None:

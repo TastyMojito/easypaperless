@@ -26,6 +26,7 @@ class SyncStoragePathsMixin:
         *,
         ids: list[int] | None = None,
         name_contains: str | None = None,
+        name_exact: str | None = None,
         page: int | None = None,
         page_size: int | None = None,
         ordering: str | None = None,
@@ -34,6 +35,7 @@ class SyncStoragePathsMixin:
         return self._run(self._async_client.list_storage_paths(
             ids=ids,
             name_contains=name_contains,
+            name_exact=name_exact,
             page=page,
             page_size=page_size,
             ordering=ordering,
