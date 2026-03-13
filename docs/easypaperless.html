@@ -1169,9 +1169,12 @@ correspondents, document types, storage paths).</p>
 <p>Use as an async context manager to ensure the underlying HTTP connection
 pool is closed when you are done:</p>
 
-<p>Example:
-    async with PaperlessClient(url="http://localhost:8000", api_key="abc") as client:
-        docs = await client.list_documents()</p>
+<h6 id="example">Example:</h6>
+
+<blockquote>
+  <p>async with PaperlessClient(url="http://localhost:8000", api_key="abc") as client:
+      docs = await client.list_documents()</p>
+</blockquote>
 </div>
 
 
@@ -1219,20 +1222,23 @@ pool is closed when you are done:</p>
 
             <div class="docstring"><p>Create an async paperless-ngx client.</p>
 
-<p>Args:
-    url: Base URL of the paperless-ngx instance
-        (e.g. <code>"http://localhost:8000"</code>).
-    api_key: API token.  Generate one in paperless-ngx under
-        *Settings → API → Generate Token*.
-    timeout: Default request timeout in seconds.  Individual
-        operations (e.g. uploads) may override this per-call.
-        Default: <code>30.0</code>.
-    poll_interval: Seconds between status checks when <code>wait=True</code>
-        is passed to <code><a href="#PaperlessClient.upload_document">upload_document()</a></code>.  Default: <code>2.0</code>.
-    poll_timeout: Maximum seconds to wait for a document to finish
-        processing before raising
-        <code>~<a href="#TaskTimeoutError">easypaperless.exceptions.TaskTimeoutError</a></code>.
-        Default: <code>60.0</code>.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>url:</strong>  Base URL of the paperless-ngx instance
+(e.g. <code>"http://localhost:8000"</code>).</li>
+<li><strong>api_key:</strong>  API token.  Generate one in paperless-ngx under
+<em>Settings → API → Generate Token</em>.</li>
+<li><strong>timeout:</strong>  Default request timeout in seconds.  Individual
+operations (e.g. uploads) may override this per-call.
+Default: <code>30.0</code>.</li>
+<li><strong>poll_interval:</strong>  Seconds between status checks when <code>wait=True</code>
+is passed to <code><a href="#PaperlessClient.upload_document">upload_document()</a></code>.  Default: <code>2.0</code>.</li>
+<li><strong>poll_timeout:</strong>  Maximum seconds to wait for a document to finish
+processing before raising
+<code>~<a href="#TaskTimeoutError">easypaperless.exceptions.TaskTimeoutError</a></code>.
+Default: <code>60.0</code>.</li>
+</ul>
 </div>
 
 
@@ -1554,104 +1560,110 @@ pool is closed when you are done:</p>
 parameters accept either integer IDs or string names — names are
 resolved to IDs transparently.</p>
 
-<p>Args:
-    search: Search string.  Behaviour depends on <code>search_mode</code>.
-    search_mode: How <code>search</code> is applied.  One of:</p>
+<h6 id="arguments">Arguments:</h6>
 
-<pre><code>    * ``"title_or_text"`` *(default)* — full-text search across
-      title and OCR content (Whoosh FTS, raw API ``search``
-      parameter).
-    * ``"title"`` — case-insensitive substring match on title
-      only (raw API ``title__icontains``).
-    * ``"query"`` — paperless query language, e.g.
-      ``"tag:invoice date:[2024 TO *]"`` (raw API ``query``).
-    * ``"original_filename"`` — case-insensitive substring match
-      on the original file name (raw API
-      ``original_filename__icontains``).
+<ul>
+<li><strong>search:</strong>  Search string.  Behaviour depends on <code>search_mode</code>.</li>
+<li><p><strong>search_mode:</strong>  How <code>search</code> is applied.  One of:</p>
 
-ids: Return only documents whose ID is in this list.
-tags: Documents must have **all** of these tags (AND semantics).
-    Accepts tag IDs or tag names.
-any_tags: Documents must have **at least one** of these tags
-    (OR semantics).  Accepts tag IDs or tag names.
-exclude_tags: Documents must have **none** of these tags.
-    Accepts tag IDs or tag names.
-correspondent: Filter to documents assigned to exactly this
-    correspondent.  Accepts a correspondent ID or name.
-any_correspondent: Filter to documents assigned to **any** of
-    these correspondents (OR semantics).  Accepts IDs or names.
-    Takes precedence over ``correspondent`` when both are given.
-exclude_correspondents: Exclude documents assigned to any of
-    these correspondents.  Accepts IDs or names.
-document_type: Filter to documents of exactly this type.
-    Accepts a document-type ID or name.
-any_document_type: Filter to documents whose type is **any** of
-    these (OR semantics).  Accepts IDs or names.  Takes
-    precedence over ``document_type`` when both are given.
-exclude_document_types: Exclude documents whose type is any of
-    these.  Accepts IDs or names.
-storage_path: Filter to documents assigned to exactly this
-    storage path.  Accepts a storage path ID or name.
-any_storage_paths: Filter to documents assigned to **any** of
-    these storage paths (OR semantics).  Accepts IDs or names.
-    Takes precedence over ``storage_path`` when both are given.
-exclude_storage_paths: Exclude documents assigned to any of
-    these storage paths.  Accepts IDs or names.
-owner: Filter to documents owned by this user ID.
-exclude_owners: Exclude documents owned by any of these user IDs.
-custom_fields: Documents must have **all** of these custom fields
-    set (AND semantics).  Accepts custom field IDs or names.
-any_custom_fields: Documents must have **at least one** of these
-    custom fields set (OR semantics).  Accepts IDs or names.
-exclude_custom_fields: Documents must have **none** of these
-    custom fields set.  Accepts IDs or names.
-custom_field_query: Filter documents by custom field values using
-    a structured query.  Simple form:
-    ``["Invoice Amount", "gt", 100]``.  Compound form:
-    ``["AND", [["Amount", "gt", 100], ["Status", "exact", "paid"]]]``.
-    Field references accept integer IDs or string names (resolved
-    server-side, not by the client).
-archive_serial_number: Filter by exact archive serial number.
-archive_serial_number_from: Filter by archive serial number
-    greater than or equal to this value.
-archive_serial_number_till: Filter by archive serial number
-    less than or equal to this value.
-created_after: ISO-8601 date string or ``date`` object.  Only
-    documents created **after** this date are returned.
-created_before: ISO-8601 date string or ``date`` object.  Only
-    documents created **before** this date are returned.
-added_after: Date, datetime, or ISO-8601 string.  Only
-    documents **added** (ingested) after this date/time.
-added_from: Date, datetime, or ISO-8601 string.  Only
-    documents **added** on or after this date/time.
-added_before: Date, datetime, or ISO-8601 string.  Only
-    documents **added** before this date/time.
-added_until: Date, datetime, or ISO-8601 string.  Only
-    documents **added** on or before this date/time.
-modified_after: Date, datetime, or ISO-8601 string.  Only
-    documents **modified** after this date/time.
-modified_from: Date, datetime, or ISO-8601 string.  Only
-    documents **modified** on or after this date/time.
-modified_before: Date, datetime, or ISO-8601 string.  Only
-    documents **modified** before this date/time.
-modified_until: Date, datetime, or ISO-8601 string.  Only
-    documents **modified** on or before this date/time.
-checksum: MD5 checksum of the original file (exact match).
-page_size: Number of results per API page.  Default: ``25``.
-page: Return only this specific page of results (1-based). When
-    set, auto-pagination is disabled. Default: ``None``.
-ordering: Field name to sort by. Default: ``None``.
-descending: When ``True``, reverses the sort direction.
-    Default: ``False``.
-max_results: Stop after collecting this many documents.
-    Default: ``None``.
-on_page: Callback invoked after each page fetch.  Receives
-    ``(fetched_so_far, total)``.  Ignored when ``page`` is set.
-</code></pre>
+<ul>
+<li><code>"title_or_text"</code> <em>(default)</em> — full-text search across
+title and OCR content (Whoosh FTS, raw API <code>search</code>
+parameter).</li>
+<li><code>"title"</code> — case-insensitive substring match on title
+only (raw API <code>title__icontains</code>).</li>
+<li><code>"query"</code> — paperless query language, e.g.
+<code>"tag:invoice date:[2024 TO *]"</code> (raw API <code>query</code>).</li>
+<li><code>"original_filename"</code> — case-insensitive substring match
+on the original file name (raw API
+<code>original_filename__icontains</code>).</li>
+</ul></li>
+<li><strong>ids:</strong>  Return only documents whose ID is in this list.</li>
+<li><strong>tags:</strong>  Documents must have <strong>all</strong> of these tags (AND semantics).
+Accepts tag IDs or tag names.</li>
+<li><strong>any_tags:</strong>  Documents must have <strong>at least one</strong> of these tags
+(OR semantics).  Accepts tag IDs or tag names.</li>
+<li><strong>exclude_tags:</strong>  Documents must have <strong>none</strong> of these tags.
+Accepts tag IDs or tag names.</li>
+<li><strong>correspondent:</strong>  Filter to documents assigned to exactly this
+correspondent.  Accepts a correspondent ID or name.</li>
+<li><strong>any_correspondent:</strong>  Filter to documents assigned to <strong>any</strong> of
+these correspondents (OR semantics).  Accepts IDs or names.
+Takes precedence over <code>correspondent</code> when both are given.</li>
+<li><strong>exclude_correspondents:</strong>  Exclude documents assigned to any of
+these correspondents.  Accepts IDs or names.</li>
+<li><strong>document_type:</strong>  Filter to documents of exactly this type.
+Accepts a document-type ID or name.</li>
+<li><strong>any_document_type:</strong>  Filter to documents whose type is <strong>any</strong> of
+these (OR semantics).  Accepts IDs or names.  Takes
+precedence over <code>document_type</code> when both are given.</li>
+<li><strong>exclude_document_types:</strong>  Exclude documents whose type is any of
+these.  Accepts IDs or names.</li>
+<li><strong>storage_path:</strong>  Filter to documents assigned to exactly this
+storage path.  Accepts a storage path ID or name.</li>
+<li><strong>any_storage_paths:</strong>  Filter to documents assigned to <strong>any</strong> of
+these storage paths (OR semantics).  Accepts IDs or names.
+Takes precedence over <code>storage_path</code> when both are given.</li>
+<li><strong>exclude_storage_paths:</strong>  Exclude documents assigned to any of
+these storage paths.  Accepts IDs or names.</li>
+<li><strong>owner:</strong>  Filter to documents owned by this user ID.</li>
+<li><strong>exclude_owners:</strong>  Exclude documents owned by any of these user IDs.</li>
+<li><strong>custom_fields:</strong>  Documents must have <strong>all</strong> of these custom fields
+set (AND semantics).  Accepts custom field IDs or names.</li>
+<li><strong>any_custom_fields:</strong>  Documents must have <strong>at least one</strong> of these
+custom fields set (OR semantics).  Accepts IDs or names.</li>
+<li><strong>exclude_custom_fields:</strong>  Documents must have <strong>none</strong> of these
+custom fields set.  Accepts IDs or names.</li>
+<li><strong>custom_field_query:</strong>  Filter documents by custom field values using
+a structured query.  Simple form:
+<code>["Invoice Amount", "gt", 100]</code>.  Compound form:
+<code>["AND", [["Amount", "gt", 100], ["Status", "exact", "paid"]]]</code>.
+Field references accept integer IDs or string names (resolved
+server-side, not by the client).</li>
+<li><strong>archive_serial_number:</strong>  Filter by exact archive serial number.</li>
+<li><strong>archive_serial_number_from:</strong>  Filter by archive serial number
+greater than or equal to this value.</li>
+<li><strong>archive_serial_number_till:</strong>  Filter by archive serial number
+less than or equal to this value.</li>
+<li><strong>created_after:</strong>  ISO-8601 date string or <code>date</code> object.  Only
+documents created <strong>after</strong> this date are returned.</li>
+<li><strong>created_before:</strong>  ISO-8601 date string or <code>date</code> object.  Only
+documents created <strong>before</strong> this date are returned.</li>
+<li><strong>added_after:</strong>  Date, datetime, or ISO-8601 string.  Only
+documents <strong>added</strong> (ingested) after this date/time.</li>
+<li><strong>added_from:</strong>  Date, datetime, or ISO-8601 string.  Only
+documents <strong>added</strong> on or after this date/time.</li>
+<li><strong>added_before:</strong>  Date, datetime, or ISO-8601 string.  Only
+documents <strong>added</strong> before this date/time.</li>
+<li><strong>added_until:</strong>  Date, datetime, or ISO-8601 string.  Only
+documents <strong>added</strong> on or before this date/time.</li>
+<li><strong>modified_after:</strong>  Date, datetime, or ISO-8601 string.  Only
+documents <strong>modified</strong> after this date/time.</li>
+<li><strong>modified_from:</strong>  Date, datetime, or ISO-8601 string.  Only
+documents <strong>modified</strong> on or after this date/time.</li>
+<li><strong>modified_before:</strong>  Date, datetime, or ISO-8601 string.  Only
+documents <strong>modified</strong> before this date/time.</li>
+<li><strong>modified_until:</strong>  Date, datetime, or ISO-8601 string.  Only
+documents <strong>modified</strong> on or before this date/time.</li>
+<li><strong>checksum:</strong>  MD5 checksum of the original file (exact match).</li>
+<li><strong>page_size:</strong>  Number of results per API page.  Default: <code>25</code>.</li>
+<li><strong>page:</strong>  Return only this specific page of results (1-based). When
+set, auto-pagination is disabled. Default: <code>None</code>.</li>
+<li><strong>ordering:</strong>  Field name to sort by. Default: <code>None</code>.</li>
+<li><strong>descending:</strong>  When <code>True</code>, reverses the sort direction.
+Default: <code>False</code>.</li>
+<li><strong>max_results:</strong>  Stop after collecting this many documents.
+Default: <code>None</code>.</li>
+<li><strong>on_page:</strong>  Callback invoked after each page fetch.  Receives
+<code>(fetched_so_far, total)</code>.  Ignored when <code>page</code> is set.</li>
+</ul>
 
-<p>Returns:
-    List of <code>~<a href="#Document">easypaperless.models.documents.Document</a></code>
-    objects.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>List of <code>~<a href="#Document">easypaperless.models.documents.Document</a></code>
+  objects.</p>
+</blockquote>
 </div>
 
 
@@ -1703,22 +1715,31 @@ on_page: Callback invoked after each page fetch.  Receives
 
             <div class="docstring"><p>Fetch a single document by its ID.</p>
 
-<p>Args:
-    id: Numeric paperless-ngx document ID.
-    include_metadata: When <code>True</code>, the extended file-level metadata
-        (checksums, sizes, MIME type) is fetched concurrently from
-        <code>/documents/{id}/metadata/</code> and attached to
-        <code>~<a href="#Document.metadata">easypaperless.models.documents.Document.metadata</a></code>.
-        Default: <code>False</code>.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The <code>~<a href="#Document">easypaperless.models.documents.Document</a></code> with the
-    given ID.  When <code>include_metadata=True</code> the <code>metadata</code>
-    attribute is populated; otherwise it is <code>None</code>.</p>
+<ul>
+<li><strong>id:</strong>  Numeric paperless-ngx document ID.</li>
+<li><strong>include_metadata:</strong>  When <code>True</code>, the extended file-level metadata
+(checksums, sizes, MIME type) is fetched concurrently from
+<code>/documents/{id}/metadata/</code> and attached to
+<code>~<a href="#Document.metadata">easypaperless.models.documents.Document.metadata</a></code>.
+Default: <code>False</code>.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no document exists
-        with that ID.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The <code>~<a href="#Document">easypaperless.models.documents.Document</a></code> with the
+  given ID.  When <code>include_metadata=True</code> the <code>metadata</code>
+  attribute is populated; otherwise it is <code>None</code>.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no document exists
+with that ID.</li>
+</ul>
 </div>
 
 
@@ -1764,17 +1785,26 @@ on_page: Callback invoked after each page fetch.  Receives
 <code>get_document(id, include_metadata=True)</code> when you only need the
 metadata and not the full document object.</p>
 
-<p>Args:
-    id: Numeric paperless-ngx document ID.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    A <code>~<a href="#DocumentMetadata">easypaperless.models.documents.DocumentMetadata</a></code>
-    instance containing checksums, sizes, MIME type, and embedded
-    file metadata.</p>
+<ul>
+<li><strong>id:</strong>  Numeric paperless-ngx document ID.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no document exists
-        with that ID.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>A <code>~<a href="#DocumentMetadata">easypaperless.models.documents.DocumentMetadata</a></code>
+  instance containing checksums, sizes, MIME type, and embedded
+  file metadata.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no document exists
+with that ID.</li>
+</ul>
 </div>
 
 
@@ -1863,27 +1893,33 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Partially update a document (PATCH semantics — only passed fields change).</p>
 
-<p>Args:
-    id: Numeric ID of the document to update.
-    title: New document title.
-    content: OCR text content of the document.
-    date: Creation date as an ISO-8601 string (<code>"YYYY-MM-DD"</code>).
-    correspondent: Correspondent to assign, as an ID or name.
-        Pass <code>0</code> to clear.
-    document_type: Document type to assign, as an ID or name.
-        Pass <code>0</code> to clear.
-    storage_path: Storage path to assign, as an ID or name.
-        Pass <code>0</code> to clear.
-    tags: Full replacement list of tags (IDs or names).  The existing
-        tag list is replaced, not merged.
-    asn: Archive serial number to assign.
-    custom_fields: List of <code>{"field": &lt;field_id&gt;, "value": ...}</code>
-        dicts.  Replaces the existing custom-field values.
-    owner: Numeric user ID to assign as document owner.
-    set_permissions: Explicit view/change permission sets.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The updated <code>~<a href="#Document">easypaperless.models.documents.Document</a></code>.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the document to update.</li>
+<li><strong>title:</strong>  New document title.</li>
+<li><strong>content:</strong>  OCR text content of the document.</li>
+<li><strong>date:</strong>  Creation date as an ISO-8601 string (<code>"YYYY-MM-DD"</code>).</li>
+<li><strong>correspondent:</strong>  Correspondent to assign, as an ID or name.
+Pass <code>0</code> to clear.</li>
+<li><strong>document_type:</strong>  Document type to assign, as an ID or name.
+Pass <code>0</code> to clear.</li>
+<li><strong>storage_path:</strong>  Storage path to assign, as an ID or name.
+Pass <code>0</code> to clear.</li>
+<li><strong>tags:</strong>  Full replacement list of tags (IDs or names).  The existing
+tag list is replaced, not merged.</li>
+<li><strong>asn:</strong>  Archive serial number to assign.</li>
+<li><strong>custom_fields:</strong>  List of <code>{"field": &lt;field_id&gt;, "value": ...}</code>
+dicts.  Replaces the existing custom-field values.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as document owner.</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The updated <code>~<a href="#Document">easypaperless.models.documents.Document</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -1916,12 +1952,18 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Permanently delete a document.</p>
 
-<p>Args:
-    id: Numeric ID of the document to delete.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no document exists
-        with that ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the document to delete.</li>
+</ul>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no document exists
+with that ID.</li>
+</ul>
 </div>
 
 
@@ -1965,14 +2007,20 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Download the binary content of a document.</p>
 
-<p>Args:
-    id: Numeric ID of the document to download.
-    original: If <code>False</code> <em>(default)</em>, returns the archived
-        (post-processed) PDF.  If <code>True</code>, returns the original
-        file that was uploaded.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    Raw file bytes.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the document to download.</li>
+<li><strong>original:</strong>  If <code>False</code> <em>(default)</em>, returns the archived
+(post-processed) PDF.  If <code>True</code>, returns the original
+file that was uploaded.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Raw file bytes.</p>
+</blockquote>
 </div>
 
 
@@ -2010,16 +2058,25 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Fetch all notes attached to a document.</p>
 
-<p>Args:
-    document_id: Numeric ID of the document whose notes to retrieve.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    List of <code>~<a href="#DocumentNote">easypaperless.models.documents.DocumentNote</a></code> objects,
-    ordered by creation time.</p>
+<ul>
+<li><strong>document_id:</strong>  Numeric ID of the document whose notes to retrieve.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no document exists
-        with that ID.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>List of <code>~<a href="#DocumentNote">easypaperless.models.documents.DocumentNote</a></code> objects,
+  ordered by creation time.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no document exists
+with that ID.</li>
+</ul>
 </div>
 
 
@@ -2065,16 +2122,25 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Create a new note on a document.</p>
 
-<p>Args:
-    document_id: Numeric ID of the document to annotate.
-    note: Text content of the note.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The newly created <code>~<a href="#DocumentNote">easypaperless.models.documents.DocumentNote</a></code>.</p>
+<ul>
+<li><strong>document_id:</strong>  Numeric ID of the document to annotate.</li>
+<li><strong>note:</strong>  Text content of the note.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no document exists
-        with that ID.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The newly created <code>~<a href="#DocumentNote">easypaperless.models.documents.DocumentNote</a></code>.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no document exists
+with that ID.</li>
+</ul>
 </div>
 
 
@@ -2108,13 +2174,19 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Delete a note from a document.</p>
 
-<p>Args:
-    document_id: Numeric ID of the document that owns the note.
-    note_id: Numeric ID of the note to delete.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no document or note
-        exists with the given IDs.</p>
+<ul>
+<li><strong>document_id:</strong>  Numeric ID of the document that owns the note.</li>
+<li><strong>note_id:</strong>  Numeric ID of the note to delete.</li>
+</ul>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no document or note
+exists with the given IDs.</li>
+</ul>
 </div>
 
 
@@ -2215,36 +2287,45 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Upload a document to paperless-ngx.</p>
 
-<p>Args:
-    file: Path to the file to upload (<code>str</code> or
-        <code>~pathlib.Path</code>).
-    title: Title to assign to the document.  Paperless-ngx derives
-        one from the file name if omitted.
-    created: Creation date as an ISO-8601 string (<code>"YYYY-MM-DD"</code>).
-    correspondent: Correspondent to assign, as an ID or name.
-    document_type: Document type to assign, as an ID or name.
-    storage_path: Storage path to assign, as an ID or name.
-    tags: Tags to assign, as IDs or names.
-    asn: Archive serial number to assign.
-    wait: If <code>False</code> <em>(default)</em>, returns immediately with the
-        task ID string.  If <code>True</code>, polls the task-status endpoint
-        until processing completes and returns the resulting
-        <code>~<a href="#Document">easypaperless.models.documents.Document</a></code>.
-    poll_interval: Override the client-level <code>poll_interval</code> for
-        this upload.  Only used when <code>wait=True</code>.
-    poll_timeout: Override the client-level <code>poll_timeout</code> for
-        this upload.  Only used when <code>wait=True</code>.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The Celery task ID string when <code>wait=False</code>, or the fully
-    processed <code>~<a href="#Document">easypaperless.models.documents.Document</a></code>
-    when <code>wait=True</code>.</p>
+<ul>
+<li><strong>file:</strong>  Path to the file to upload (<code>str</code> or
+<code>~pathlib.Path</code>).</li>
+<li><strong>title:</strong>  Title to assign to the document.  Paperless-ngx derives
+one from the file name if omitted.</li>
+<li><strong>created:</strong>  Creation date as an ISO-8601 string (<code>"YYYY-MM-DD"</code>).</li>
+<li><strong>correspondent:</strong>  Correspondent to assign, as an ID or name.</li>
+<li><strong>document_type:</strong>  Document type to assign, as an ID or name.</li>
+<li><strong>storage_path:</strong>  Storage path to assign, as an ID or name.</li>
+<li><strong>tags:</strong>  Tags to assign, as IDs or names.</li>
+<li><strong>asn:</strong>  Archive serial number to assign.</li>
+<li><strong>wait:</strong>  If <code>False</code> <em>(default)</em>, returns immediately with the
+task ID string.  If <code>True</code>, polls the task-status endpoint
+until processing completes and returns the resulting
+<code>~<a href="#Document">easypaperless.models.documents.Document</a></code>.</li>
+<li><strong>poll_interval:</strong>  Override the client-level <code>poll_interval</code> for
+this upload.  Only used when <code>wait=True</code>.</li>
+<li><strong>poll_timeout:</strong>  Override the client-level <code>poll_timeout</code> for
+this upload.  Only used when <code>wait=True</code>.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#UploadError">easypaperless.exceptions.UploadError</a>: If paperless-ngx reports
-        that the processing task failed.
-    ~<a href="#TaskTimeoutError">easypaperless.exceptions.TaskTimeoutError</a>: If <code>wait=True</code> and
-        processing does not complete within the timeout.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The Celery task ID string when <code>wait=False</code>, or the fully
+  processed <code>~<a href="#Document">easypaperless.models.documents.Document</a></code>
+  when <code>wait=True</code>.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#UploadError">easypaperless.exceptions.UploadError</a>:</strong>  If paperless-ngx reports
+that the processing task failed.</li>
+<li><strong>~<a href="#TaskTimeoutError">easypaperless.exceptions.TaskTimeoutError</a>:</strong>  If <code>wait=True</code> and
+processing does not complete within the timeout.</li>
+</ul>
 </div>
 
 
@@ -2289,12 +2370,15 @@ metadata and not the full document object.</p>
 <code><a href="#PaperlessClient.bulk_add_tag">bulk_add_tag()</a></code>, <code><a href="#PaperlessClient.bulk_remove_tag">bulk_remove_tag()</a></code>, and
 <code><a href="#PaperlessClient.bulk_modify_tags">bulk_modify_tags()</a></code>.</p>
 
-<p>Args:
-    document_ids: List of document IDs to operate on.
-    method: Bulk-edit method name as recognised by paperless-ngx
-        (e.g. <code>"add_tag"</code>, <code>"remove_tag"</code>, <code>"delete"</code>).
-    **parameters: Additional keyword arguments forwarded to the API as
-        the <code>parameters</code> object.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to operate on.</li>
+<li><strong>method:</strong>  Bulk-edit method name as recognised by paperless-ngx
+(e.g. <code>"add_tag"</code>, <code>"remove_tag"</code>, <code>"delete"</code>).</li>
+<li><strong>**parameters:</strong>  Additional keyword arguments forwarded to the API as
+the <code>parameters</code> object.</li>
+</ul>
 </div>
 
 
@@ -2324,9 +2408,12 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Add a tag to multiple documents in a single request.</p>
 
-<p>Args:
-    document_ids: List of document IDs to tag.
-    tag: Tag to add, as an ID or name.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to tag.</li>
+<li><strong>tag:</strong>  Tag to add, as an ID or name.</li>
+</ul>
 </div>
 
 
@@ -2356,9 +2443,12 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Remove a tag from multiple documents in a single request.</p>
 
-<p>Args:
-    document_ids: List of document IDs to un-tag.
-    tag: Tag to remove, as an ID or name.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to un-tag.</li>
+<li><strong>tag:</strong>  Tag to remove, as an ID or name.</li>
+</ul>
 </div>
 
 
@@ -2396,10 +2486,13 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Add and/or remove tags on multiple documents atomically.</p>
 
-<p>Args:
-    document_ids: List of document IDs to modify.
-    add_tags: Tags to add, as IDs or names.
-    remove_tags: Tags to remove, as IDs or names.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to modify.</li>
+<li><strong>add_tags:</strong>  Tags to add, as IDs or names.</li>
+<li><strong>remove_tags:</strong>  Tags to remove, as IDs or names.</li>
+</ul>
 </div>
 
 
@@ -2427,8 +2520,11 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Permanently delete multiple documents in a single request.</p>
 
-<p>Args:
-    document_ids: List of document IDs to delete.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to delete.</li>
+</ul>
 </div>
 
 
@@ -2463,10 +2559,13 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Assign a correspondent to multiple documents in a single request.</p>
 
-<p>Args:
-    document_ids: List of document IDs to modify.
-    correspondent: Correspondent to assign, as an ID or name.
-        Pass <code>None</code> to clear the assignment.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to modify.</li>
+<li><strong>correspondent:</strong>  Correspondent to assign, as an ID or name.
+Pass <code>None</code> to clear the assignment.</li>
+</ul>
 </div>
 
 
@@ -2501,10 +2600,13 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Assign a document type to multiple documents in a single request.</p>
 
-<p>Args:
-    document_ids: List of document IDs to modify.
-    document_type: Document type to assign, as an ID or name.
-        Pass <code>None</code> to clear the assignment.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to modify.</li>
+<li><strong>document_type:</strong>  Document type to assign, as an ID or name.
+Pass <code>None</code> to clear the assignment.</li>
+</ul>
 </div>
 
 
@@ -2539,10 +2641,13 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Assign a storage path to multiple documents in a single request.</p>
 
-<p>Args:
-    document_ids: List of document IDs to modify.
-    storage_path: Storage path to assign, as an ID or name.
-        Pass <code>None</code> to clear the assignment.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to modify.</li>
+<li><strong>storage_path:</strong>  Storage path to assign, as an ID or name.
+Pass <code>None</code> to clear the assignment.</li>
+</ul>
 </div>
 
 
@@ -2584,11 +2689,14 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Add and/or remove custom field values on multiple documents.</p>
 
-<p>Args:
-    document_ids: List of document IDs to modify.
-    add_fields: Custom-field value dicts to add (each must contain
-        <code>"field"</code> and <code>"value"</code> keys).
-    remove_fields: Custom-field IDs whose values should be removed.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to modify.</li>
+<li><strong>add_fields:</strong>  Custom-field value dicts to add (each must contain
+<code>"field"</code> and <code>"value"</code> keys).</li>
+<li><strong>remove_fields:</strong>  Custom-field IDs whose values should be removed.</li>
+</ul>
 </div>
 
 
@@ -2632,12 +2740,15 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Set permissions and/or owner on multiple documents.</p>
 
-<p>Args:
-    document_ids: List of document IDs to modify.
-    set_permissions: Explicit view/change permission sets to apply.
-    owner: Numeric user ID to assign as document owner.
-    merge: When <code>True</code>, new permissions are merged with existing
-        ones rather than replacing them.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>document_ids:</strong>  List of document IDs to modify.</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets to apply.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as document owner.</li>
+<li><strong>merge:</strong>  When <code>True</code>, new permissions are merged with existing
+ones rather than replacing them.</li>
+</ul>
 </div>
 
 
@@ -2689,14 +2800,17 @@ metadata and not the full document object.</p>
 <p>This is a low-level method; prefer the higher-level helpers such as
 <code><a href="#PaperlessClient.bulk_delete_tags">bulk_delete_tags()</a></code> or <code><a href="#PaperlessClient.bulk_set_permissions_tags">bulk_set_permissions_tags()</a></code>.</p>
 
-<p>Args:
-    object_type: The paperless-ngx object type string (e.g.
-        <code>"tags"</code>, <code>"correspondents"</code>).
-    object_ids: List of object IDs to operate on.
-    operation: Operation name recognised by the
-        <code>/bulk_edit_objects/</code> endpoint.
-    **parameters: Additional keyword arguments forwarded directly to
-        the API payload.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>object_type:</strong>  The paperless-ngx object type string (e.g.
+<code>"tags"</code>, <code>"correspondents"</code>).</li>
+<li><strong>object_ids:</strong>  List of object IDs to operate on.</li>
+<li><strong>operation:</strong>  Operation name recognised by the
+<code>/bulk_edit_objects/</code> endpoint.</li>
+<li><strong>**parameters:</strong>  Additional keyword arguments forwarded directly to
+the API payload.</li>
+</ul>
 </div>
 
 
@@ -2724,8 +2838,11 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Permanently delete multiple tags in a single request.</p>
 
-<p>Args:
-    ids: List of tag IDs to delete.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>ids:</strong>  List of tag IDs to delete.</li>
+</ul>
 </div>
 
 
@@ -2753,8 +2870,11 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Permanently delete multiple correspondents in a single request.</p>
 
-<p>Args:
-    ids: List of correspondent IDs to delete.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>ids:</strong>  List of correspondent IDs to delete.</li>
+</ul>
 </div>
 
 
@@ -2782,8 +2902,11 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Permanently delete multiple document types in a single request.</p>
 
-<p>Args:
-    ids: List of document type IDs to delete.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>ids:</strong>  List of document type IDs to delete.</li>
+</ul>
 </div>
 
 
@@ -2811,8 +2934,11 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Permanently delete multiple storage paths in a single request.</p>
 
-<p>Args:
-    ids: List of storage path IDs to delete.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>ids:</strong>  List of storage path IDs to delete.</li>
+</ul>
 </div>
 
 
@@ -2856,12 +2982,15 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Set permissions and/or owner on multiple tags.</p>
 
-<p>Args:
-    ids: List of tag IDs to modify.
-    set_permissions: Explicit view/change permission sets to apply.
-    owner: Numeric user ID to assign as owner.
-    merge: When <code>True</code>, new permissions are merged with existing
-        ones rather than replacing them.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>ids:</strong>  List of tag IDs to modify.</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets to apply.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as owner.</li>
+<li><strong>merge:</strong>  When <code>True</code>, new permissions are merged with existing
+ones rather than replacing them.</li>
+</ul>
 </div>
 
 
@@ -2905,12 +3034,15 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Set permissions and/or owner on multiple correspondents.</p>
 
-<p>Args:
-    ids: List of correspondent IDs to modify.
-    set_permissions: Explicit view/change permission sets to apply.
-    owner: Numeric user ID to assign as owner.
-    merge: When <code>True</code>, new permissions are merged with existing
-        ones rather than replacing them.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>ids:</strong>  List of correspondent IDs to modify.</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets to apply.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as owner.</li>
+<li><strong>merge:</strong>  When <code>True</code>, new permissions are merged with existing
+ones rather than replacing them.</li>
+</ul>
 </div>
 
 
@@ -2954,12 +3086,15 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Set permissions and/or owner on multiple document types.</p>
 
-<p>Args:
-    ids: List of document type IDs to modify.
-    set_permissions: Explicit view/change permission sets to apply.
-    owner: Numeric user ID to assign as owner.
-    merge: When <code>True</code>, new permissions are merged with existing
-        ones rather than replacing them.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>ids:</strong>  List of document type IDs to modify.</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets to apply.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as owner.</li>
+<li><strong>merge:</strong>  When <code>True</code>, new permissions are merged with existing
+ones rather than replacing them.</li>
+</ul>
 </div>
 
 
@@ -3003,12 +3138,15 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Set permissions and/or owner on multiple storage paths.</p>
 
-<p>Args:
-    ids: List of storage path IDs to modify.
-    set_permissions: Explicit view/change permission sets to apply.
-    owner: Numeric user ID to assign as owner.
-    merge: When <code>True</code>, new permissions are merged with existing
-        ones rather than replacing them.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>ids:</strong>  List of storage path IDs to modify.</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets to apply.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as owner.</li>
+<li><strong>merge:</strong>  When <code>True</code>, new permissions are merged with existing
+ones rather than replacing them.</li>
+</ul>
 </div>
 
 
@@ -3073,22 +3211,28 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Return tags defined in paperless-ngx.</p>
 
-<p>Args:
-    ids: Return only tags whose ID is in this list.
-    name_contains: Case-insensitive substring filter on tag name
-        (raw API <code>name__icontains</code>).
-    name_exact: Case-insensitive exact match on tag name
-        (raw API <code>name__iexact</code>).
-    page: Return only this specific page (1-based). Disables
-        auto-pagination. Default: <code>None</code> (return all).
-    page_size: Number of results per page. When omitted, the server
-        default is used.
-    ordering: Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.
-    descending: When <code>True</code>, reverses the sort direction of
-        <code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    List of <code>~<a href="#Tag">easypaperless.models.tags.Tag</a></code> objects.</p>
+<ul>
+<li><strong>ids:</strong>  Return only tags whose ID is in this list.</li>
+<li><strong>name_contains:</strong>  Case-insensitive substring filter on tag name
+(raw API <code>name__icontains</code>).</li>
+<li><strong>name_exact:</strong>  Case-insensitive exact match on tag name
+(raw API <code>name__iexact</code>).</li>
+<li><strong>page:</strong>  Return only this specific page (1-based). Disables
+auto-pagination. Default: <code>None</code> (return all).</li>
+<li><strong>page_size:</strong>  Number of results per page. When omitted, the server
+default is used.</li>
+<li><strong>ordering:</strong>  Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.</li>
+<li><strong>descending:</strong>  When <code>True</code>, reverses the sort direction of
+<code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>List of <code>~<a href="#Tag">easypaperless.models.tags.Tag</a></code> objects.</p>
+</blockquote>
 </div>
 
 
@@ -3123,15 +3267,24 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Fetch a single tag by its ID.</p>
 
-<p>Args:
-    id: Numeric tag ID.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The <code>~<a href="#Tag">easypaperless.models.tags.Tag</a></code> with the given ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric tag ID.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no tag exists with
-        that ID.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The <code>~<a href="#Tag">easypaperless.models.tags.Tag</a></code> with the given ID.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no tag exists with
+that ID.</li>
+</ul>
 </div>
 
 
@@ -3203,28 +3356,34 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Create a new tag.</p>
 
-<p>Args:
-    name: Tag name. Must be unique.
-    color: Background colour in the paperless-ngx UI as a CSS hex
-        string (e.g. <code>"#ff0000"</code>).
-    is_inbox_tag: When <code>True</code>, newly ingested documents receive this
-        tag automatically until processed. At most one tag should be
-        the inbox tag.
-    match: Auto-matching pattern tested against incoming document
-        content. Interpretation depends on <code>matching_algorithm</code>.
-    matching_algorithm: Controls how <code>match</code> is applied.
-        See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.
-    is_insensitive: When <code>True</code>, <code>match</code> is evaluated
-        case-insensitively.
-    parent: ID of an existing tag to use as parent, enabling
-        hierarchical tag trees. <code>None</code> creates a root-level tag.
-    owner: Numeric user ID to assign as owner. <code>None</code> creates the
-        tag with no owner (visible to all users).
-    set_permissions: Explicit view/change permission sets. Defaults to
-        no permissions (all users have access via public visibility).</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The newly created <code>~<a href="#Tag">easypaperless.models.tags.Tag</a></code>.</p>
+<ul>
+<li><strong>name:</strong>  Tag name. Must be unique.</li>
+<li><strong>color:</strong>  Background colour in the paperless-ngx UI as a CSS hex
+string (e.g. <code>"#ff0000"</code>).</li>
+<li><strong>is_inbox_tag:</strong>  When <code>True</code>, newly ingested documents receive this
+tag automatically until processed. At most one tag should be
+the inbox tag.</li>
+<li><strong>match:</strong>  Auto-matching pattern tested against incoming document
+content. Interpretation depends on <code>matching_algorithm</code>.</li>
+<li><strong>matching_algorithm:</strong>  Controls how <code>match</code> is applied.
+See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.</li>
+<li><strong>is_insensitive:</strong>  When <code>True</code>, <code>match</code> is evaluated
+case-insensitively.</li>
+<li><strong>parent:</strong>  ID of an existing tag to use as parent, enabling
+hierarchical tag trees. <code>None</code> creates a root-level tag.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as owner. <code>None</code> creates the
+tag with no owner (visible to all users).</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets. Defaults to
+no permissions (all users have access via public visibility).</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The newly created <code>~<a href="#Tag">easypaperless.models.tags.Tag</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -3291,25 +3450,31 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Partially update a tag (PATCH semantics).</p>
 
-<p>Args:
-    id: Numeric ID of the tag to update.
-    name: Tag name. Must be unique.
-    color: Background colour in the paperless-ngx UI as a CSS hex
-        string (e.g. <code>"#00ff00"</code>).
-    is_inbox_tag: When <code>True</code>, newly ingested documents receive this
-        tag automatically until processed. At most one tag should be
-        the inbox tag.
-    match: Auto-matching pattern tested against incoming document
-        content. Interpretation depends on <code>matching_algorithm</code>.
-    matching_algorithm: Controls how <code>match</code> is applied.
-        See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.
-    is_insensitive: When <code>True</code>, <code>match</code> is evaluated
-        case-insensitively.
-    parent: ID of an existing tag to use as parent, enabling
-        hierarchical tag trees.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The updated <code>~<a href="#Tag">easypaperless.models.tags.Tag</a></code>.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the tag to update.</li>
+<li><strong>name:</strong>  Tag name. Must be unique.</li>
+<li><strong>color:</strong>  Background colour in the paperless-ngx UI as a CSS hex
+string (e.g. <code>"#00ff00"</code>).</li>
+<li><strong>is_inbox_tag:</strong>  When <code>True</code>, newly ingested documents receive this
+tag automatically until processed. At most one tag should be
+the inbox tag.</li>
+<li><strong>match:</strong>  Auto-matching pattern tested against incoming document
+content. Interpretation depends on <code>matching_algorithm</code>.</li>
+<li><strong>matching_algorithm:</strong>  Controls how <code>match</code> is applied.
+See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.</li>
+<li><strong>is_insensitive:</strong>  When <code>True</code>, <code>match</code> is evaluated
+case-insensitively.</li>
+<li><strong>parent:</strong>  ID of an existing tag to use as parent, enabling
+hierarchical tag trees.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The updated <code>~<a href="#Tag">easypaperless.models.tags.Tag</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -3341,12 +3506,18 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Delete a tag.</p>
 
-<p>Args:
-    id: Numeric ID of the tag to delete.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no tag exists with
-        that ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the tag to delete.</li>
+</ul>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no tag exists with
+that ID.</li>
+</ul>
 </div>
 
 
@@ -3416,24 +3587,30 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Return correspondents defined in paperless-ngx.</p>
 
-<p>Args:
-    ids: Return only correspondents whose ID is in this list.
-    name_contains: Case-insensitive substring filter on correspondent
-        name (raw API <code>name__icontains</code>).
-    name_exact: Case-insensitive exact match on correspondent name
-        (raw API <code>name__iexact</code>).
-    page: Return only this specific page (1-based). Disables
-        auto-pagination. Default: <code>None</code> (return all).
-    page_size: Number of results per page. When omitted, the server
-        default is used.
-    ordering: Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.
-    descending: When <code>True</code>, reverses the sort direction of
-        <code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    List of
-    <code>~<a href="#Correspondent">easypaperless.models.correspondents.Correspondent</a></code>
-    objects.</p>
+<ul>
+<li><strong>ids:</strong>  Return only correspondents whose ID is in this list.</li>
+<li><strong>name_contains:</strong>  Case-insensitive substring filter on correspondent
+name (raw API <code>name__icontains</code>).</li>
+<li><strong>name_exact:</strong>  Case-insensitive exact match on correspondent name
+(raw API <code>name__iexact</code>).</li>
+<li><strong>page:</strong>  Return only this specific page (1-based). Disables
+auto-pagination. Default: <code>None</code> (return all).</li>
+<li><strong>page_size:</strong>  Number of results per page. When omitted, the server
+default is used.</li>
+<li><strong>ordering:</strong>  Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.</li>
+<li><strong>descending:</strong>  When <code>True</code>, reverses the sort direction of
+<code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>List of
+  <code>~<a href="#Correspondent">easypaperless.models.correspondents.Correspondent</a></code>
+  objects.</p>
+</blockquote>
 </div>
 
 
@@ -3469,16 +3646,25 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Fetch a single correspondent by its ID.</p>
 
-<p>Args:
-    id: Numeric correspondent ID.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The <code>~<a href="#Correspondent">easypaperless.models.correspondents.Correspondent</a></code>
-    with the given ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric correspondent ID.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no correspondent
-        exists with that ID.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The <code>~<a href="#Correspondent">easypaperless.models.correspondents.Correspondent</a></code>
+  with the given ID.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no correspondent
+exists with that ID.</li>
+</ul>
 </div>
 
 
@@ -3538,22 +3724,28 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Create a new correspondent.</p>
 
-<p>Args:
-    name: Correspondent name (sender/recipient). Must be unique.
-    match: Auto-matching pattern tested against incoming document
-        content. Interpretation depends on <code>matching_algorithm</code>.
-    matching_algorithm: Controls how <code>match</code> is applied.
-        See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.
-    is_insensitive: When <code>True</code>, <code>match</code> is evaluated
-        case-insensitively.
-    owner: Numeric user ID to assign as owner. <code>None</code> creates the
-        correspondent with no owner (visible to all users).
-    set_permissions: Explicit view/change permission sets. Defaults to
-        no permissions (all users have access via public visibility).</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The newly created
-    <code>~<a href="#Correspondent">easypaperless.models.correspondents.Correspondent</a></code>.</p>
+<ul>
+<li><strong>name:</strong>  Correspondent name (sender/recipient). Must be unique.</li>
+<li><strong>match:</strong>  Auto-matching pattern tested against incoming document
+content. Interpretation depends on <code>matching_algorithm</code>.</li>
+<li><strong>matching_algorithm:</strong>  Controls how <code>match</code> is applied.
+See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.</li>
+<li><strong>is_insensitive:</strong>  When <code>True</code>, <code>match</code> is evaluated
+case-insensitively.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as owner. <code>None</code> creates the
+correspondent with no owner (visible to all users).</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets. Defaults to
+no permissions (all users have access via public visibility).</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The newly created
+  <code>~<a href="#Correspondent">easypaperless.models.correspondents.Correspondent</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -3608,19 +3800,25 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Partially update a correspondent (PATCH semantics).</p>
 
-<p>Args:
-    id: Numeric ID of the correspondent to update.
-    name: Correspondent name (sender/recipient). Must be unique.
-    match: Auto-matching pattern tested against incoming document
-        content. Interpretation depends on <code>matching_algorithm</code>.
-    matching_algorithm: Controls how <code>match</code> is applied.
-        See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.
-    is_insensitive: When <code>True</code>, <code>match</code> is evaluated
-        case-insensitively.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The updated
-    <code>~<a href="#Correspondent">easypaperless.models.correspondents.Correspondent</a></code>.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the correspondent to update.</li>
+<li><strong>name:</strong>  Correspondent name (sender/recipient). Must be unique.</li>
+<li><strong>match:</strong>  Auto-matching pattern tested against incoming document
+content. Interpretation depends on <code>matching_algorithm</code>.</li>
+<li><strong>matching_algorithm:</strong>  Controls how <code>match</code> is applied.
+See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.</li>
+<li><strong>is_insensitive:</strong>  When <code>True</code>, <code>match</code> is evaluated
+case-insensitively.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The updated
+  <code>~<a href="#Correspondent">easypaperless.models.correspondents.Correspondent</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -3652,12 +3850,18 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Delete a correspondent.</p>
 
-<p>Args:
-    id: Numeric ID of the correspondent to delete.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no correspondent
-        exists with that ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the correspondent to delete.</li>
+</ul>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no correspondent
+exists with that ID.</li>
+</ul>
 </div>
 
 
@@ -3727,24 +3931,30 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Return document types defined in paperless-ngx.</p>
 
-<p>Args:
-    ids: Return only document types whose ID is in this list.
-    name_contains: Case-insensitive substring filter on document-type
-        name (raw API <code>name__icontains</code>).
-    name_exact: Case-insensitive exact match on document-type name
-        (raw API <code>name__iexact</code>).
-    page: Return only this specific page (1-based). Disables
-        auto-pagination. Default: <code>None</code> (return all).
-    page_size: Number of results per page. When omitted, the server
-        default is used.
-    ordering: Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.
-    descending: When <code>True</code>, reverses the sort direction of
-        <code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    List of
-    <code>~<a href="#DocumentType">easypaperless.models.document_types.DocumentType</a></code>
-    objects.</p>
+<ul>
+<li><strong>ids:</strong>  Return only document types whose ID is in this list.</li>
+<li><strong>name_contains:</strong>  Case-insensitive substring filter on document-type
+name (raw API <code>name__icontains</code>).</li>
+<li><strong>name_exact:</strong>  Case-insensitive exact match on document-type name
+(raw API <code>name__iexact</code>).</li>
+<li><strong>page:</strong>  Return only this specific page (1-based). Disables
+auto-pagination. Default: <code>None</code> (return all).</li>
+<li><strong>page_size:</strong>  Number of results per page. When omitted, the server
+default is used.</li>
+<li><strong>ordering:</strong>  Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.</li>
+<li><strong>descending:</strong>  When <code>True</code>, reverses the sort direction of
+<code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>List of
+  <code>~<a href="#DocumentType">easypaperless.models.document_types.DocumentType</a></code>
+  objects.</p>
+</blockquote>
 </div>
 
 
@@ -3780,16 +3990,25 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Fetch a single document type by its ID.</p>
 
-<p>Args:
-    id: Numeric document-type ID.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The <code>~<a href="#DocumentType">easypaperless.models.document_types.DocumentType</a></code>
-    with the given ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric document-type ID.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no document type
-        exists with that ID.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The <code>~<a href="#DocumentType">easypaperless.models.document_types.DocumentType</a></code>
+  with the given ID.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no document type
+exists with that ID.</li>
+</ul>
 </div>
 
 
@@ -3850,23 +4069,29 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Create a new document type.</p>
 
-<p>Args:
-    name: Document-type name (e.g. <code>"Invoice"</code>, <code>"Receipt"</code>).
-        Must be unique.
-    match: Auto-matching pattern tested against incoming document
-        content. Interpretation depends on <code>matching_algorithm</code>.
-    matching_algorithm: Controls how <code>match</code> is applied.
-        See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.
-    is_insensitive: When <code>True</code>, <code>match</code> is evaluated
-        case-insensitively.
-    owner: Numeric user ID to assign as owner. <code>None</code> creates the
-        document type with no owner (visible to all users).
-    set_permissions: Explicit view/change permission sets. Defaults to
-        no permissions (all users have access via public visibility).</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The newly created
-    <code>~<a href="#DocumentType">easypaperless.models.document_types.DocumentType</a></code>.</p>
+<ul>
+<li><strong>name:</strong>  Document-type name (e.g. <code>"Invoice"</code>, <code>"Receipt"</code>).
+Must be unique.</li>
+<li><strong>match:</strong>  Auto-matching pattern tested against incoming document
+content. Interpretation depends on <code>matching_algorithm</code>.</li>
+<li><strong>matching_algorithm:</strong>  Controls how <code>match</code> is applied.
+See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.</li>
+<li><strong>is_insensitive:</strong>  When <code>True</code>, <code>match</code> is evaluated
+case-insensitively.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as owner. <code>None</code> creates the
+document type with no owner (visible to all users).</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets. Defaults to
+no permissions (all users have access via public visibility).</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The newly created
+  <code>~<a href="#DocumentType">easypaperless.models.document_types.DocumentType</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -3922,20 +4147,26 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Partially update a document type (PATCH semantics).</p>
 
-<p>Args:
-    id: Numeric ID of the document type to update.
-    name: Document-type name (e.g. <code>"Invoice"</code>, <code>"Receipt"</code>).
-        Must be unique.
-    match: Auto-matching pattern tested against incoming document
-        content. Interpretation depends on <code>matching_algorithm</code>.
-    matching_algorithm: Controls how <code>match</code> is applied.
-        See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.
-    is_insensitive: When <code>True</code>, <code>match</code> is evaluated
-        case-insensitively.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The updated
-    <code>~<a href="#DocumentType">easypaperless.models.document_types.DocumentType</a></code>.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the document type to update.</li>
+<li><strong>name:</strong>  Document-type name (e.g. <code>"Invoice"</code>, <code>"Receipt"</code>).
+Must be unique.</li>
+<li><strong>match:</strong>  Auto-matching pattern tested against incoming document
+content. Interpretation depends on <code>matching_algorithm</code>.</li>
+<li><strong>matching_algorithm:</strong>  Controls how <code>match</code> is applied.
+See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.</li>
+<li><strong>is_insensitive:</strong>  When <code>True</code>, <code>match</code> is evaluated
+case-insensitively.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The updated
+  <code>~<a href="#DocumentType">easypaperless.models.document_types.DocumentType</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -3967,12 +4198,18 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Delete a document type.</p>
 
-<p>Args:
-    id: Numeric ID of the document type to delete.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no document type
-        exists with that ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the document type to delete.</li>
+</ul>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no document type
+exists with that ID.</li>
+</ul>
 </div>
 
 
@@ -4042,24 +4279,30 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Return storage paths defined in paperless-ngx.</p>
 
-<p>Args:
-    ids: Return only storage paths whose ID is in this list.
-    name_contains: Case-insensitive substring filter on storage-path
-        name (raw API <code>name__icontains</code>).
-    name_exact: Case-insensitive exact match on storage-path name
-        (raw API <code>name__iexact</code>).
-    page: Return only this specific page (1-based). Disables
-        auto-pagination. Default: <code>None</code> (return all).
-    page_size: Number of results per page. When omitted, the server
-        default is used.
-    ordering: Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.
-    descending: When <code>True</code>, reverses the sort direction of
-        <code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    List of
-    <code>~<a href="#StoragePath">easypaperless.models.storage_paths.StoragePath</a></code>
-    objects.</p>
+<ul>
+<li><strong>ids:</strong>  Return only storage paths whose ID is in this list.</li>
+<li><strong>name_contains:</strong>  Case-insensitive substring filter on storage-path
+name (raw API <code>name__icontains</code>).</li>
+<li><strong>name_exact:</strong>  Case-insensitive exact match on storage-path name
+(raw API <code>name__iexact</code>).</li>
+<li><strong>page:</strong>  Return only this specific page (1-based). Disables
+auto-pagination. Default: <code>None</code> (return all).</li>
+<li><strong>page_size:</strong>  Number of results per page. When omitted, the server
+default is used.</li>
+<li><strong>ordering:</strong>  Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.</li>
+<li><strong>descending:</strong>  When <code>True</code>, reverses the sort direction of
+<code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>List of
+  <code>~<a href="#StoragePath">easypaperless.models.storage_paths.StoragePath</a></code>
+  objects.</p>
+</blockquote>
 </div>
 
 
@@ -4095,16 +4338,25 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Fetch a single storage path by its ID.</p>
 
-<p>Args:
-    id: Numeric storage-path ID.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The <code>~<a href="#StoragePath">easypaperless.models.storage_paths.StoragePath</a></code>
-    with the given ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric storage-path ID.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no storage path
-        exists with that ID.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The <code>~<a href="#StoragePath">easypaperless.models.storage_paths.StoragePath</a></code>
+  with the given ID.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no storage path
+exists with that ID.</li>
+</ul>
 </div>
 
 
@@ -4172,28 +4424,34 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Create a new storage path.</p>
 
-<p>Args:
-    name: Storage-path name. Must be unique.
-    path: Template string for the archive file path. Supported
-        placeholders: <code>{created_year}</code>, <code>{created_month}</code>,
-        <code>{created_day}</code>, <code>{correspondent}</code>, <code>{document_type}</code>,
-        <code>{title}</code>, <code>{asn}</code>. Example:
-        <code>"{created_year}/{correspondent}/{title}"</code>. When omitted,
-        the server default location is used.
-    match: Auto-matching pattern tested against incoming document
-        content. Interpretation depends on <code>matching_algorithm</code>.
-    matching_algorithm: Controls how <code>match</code> is applied.
-        See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.
-    is_insensitive: When <code>True</code>, <code>match</code> is evaluated
-        case-insensitively.
-    owner: Numeric user ID to assign as owner. <code>None</code> creates the
-        storage path with no owner (visible to all users).
-    set_permissions: Explicit view/change permission sets. Defaults to
-        no permissions (all users have access via public visibility).</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The newly created
-    <code>~<a href="#StoragePath">easypaperless.models.storage_paths.StoragePath</a></code>.</p>
+<ul>
+<li><strong>name:</strong>  Storage-path name. Must be unique.</li>
+<li><strong>path:</strong>  Template string for the archive file path. Supported
+placeholders: <code>{created_year}</code>, <code>{created_month}</code>,
+<code>{created_day}</code>, <code>{correspondent}</code>, <code>{document_type}</code>,
+<code>{title}</code>, <code>{asn}</code>. Example:
+<code>"{created_year}/{correspondent}/{title}"</code>. When omitted,
+the server default location is used.</li>
+<li><strong>match:</strong>  Auto-matching pattern tested against incoming document
+content. Interpretation depends on <code>matching_algorithm</code>.</li>
+<li><strong>matching_algorithm:</strong>  Controls how <code>match</code> is applied.
+See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.</li>
+<li><strong>is_insensitive:</strong>  When <code>True</code>, <code>match</code> is evaluated
+case-insensitively.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as owner. <code>None</code> creates the
+storage path with no owner (visible to all users).</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets. Defaults to
+no permissions (all users have access via public visibility).</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The newly created
+  <code>~<a href="#StoragePath">easypaperless.models.storage_paths.StoragePath</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -4254,23 +4512,29 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Partially update a storage path (PATCH semantics).</p>
 
-<p>Args:
-    id: Numeric ID of the storage path to update.
-    name: Storage-path name. Must be unique.
-    path: Template string for the archive file path. Supported
-        placeholders: <code>{created_year}</code>, <code>{created_month}</code>,
-        <code>{created_day}</code>, <code>{correspondent}</code>, <code>{document_type}</code>,
-        <code>{title}</code>, <code>{asn}</code>. Example: <code>"{title}"</code>.
-    match: Auto-matching pattern tested against incoming document
-        content. Interpretation depends on <code>matching_algorithm</code>.
-    matching_algorithm: Controls how <code>match</code> is applied.
-        See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.
-    is_insensitive: When <code>True</code>, <code>match</code> is evaluated
-        case-insensitively.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The updated
-    <code>~<a href="#StoragePath">easypaperless.models.storage_paths.StoragePath</a></code>.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the storage path to update.</li>
+<li><strong>name:</strong>  Storage-path name. Must be unique.</li>
+<li><strong>path:</strong>  Template string for the archive file path. Supported
+placeholders: <code>{created_year}</code>, <code>{created_month}</code>,
+<code>{created_day}</code>, <code>{correspondent}</code>, <code>{document_type}</code>,
+<code>{title}</code>, <code>{asn}</code>. Example: <code>"{title}"</code>.</li>
+<li><strong>match:</strong>  Auto-matching pattern tested against incoming document
+content. Interpretation depends on <code>matching_algorithm</code>.</li>
+<li><strong>matching_algorithm:</strong>  Controls how <code>match</code> is applied.
+See <code>~<a href="#MatchingAlgorithm">easypaperless.models.MatchingAlgorithm</a></code>.</li>
+<li><strong>is_insensitive:</strong>  When <code>True</code>, <code>match</code> is evaluated
+case-insensitively.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The updated
+  <code>~<a href="#StoragePath">easypaperless.models.storage_paths.StoragePath</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -4302,12 +4566,18 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Delete a storage path.</p>
 
-<p>Args:
-    id: Numeric ID of the storage path to delete.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no storage path
-        exists with that ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the storage path to delete.</li>
+</ul>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no storage path
+exists with that ID.</li>
+</ul>
 </div>
 
 
@@ -4363,19 +4633,25 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Return all custom fields defined in paperless-ngx.</p>
 
-<p>Args:
-    page: Return only this specific page (1-based). Disables
-        auto-pagination. Default: <code>None</code> (return all).
-    page_size: Number of results per page. When omitted, the server
-        default is used.
-    ordering: Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.
-    descending: When <code>True</code>, reverses the sort direction of
-        <code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    List of
-    <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>
-    objects.</p>
+<ul>
+<li><strong>page:</strong>  Return only this specific page (1-based). Disables
+auto-pagination. Default: <code>None</code> (return all).</li>
+<li><strong>page_size:</strong>  Number of results per page. When omitted, the server
+default is used.</li>
+<li><strong>ordering:</strong>  Field to sort by. Examples: <code>"name"</code>, <code>"id"</code>.</li>
+<li><strong>descending:</strong>  When <code>True</code>, reverses the sort direction of
+<code>ordering</code>. Ignored when <code>ordering</code> is <code>None</code>.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>List of
+  <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>
+  objects.</p>
+</blockquote>
 </div>
 
 
@@ -4411,16 +4687,25 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Fetch a single custom field by its ID.</p>
 
-<p>Args:
-    id: Numeric custom-field ID.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>
-    with the given ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric custom-field ID.</li>
+</ul>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no custom field
-        exists with that ID.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>
+  with the given ID.</p>
+</blockquote>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no custom field
+exists with that ID.</li>
+</ul>
 </div>
 
 
@@ -4479,23 +4764,29 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Create a new custom field.</p>
 
-<p>Args:
-    name: Field name shown in the UI. Must be unique.
-    data_type: Value type. One of <code>"string"</code>, <code>"boolean"</code>,
-        <code>"integer"</code>, <code>"float"</code>, <code>"monetary"</code>, <code>"date"</code>,
-        <code>"url"</code>, <code>"documentlink"</code>, <code>"select"</code>.
-    extra_data: Additional configuration for the field type. For
-        <code>data_type="select"</code>, pass
-        <code>{"select_options": ["Option A", "Option B"]}</code>. For all
-        other types, leave as <code>None</code>.
-    owner: Numeric user ID to assign as owner. <code>None</code> creates the
-        field with no owner (visible to all users).
-    set_permissions: Explicit view/change permission sets. Defaults to
-        no permissions (all users have access via public visibility).</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    The newly created
-    <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>.</p>
+<ul>
+<li><strong>name:</strong>  Field name shown in the UI. Must be unique.</li>
+<li><strong>data_type:</strong>  Value type. One of <code>"string"</code>, <code>"boolean"</code>,
+<code>"integer"</code>, <code>"float"</code>, <code>"monetary"</code>, <code>"date"</code>,
+<code>"url"</code>, <code>"documentlink"</code>, <code>"select"</code>.</li>
+<li><strong>extra_data:</strong>  Additional configuration for the field type. For
+<code>data_type="select"</code>, pass
+<code>{"select_options": ["Option A", "Option B"]}</code>. For all
+other types, leave as <code>None</code>.</li>
+<li><strong>owner:</strong>  Numeric user ID to assign as owner. <code>None</code> creates the
+field with no owner (visible to all users).</li>
+<li><strong>set_permissions:</strong>  Explicit view/change permission sets. Defaults to
+no permissions (all users have access via public visibility).</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The newly created
+  <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -4549,22 +4840,31 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Partially update a custom field (PATCH semantics).</p>
 
-<p>Note:
-    <code>data_type</code> is intentionally excluded — the paperless-ngx API
-    does not allow changing the type of an existing custom field. To
-    change the type, delete and recreate the field.</p>
+<h6 id="note">Note:</h6>
 
-<p>Args:
-    id: Numeric ID of the custom field to update.
-    name: Field name shown in the UI. Must be unique.
-    extra_data: Additional configuration for the field type (e.g.
-        <code>{"select_options": ["Option A", "Option B"]}</code> for select
-        fields). Passing <code>None</code> is a no-op and will not clear the
-        existing value.</p>
+<blockquote>
+  <p><code>data_type</code> is intentionally excluded — the paperless-ngx API
+  does not allow changing the type of an existing custom field. To
+  change the type, delete and recreate the field.</p>
+</blockquote>
 
-<p>Returns:
-    The updated
-    <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>id:</strong>  Numeric ID of the custom field to update.</li>
+<li><strong>name:</strong>  Field name shown in the UI. Must be unique.</li>
+<li><strong>extra_data:</strong>  Additional configuration for the field type (e.g.
+<code>{"select_options": ["Option A", "Option B"]}</code> for select
+fields). Passing <code>None</code> is a no-op and will not clear the
+existing value.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>The updated
+  <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>.</p>
+</blockquote>
 </div>
 
 
@@ -4596,12 +4896,18 @@ metadata and not the full document object.</p>
 
             <div class="docstring"><p>Delete a custom field.</p>
 
-<p>Args:
-    id: Numeric ID of the custom field to delete.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    ~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>: If no custom field
-        exists with that ID.</p>
+<ul>
+<li><strong>id:</strong>  Numeric ID of the custom field to delete.</li>
+</ul>
+
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>~<a href="#NotFoundError">easypaperless.exceptions.NotFoundError</a>:</strong>  If no custom field
+exists with that ID.</li>
+</ul>
 </div>
 
 
@@ -4758,15 +5064,21 @@ is reused across calls and cleanup works correctly.</p>
 
 <p>Use as a context manager to ensure proper cleanup:</p>
 
-<p>Example:
-    with SyncPaperlessClient(url="http://localhost:8000", api_key="abc") as client:
-        tags = client.list_tags()
-        docs = client.list_documents(search="invoice")</p>
+<h6 id="example">Example:</h6>
 
-<p>Note:
-    Cannot be used inside an already-running event loop (e.g. Jupyter
-    notebooks).  Use <code>~<a href="#PaperlessClient">easypaperless.client.PaperlessClient</a></code>
-    directly in those environments.</p>
+<blockquote>
+  <p>with SyncPaperlessClient(url="http://localhost:8000", api_key="abc") as client:
+      tags = client.list_tags()
+      docs = client.list_documents(search="invoice")</p>
+</blockquote>
+
+<h6 id="note">Note:</h6>
+
+<blockquote>
+  <p>Cannot be used inside an already-running event loop (e.g. Jupyter
+  notebooks).  Use <code>~<a href="#PaperlessClient">easypaperless.client.PaperlessClient</a></code>
+  directly in those environments.</p>
+</blockquote>
 </div>
 
 
@@ -4798,14 +5110,17 @@ is reused across calls and cleanup works correctly.</p>
 
             <div class="docstring"><p>Create a synchronous paperless-ngx client.</p>
 
-<p>Args:
-    url: Base URL of the paperless-ngx instance
-        (e.g. <code>"http://localhost:8000"</code>).
-    api_key: API token.  Generate one in paperless-ngx under
-        <em>Settings → API → Generate Token</em>.
-    **kwargs: Additional keyword arguments forwarded to
-        <code>~<a href="#PaperlessClient">easypaperless.client.PaperlessClient</a></code> (e.g.
-        <code>poll_interval</code>, <code>poll_timeout</code>).</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>url:</strong>  Base URL of the paperless-ngx instance
+(e.g. <code>"http://localhost:8000"</code>).</li>
+<li><strong>api_key:</strong>  API token.  Generate one in paperless-ngx under
+<em>Settings → API → Generate Token</em>.</li>
+<li><strong>**kwargs:</strong>  Additional keyword arguments forwarded to
+<code>~<a href="#PaperlessClient">easypaperless.client.PaperlessClient</a></code> (e.g.
+<code>poll_interval</code>, <code>poll_timeout</code>).</li>
+</ul>
 </div>
 
 
@@ -6467,12 +6782,15 @@ is reused across calls and cleanup works correctly.</p>
 
             <div class="docstring"><p>A paperless-ngx correspondent (sender or recipient of a document).</p>
 
-<p>Attributes:
-    id: Unique correspondent ID.
-    name: Correspondent name.
-    document_count: Number of documents assigned to this correspondent.
-    last_correspondence: Date of the most recent document assigned here,
-        or <code>None</code>.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>id:</strong>  Unique correspondent ID.</li>
+<li><strong>name:</strong>  Correspondent name.</li>
+<li><strong>document_count:</strong>  Number of documents assigned to this correspondent.</li>
+<li><strong>last_correspondence:</strong>  Date of the most recent document assigned here,
+or <code>None</code>.</li>
+</ul>
 </div>
 
 
@@ -6633,14 +6951,17 @@ is reused across calls and cleanup works correctly.</p>
 
             <div class="docstring"><p>A custom field definition in paperless-ngx.</p>
 
-<p>Attributes:
-    id: Unique custom-field ID.
-    name: Field name shown in the UI.
-    data_type: The value type for this field (see
-        <code><a href="#FieldDataType">FieldDataType</a></code>).
-    extra_data: Additional configuration (e.g. select options), or
-        <code>None</code>.
-    document_count: Number of documents that have a value for this field.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>id:</strong>  Unique custom-field ID.</li>
+<li><strong>name:</strong>  Field name shown in the UI.</li>
+<li><strong>data_type:</strong>  The value type for this field (see
+<code><a href="#FieldDataType">FieldDataType</a></code>).</li>
+<li><strong>extra_data:</strong>  Additional configuration (e.g. select options), or
+<code>None</code>.</li>
+<li><strong>document_count:</strong>  Number of documents that have a value for this field.</li>
+</ul>
 </div>
 
 
@@ -6735,11 +7056,14 @@ is reused across calls and cleanup works correctly.</p>
 
             <div class="docstring"><p>A custom field value attached to a document.</p>
 
-<p>Attributes:
-    field: ID of the <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>
-        definition.
-    value: The stored value; its Python type depends on the field's
-        <code>data_type</code>.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>field:</strong>  ID of the <code>~<a href="#CustomField">easypaperless.models.custom_fields.CustomField</a></code>
+definition.</li>
+<li><strong>value:</strong>  The stored value; its Python type depends on the field's
+<code>data_type</code>.</li>
+</ul>
 </div>
 
 
@@ -6831,25 +7155,28 @@ is reused across calls and cleanup works correctly.</p>
 
             <div class="docstring"><p>A paperless-ngx document.</p>
 
-<p>Attributes:
-    id: Unique document ID.
-    title: Document title.
-    content: Full OCR text content, if available.
-    tags: List of tag IDs assigned to this document.
-    document_type: ID of the assigned document type, or <code>None</code>.
-    correspondent: ID of the assigned correspondent, or <code>None</code>.
-    storage_path: ID of the assigned storage path, or <code>None</code>.
-    created: Full creation datetime.
-    created_date: Date portion of creation (<code>date</code> object).
-    archive_serial_number: Archive serial number (ASN), or <code>None</code>.
-    custom_fields: List of <code><a href="#CustomFieldValue">CustomFieldValue</a></code> instances.
-    notes: User notes attached to this document.
-    search_hit: Full-text search relevance metadata, populated only when
-        the document was returned by a full-text search.
-    metadata: Extended file-level metadata (checksums, sizes, MIME type).
-        <code>None</code> unless the document was fetched with
-        <code>include_metadata=True</code> or enriched via
-        <code>~<a href="#PaperlessClient.get_document_metadata">easypaperless.PaperlessClient.get_document_metadata()</a></code>.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>id:</strong>  Unique document ID.</li>
+<li><strong>title:</strong>  Document title.</li>
+<li><strong>content:</strong>  Full OCR text content, if available.</li>
+<li><strong>tags:</strong>  List of tag IDs assigned to this document.</li>
+<li><strong>document_type:</strong>  ID of the assigned document type, or <code>None</code>.</li>
+<li><strong>correspondent:</strong>  ID of the assigned correspondent, or <code>None</code>.</li>
+<li><strong>storage_path:</strong>  ID of the assigned storage path, or <code>None</code>.</li>
+<li><strong>created:</strong>  Full creation datetime.</li>
+<li><strong>created_date:</strong>  Date portion of creation (<code>date</code> object).</li>
+<li><strong>archive_serial_number:</strong>  Archive serial number (ASN), or <code>None</code>.</li>
+<li><strong>custom_fields:</strong>  List of <code><a href="#CustomFieldValue">CustomFieldValue</a></code> instances.</li>
+<li><strong>notes:</strong>  User notes attached to this document.</li>
+<li><strong>search_hit:</strong>  Full-text search relevance metadata, populated only when
+the document was returned by a full-text search.</li>
+<li><strong>metadata:</strong>  Extended file-level metadata (checksums, sizes, MIME type).
+<code>None</code> unless the document was fetched with
+<code>include_metadata=True</code> or enriched via
+<code>~<a href="#PaperlessClient.get_document_metadata">easypaperless.PaperlessClient.get_document_metadata()</a></code>.</li>
+</ul>
 </div>
 
 
@@ -7168,22 +7495,25 @@ is called with <code>include_metadata=True</code>.</p>
 <p>Because reading metadata requires disk I/O it is <strong>not</strong> included in
 document list responses; it must be requested explicitly.</p>
 
-<p>Attributes:
-    original_checksum: MD5 checksum of the original uploaded file.
-    original_size: Size of the original file in bytes.
-    original_mime_type: MIME type of the original file
-        (e.g. <code>"application/pdf"</code>).
-    media_filename: Path of the archived file relative to the
-        paperless-ngx media root.
-    has_archive_version: <code>True</code> when paperless-ngx has produced an
-        archived (post-processed) PDF in addition to the original.
-    original_metadata: File-level metadata entries extracted from the
-        original document (PDF XMP/info tags, etc.).
-    archive_checksum: MD5 checksum of the archived file, or <code>None</code> if
-        no archive version exists.
-    archive_size: Size of the archived file in bytes, or <code>None</code>.
-    archive_metadata: File-level metadata entries from the archived
-        document, or <code>None</code>.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>original_checksum:</strong>  MD5 checksum of the original uploaded file.</li>
+<li><strong>original_size:</strong>  Size of the original file in bytes.</li>
+<li><strong>original_mime_type:</strong>  MIME type of the original file
+(e.g. <code>"application/pdf"</code>).</li>
+<li><strong>media_filename:</strong>  Path of the archived file relative to the
+paperless-ngx media root.</li>
+<li><strong>has_archive_version:</strong>  <code>True</code> when paperless-ngx has produced an
+archived (post-processed) PDF in addition to the original.</li>
+<li><strong>original_metadata:</strong>  File-level metadata entries extracted from the
+original document (PDF XMP/info tags, etc.).</li>
+<li><strong>archive_checksum:</strong>  MD5 checksum of the archived file, or <code>None</code> if
+no archive version exists.</li>
+<li><strong>archive_size:</strong>  Size of the archived file in bytes, or <code>None</code>.</li>
+<li><strong>archive_metadata:</strong>  File-level metadata entries from the archived
+document, or <code>None</code>.</li>
+</ul>
 </div>
 
 
@@ -7337,12 +7667,15 @@ document list responses; it must be requested explicitly.</p>
 
             <div class="docstring"><p>A user note attached to a document.</p>
 
-<p>Attributes:
-    id: Unique note ID.
-    note: Text content of the note.
-    created: Timestamp when the note was created.
-    document: ID of the parent document.
-    user: ID of the user who created the note.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>id:</strong>  Unique note ID.</li>
+<li><strong>note:</strong>  Text content of the note.</li>
+<li><strong>created:</strong>  Timestamp when the note was created.</li>
+<li><strong>document:</strong>  ID of the parent document.</li>
+<li><strong>user:</strong>  ID of the user who created the note.</li>
+</ul>
 </div>
 
 
@@ -7443,10 +7776,13 @@ document list responses; it must be requested explicitly.</p>
 
             <div class="docstring"><p>A paperless-ngx document type (e.g. Invoice, Receipt, Contract).</p>
 
-<p>Attributes:
-    id: Unique document-type ID.
-    name: Document-type name.
-    document_count: Number of documents assigned to this document type.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>id:</strong>  Unique document-type ID.</li>
+<li><strong>name:</strong>  Document-type name.</li>
+<li><strong>document_count:</strong>  Number of documents assigned to this document type.</li>
+</ul>
 </div>
 
 
@@ -7738,11 +8074,14 @@ document list responses; it must be requested explicitly.</p>
 exposes each entry in this format.  <code><a href="#FileMetadataEntry.namespace">namespace</a></code> and <code><a href="#FileMetadataEntry.prefix">prefix</a></code> are
 <code>None</code> for non-namespaced entries.</p>
 
-<p>Attributes:
-    namespace: XML namespace URI, or <code>None</code>.
-    prefix: Namespace prefix (e.g. <code>"pdf"</code>), or <code>None</code>.
-    key: Metadata key (e.g. <code>"Producer"</code>).
-    value: Metadata value as a string.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>namespace:</strong>  XML namespace URI, or <code>None</code>.</li>
+<li><strong>prefix:</strong>  Namespace prefix (e.g. <code>"pdf"</code>), or <code>None</code>.</li>
+<li><strong>key:</strong>  Metadata key (e.g. <code>"Producer"</code>).</li>
+<li><strong>value:</strong>  Metadata value as a string.</li>
+</ul>
 </div>
 
 
@@ -7817,32 +8156,31 @@ exposes each entry in this format.  <code><a href="#FileMetadataEntry.namespace"
 
 <p>A base class for creating Pydantic models.</p>
 
-<p>Attributes:
-    __class_vars__: The names of the class variables defined on the model.
-    __private_attributes__: Metadata about the private attributes of the model.
-    __signature__: The synthesized <code>__init__</code> [<code>Signature</code>][inspect.Signature] of the model.</p>
+<h6 id="attributes">Attributes:</h6>
 
-<pre><code>__pydantic_complete__: Whether model building is completed, or if there are still undefined fields.
-__pydantic_core_schema__: The core schema of the model.
-__pydantic_custom_init__: Whether the model has a custom `__init__` function.
-__pydantic_decorators__: Metadata containing the decorators defined on the model.
-    This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.
-__pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to
-    __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.
-__pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.
-__pydantic_post_init__: The name of the post-init method for the model, if defined.
-__pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].
-__pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.
-__pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.
-
-__pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.
-__pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.
-
-__pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]
-    is set to `'allow'`.
-__pydantic_fields_set__: The names of fields explicitly set during instantiation.
-__pydantic_private__: Values of private attributes set on the model instance.
-</code></pre>
+<ul>
+<li><strong>__class_vars__:</strong>  The names of the class variables defined on the model.</li>
+<li><strong>__private_attributes__:</strong>  Metadata about the private attributes of the model.</li>
+<li><strong>__signature__:</strong>  The synthesized <code>__init__</code> [<code>Signature</code>][inspect.Signature] of the model.</li>
+<li><strong>__pydantic_complete__:</strong>  Whether model building is completed, or if there are still undefined fields.</li>
+<li><strong>__pydantic_core_schema__:</strong>  The core schema of the model.</li>
+<li><strong>__pydantic_custom_init__:</strong>  Whether the model has a custom <code>__init__</code> function.</li>
+<li><strong>__pydantic_decorators__:</strong>  Metadata containing the decorators defined on the model.
+This replaces <code>Model.__validators__</code> and <code>Model.__root_validators__</code> from Pydantic V1.</li>
+<li><strong>__pydantic_generic_metadata__:</strong>  Metadata for generic models; contains data used for a similar purpose to
+__args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.</li>
+<li><strong>__pydantic_parent_namespace__:</strong>  Parent namespace of the model, used for automatic rebuilding of models.</li>
+<li><strong>__pydantic_post_init__:</strong>  The name of the post-init method for the model, if defined.</li>
+<li><strong>__pydantic_root_model__:</strong>  Whether the model is a [<code>RootModel</code>][pydantic.root_model.RootModel].</li>
+<li><strong>__pydantic_serializer__:</strong>  The <code>pydantic-core</code> <code>SchemaSerializer</code> used to dump instances of the model.</li>
+<li><strong>__pydantic_validator__:</strong>  The <code>pydantic-core</code> <code>SchemaValidator</code> used to validate instances of the model.</li>
+<li><strong>__pydantic_fields__:</strong>  A dictionary of field names and their corresponding [<code>FieldInfo</code>][pydantic.fields.FieldInfo] objects.</li>
+<li><strong>__pydantic_computed_fields__:</strong>  A dictionary of computed field names and their corresponding [<code>ComputedFieldInfo</code>][pydantic.fields.ComputedFieldInfo] objects.</li>
+<li><strong>__pydantic_extra__:</strong>  A dictionary containing extra values, if [<code>extra</code>][pydantic.config.ConfigDict.extra]
+is set to <code>'allow'</code>.</li>
+<li><strong>__pydantic_fields_set__:</strong>  The names of fields explicitly set during instantiation.</li>
+<li><strong>__pydantic_private__:</strong>  Values of private attributes set on the model instance.</li>
+</ul>
 </div>
 
 
@@ -7902,10 +8240,13 @@ __pydantic_private__: Values of private attributes set on the model instance.
 
             <div class="docstring"><p>Full-text search relevance metadata returned alongside a document.</p>
 
-<p>Attributes:
-    score: Relevance score assigned by the Whoosh FTS engine.
-    highlights: HTML snippet with matching terms highlighted.
-    rank: Position in the result set by relevance.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>score:</strong>  Relevance score assigned by the Whoosh FTS engine.</li>
+<li><strong>highlights:</strong>  HTML snippet with matching terms highlighted.</li>
+<li><strong>rank:</strong>  Position in the result set by relevance.</li>
+</ul>
 </div>
 
 
@@ -7980,32 +8321,31 @@ __pydantic_private__: Values of private attributes set on the model instance.
 
 <p>A base class for creating Pydantic models.</p>
 
-<p>Attributes:
-    __class_vars__: The names of the class variables defined on the model.
-    __private_attributes__: Metadata about the private attributes of the model.
-    __signature__: The synthesized <code>__init__</code> [<code>Signature</code>][inspect.Signature] of the model.</p>
+<h6 id="attributes">Attributes:</h6>
 
-<pre><code>__pydantic_complete__: Whether model building is completed, or if there are still undefined fields.
-__pydantic_core_schema__: The core schema of the model.
-__pydantic_custom_init__: Whether the model has a custom `__init__` function.
-__pydantic_decorators__: Metadata containing the decorators defined on the model.
-    This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.
-__pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to
-    __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.
-__pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.
-__pydantic_post_init__: The name of the post-init method for the model, if defined.
-__pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].
-__pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.
-__pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.
-
-__pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.
-__pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.
-
-__pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]
-    is set to `'allow'`.
-__pydantic_fields_set__: The names of fields explicitly set during instantiation.
-__pydantic_private__: Values of private attributes set on the model instance.
-</code></pre>
+<ul>
+<li><strong>__class_vars__:</strong>  The names of the class variables defined on the model.</li>
+<li><strong>__private_attributes__:</strong>  Metadata about the private attributes of the model.</li>
+<li><strong>__signature__:</strong>  The synthesized <code>__init__</code> [<code>Signature</code>][inspect.Signature] of the model.</li>
+<li><strong>__pydantic_complete__:</strong>  Whether model building is completed, or if there are still undefined fields.</li>
+<li><strong>__pydantic_core_schema__:</strong>  The core schema of the model.</li>
+<li><strong>__pydantic_custom_init__:</strong>  Whether the model has a custom <code>__init__</code> function.</li>
+<li><strong>__pydantic_decorators__:</strong>  Metadata containing the decorators defined on the model.
+This replaces <code>Model.__validators__</code> and <code>Model.__root_validators__</code> from Pydantic V1.</li>
+<li><strong>__pydantic_generic_metadata__:</strong>  Metadata for generic models; contains data used for a similar purpose to
+__args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.</li>
+<li><strong>__pydantic_parent_namespace__:</strong>  Parent namespace of the model, used for automatic rebuilding of models.</li>
+<li><strong>__pydantic_post_init__:</strong>  The name of the post-init method for the model, if defined.</li>
+<li><strong>__pydantic_root_model__:</strong>  Whether the model is a [<code>RootModel</code>][pydantic.root_model.RootModel].</li>
+<li><strong>__pydantic_serializer__:</strong>  The <code>pydantic-core</code> <code>SchemaSerializer</code> used to dump instances of the model.</li>
+<li><strong>__pydantic_validator__:</strong>  The <code>pydantic-core</code> <code>SchemaValidator</code> used to validate instances of the model.</li>
+<li><strong>__pydantic_fields__:</strong>  A dictionary of field names and their corresponding [<code>FieldInfo</code>][pydantic.fields.FieldInfo] objects.</li>
+<li><strong>__pydantic_computed_fields__:</strong>  A dictionary of computed field names and their corresponding [<code>ComputedFieldInfo</code>][pydantic.fields.ComputedFieldInfo] objects.</li>
+<li><strong>__pydantic_extra__:</strong>  A dictionary containing extra values, if [<code>extra</code>][pydantic.config.ConfigDict.extra]
+is set to <code>'allow'</code>.</li>
+<li><strong>__pydantic_fields_set__:</strong>  The names of fields explicitly set during instantiation.</li>
+<li><strong>__pydantic_private__:</strong>  Values of private attributes set on the model instance.</li>
+</ul>
 </div>
 
 
@@ -8073,12 +8413,15 @@ __pydantic_private__: Values of private attributes set on the model instance.
 
             <div class="docstring"><p>A paperless-ngx storage path — controls where archived files are stored.</p>
 
-<p>Attributes:
-    id: Unique storage-path ID.
-    name: Storage-path name.
-    path: Template string used to build the storage path, e.g.
-        <code>"{created_year}/{correspondent}/{title}"</code>.
-    document_count: Number of documents using this storage path.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>id:</strong>  Unique storage-path ID.</li>
+<li><strong>name:</strong>  Storage-path name.</li>
+<li><strong>path:</strong>  Template string used to build the storage path, e.g.
+<code>"{created_year}/{correspondent}/{title}"</code>.</li>
+<li><strong>document_count:</strong>  Number of documents using this storage path.</li>
+</ul>
 </div>
 
 
@@ -8249,15 +8592,18 @@ __pydantic_private__: Values of private attributes set on the model instance.
 
             <div class="docstring"><p>A paperless-ngx tag.</p>
 
-<p>Attributes:
-    id: Unique tag ID.
-    name: Tag name.
-    color: Hex colour code used in the UI (e.g. <code>"#ff0000"</code>).
-    is_inbox_tag: If <code>True</code>, newly ingested documents receive this tag
-        automatically until they are processed.
-    document_count: Number of documents currently assigned to this tag.
-    parent: ID of the parent tag for hierarchical tag trees, or <code>None</code>.
-    children: IDs of child tags, or <code>None</code>.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>id:</strong>  Unique tag ID.</li>
+<li><strong>name:</strong>  Tag name.</li>
+<li><strong>color:</strong>  Hex colour code used in the UI (e.g. <code>"#ff0000"</code>).</li>
+<li><strong>is_inbox_tag:</strong>  If <code>True</code>, newly ingested documents receive this tag
+automatically until they are processed.</li>
+<li><strong>document_count:</strong>  Number of documents currently assigned to this tag.</li>
+<li><strong>parent:</strong>  ID of the parent tag for hierarchical tag trees, or <code>None</code>.</li>
+<li><strong>children:</strong>  IDs of child tags, or <code>None</code>.</li>
+</ul>
 </div>
 
 
@@ -8469,13 +8815,16 @@ __pydantic_private__: Values of private attributes set on the model instance.
 
             <div class="docstring"><p>A paperless-ngx background processing task (e.g. document ingestion).</p>
 
-<p>Attributes:
-    task_id: Unique Celery task identifier.
-    task_file_name: Original file name submitted for processing.
-    status: Current task status as a <code><a href="#TaskStatus">TaskStatus</a></code> enum value.
-    result: Human-readable result or error message, set on completion.
-    related_document: String representation of the resulting document ID
-        on success, <code>None</code> otherwise.</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>task_id:</strong>  Unique Celery task identifier.</li>
+<li><strong>task_file_name:</strong>  Original file name submitted for processing.</li>
+<li><strong>status:</strong>  Current task status as a <code><a href="#TaskStatus">TaskStatus</a></code> enum value.</li>
+<li><strong>result:</strong>  Human-readable result or error message, set on completion.</li>
+<li><strong>related_document:</strong>  String representation of the resulting document ID
+on success, <code>None</code> otherwise.</li>
+</ul>
 </div>
 
 
@@ -8721,9 +9070,12 @@ __pydantic_private__: Values of private attributes set on the model instance.
 
             <div class="docstring"><p>Base exception for all easypaperless errors.</p>
 
-<p>Attributes:
-    status_code: The HTTP status code associated with the error, or
-        <code>None</code> for non-HTTP errors (e.g. timeouts, local validation).</p>
+<h6 id="attributes">Attributes:</h6>
+
+<ul>
+<li><strong>status_code:</strong>  The HTTP status code associated with the error, or
+<code>None</code> for non-HTTP errors (e.g. timeouts, local validation).</li>
+</ul>
 </div>
 
 
@@ -8751,9 +9103,12 @@ __pydantic_private__: Values of private attributes set on the model instance.
 
             <div class="docstring"><p>Create a PaperlessError.</p>
 
-<p>Args:
-    message: Human-readable error description.
-    status_code: HTTP status code, if applicable.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>message:</strong>  Human-readable error description.</li>
+<li><strong>status_code:</strong>  HTTP status code, if applicable.</li>
+</ul>
 </div>
 
 
@@ -8940,9 +9295,12 @@ terminal state within <code>poll_timeout</code> seconds.</p>
 
             <div class="docstring"><p>Create a PaperlessError.</p>
 
-<p>Args:
-    message: Human-readable error description.
-    status_code: HTTP status code, if applicable.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>message:</strong>  Human-readable error description.</li>
+<li><strong>status_code:</strong>  HTTP status code, if applicable.</li>
+</ul>
 </div>
 
 
