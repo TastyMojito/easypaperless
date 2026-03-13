@@ -26,15 +26,17 @@ class SyncStoragePathsResource:
         ids: List[int] | None = None,
         name_contains: str | None = None,
         name_exact: str | None = None,
+        path_contains: str | None = None,
+        path_exact: str | None = None,
         page: int | None = None,
         page_size: int | None = None,
         ordering: str | None = None,
         descending: bool = False,
     ) -> List[StoragePath]:
         """Return storage paths defined in paperless-ngx.
-        
+
         This is a sync wrapper for the async method with exactly the same parameters.
-        See: `easypaperless.StoragePathsResource.list` 
+        See: `easypaperless.StoragePathsResource.list`
         """
         return cast(
             List[StoragePath],
@@ -43,6 +45,8 @@ class SyncStoragePathsResource:
                     ids=ids,
                     name_contains=name_contains,
                     name_exact=name_exact,
+                    path_contains=path_contains,
+                    path_exact=path_exact,
                     page=page,
                     page_size=page_size,
                     ordering=ordering,
@@ -100,11 +104,12 @@ class SyncStoragePathsResource:
         matching_algorithm: MatchingAlgorithm | None | _Unset = UNSET,
         is_insensitive: bool | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
+        set_permissions: SetPermissions | None | _Unset = UNSET,
     ) -> StoragePath:
         """Partially update a storage path.
-        
+
         This is a sync wrapper for the async method with exactly the same parameters.
-        See: `easypaperless.StoragePathsResource.update` 
+        See: `easypaperless.StoragePathsResource.update`
         """
         return cast(
             StoragePath,
@@ -117,6 +122,7 @@ class SyncStoragePathsResource:
                     matching_algorithm=matching_algorithm,
                     is_insensitive=is_insensitive,
                     owner=owner,
+                    set_permissions=set_permissions,
                 )
             ),
         )

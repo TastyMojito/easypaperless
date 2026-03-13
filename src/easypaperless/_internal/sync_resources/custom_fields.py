@@ -22,20 +22,24 @@ class SyncCustomFieldsResource:
     def list(
         self,
         *,
+        name_contains: str | None = None,
+        name_exact: str | None = None,
         page: int | None = None,
         page_size: int | None = None,
         ordering: str | None = None,
         descending: bool = False,
     ) -> List[CustomField]:
         """Return all custom fields defined in paperless-ngx.
-        
+
         This is a sync wrapper for the async method with exactly the same parameters.
-        See: `easypaperless.CustomFieldsResource.list` 
+        See: `easypaperless.CustomFieldsResource.list`
         """
         return cast(
             List[CustomField],
             self._run(
                 self._async_custom_fields.list(
+                    name_contains=name_contains,
+                    name_exact=name_exact,
                     page=page,
                     page_size=page_size,
                     ordering=ordering,
@@ -84,12 +88,13 @@ class SyncCustomFieldsResource:
         id: int,
         *,
         name: str | None | _Unset = UNSET,
+        data_type: str | None | _Unset = UNSET,
         extra_data: Any | None | _Unset = UNSET,
     ) -> CustomField:
         """Partially update a custom field.
-        
+
         This is a sync wrapper for the async method with exactly the same parameters.
-        See: `easypaperless.CustomFieldsResource.update` 
+        See: `easypaperless.CustomFieldsResource.update`
         """
         return cast(
             CustomField,
@@ -97,6 +102,7 @@ class SyncCustomFieldsResource:
                 self._async_custom_fields.update(
                     id,
                     name=name,
+                    data_type=data_type,
                     extra_data=extra_data,
                 )
             ),

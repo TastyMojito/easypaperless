@@ -21,6 +21,8 @@ class CustomFieldsResource:
     async def list(
         self,
         *,
+        name_contains: str | None = None,
+        name_exact: str | None = None,
         page: int | None = None,
         page_size: int | None = None,
         ordering: str | None = None,
@@ -29,6 +31,8 @@ class CustomFieldsResource:
         """Return all custom fields defined in paperless-ngx.
 
         Args:
+            name_contains: Case-insensitive substring filter on name.
+            name_exact: Case-insensitive exact match on name.
             page: Return only this specific page (1-based).
             page_size: Number of results per page.
             ordering: Field to sort by.
@@ -38,6 +42,10 @@ class CustomFieldsResource:
             List of :class:`~easypaperless.models.custom_fields.CustomField` objects.
         """
         params: dict[str, Any] = {}
+        if name_contains is not None:
+            params["name__icontains"] = name_contains
+        if name_exact is not None:
+            params["name__iexact"] = name_exact
         if page is not None:
             params["page"] = page
         if page_size is not None:
@@ -104,6 +112,7 @@ class CustomFieldsResource:
         id: int,
         *,
         name: str | None | _Unset = UNSET,
+        data_type: str | None | _Unset = UNSET,
         extra_data: Any | None | _Unset = UNSET,
     ) -> CustomField:
         """Partially update a custom field (PATCH semantics).
@@ -111,6 +120,8 @@ class CustomFieldsResource:
         Args:
             id: Numeric ID of the custom field to update.
             name: Field name shown in the UI.
+            data_type: Value type (e.g. ``"string"``, ``"boolean"``, ``"integer"``).
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             extra_data: Additional configuration for the field type.
 
         Returns:
@@ -123,6 +134,7 @@ class CustomFieldsResource:
                 id,
                 CustomField,
                 name=name,
+                data_type=data_type,
                 extra_data=extra_data,
             ),
         )

@@ -182,6 +182,8 @@ class DocumentsResource:
         any_correspondent: List[int | str] | None = None,
         exclude_correspondents: List[int | str] | None = None,
         document_type: int | str | None | _Unset = UNSET,
+        document_type_name_contains: str | None = None,
+        document_type_name_exact: str | None = None,
         any_document_type: List[int | str] | None = None,
         exclude_document_types: List[int | str] | None = None,
         storage_path: int | str | None | _Unset = UNSET,
@@ -236,6 +238,8 @@ class DocumentsResource:
             document_type: Filter to documents of exactly this type.
                 Pass ``None`` to return only documents with no document type set.
                 Omit (or pass :data:`~easypaperless.UNSET`) to apply no filter.
+            document_type_name_contains: Case-insensitive substring filter on document type name.
+            document_type_name_exact: Case-insensitive exact match on document type name.
             any_document_type: Filter to documents whose type is any of these.
             exclude_document_types: Exclude documents whose type is any of these.
             storage_path: Filter to documents assigned to this storage path.
@@ -312,6 +316,11 @@ class DocumentsResource:
         if exclude_correspondents is not None:
             resolved = await resolver.resolve_list("correspondents", exclude_correspondents)
             params["correspondent__id__none"] = ",".join(str(c) for c in resolved)
+
+        if document_type_name_contains is not None:
+            params["document_type__name__icontains"] = document_type_name_contains
+        if document_type_name_exact is not None:
+            params["document_type__name__iexact"] = document_type_name_exact
 
         if any_document_type is not None:
             resolved = await resolver.resolve_list("document_types", any_document_type)
@@ -449,6 +458,7 @@ class DocumentsResource:
         custom_fields: List[dict[str, Any]] | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
         set_permissions: SetPermissions | None | _Unset = UNSET,
+        remove_inbox_tags: bool | None | _Unset = UNSET,
     ) -> Document:
         """Partially update a document (PATCH semantics).
 
@@ -475,6 +485,8 @@ class DocumentsResource:
                 Pass ``None`` to clear the owner.
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             set_permissions: Explicit view/change permission sets.
+            remove_inbox_tags: When ``True``, removes all inbox tags from the document.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
 
         Returns:
             The updated :class:`~easypaperless.models.documents.Document`.
@@ -517,6 +529,8 @@ class DocumentsResource:
             payload["owner"] = owner
         if not isinstance(set_permissions, _Unset):
             payload["set_permissions"] = (set_permissions or SetPermissions()).model_dump()
+        if not isinstance(remove_inbox_tags, _Unset):
+            payload["remove_inbox_tags"] = remove_inbox_tags
 
         resp = await self._core._session.patch(f"/documents/{id}/", json=payload)
         return Document.model_validate(resp.json())
@@ -567,6 +581,7 @@ class DocumentsResource:
         storage_path: int | str | None = None,
         tags: List[int | str] | None = None,
         asn: int | None = None,
+        custom_fields: List[dict[str, Any]] | None = None,
         wait: bool = False,
         poll_interval: float | None = None,
         poll_timeout: float | None = None,
@@ -582,6 +597,7 @@ class DocumentsResource:
             storage_path: Storage path to assign, as an ID or name.
             tags: Tags to assign, as IDs or names.
             asn: Archive serial number to assign.
+            custom_fields: List of ``{"field": <field_id>, "value": ...}`` dicts.
             wait: If ``False`` *(default)*, returns immediately with the task ID.
                 If ``True``, polls until processing completes.
             poll_interval: Override the client-level ``poll_interval``.
@@ -617,6 +633,8 @@ class DocumentsResource:
             data["tags"] = resolved
         if asn is not None:
             data["archive_serial_number"] = asn
+        if custom_fields is not None:
+            data["custom_fields"] = json.dumps(custom_fields)
 
         files = {"document": (file_path.name, file_bytes)}
         resp = await self._core._session.post("/documents/post_document/", data=data, files=files)

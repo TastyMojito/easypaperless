@@ -124,6 +124,7 @@ class CorrespondentsResource:
         matching_algorithm: MatchingAlgorithm | None | _Unset = UNSET,
         is_insensitive: bool | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
+        set_permissions: SetPermissions | None | _Unset = UNSET,
     ) -> Correspondent:
         """Partially update a correspondent (PATCH semantics).
 
@@ -136,10 +137,17 @@ class CorrespondentsResource:
             owner: Numeric user ID to assign as owner.
                 Pass ``None`` to clear the owner.
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
+            set_permissions: Explicit view/change permission sets.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
 
         Returns:
             The updated :class:`~easypaperless.models.correspondents.Correspondent`.
         """
+        _set_perms: dict[str, Any] | _Unset = (
+            UNSET
+            if isinstance(set_permissions, _Unset)
+            else (set_permissions or SetPermissions()).model_dump()
+        )
         return cast(
             Correspondent,
             await self._core._update_resource(
@@ -151,6 +159,7 @@ class CorrespondentsResource:
                 matching_algorithm=matching_algorithm,
                 is_insensitive=is_insensitive,
                 owner=owner,
+                set_permissions=_set_perms,
             ),
         )
 

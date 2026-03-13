@@ -25,6 +25,8 @@ class StoragePathsResource:
         ids: List[int] | None = None,
         name_contains: str | None = None,
         name_exact: str | None = None,
+        path_contains: str | None = None,
+        path_exact: str | None = None,
         page: int | None = None,
         page_size: int | None = None,
         ordering: str | None = None,
@@ -36,6 +38,8 @@ class StoragePathsResource:
             ids: Return only storage paths whose ID is in this list.
             name_contains: Case-insensitive substring filter on name.
             name_exact: Case-insensitive exact match on name.
+            path_contains: Case-insensitive substring filter on path template.
+            path_exact: Case-insensitive exact match on path template.
             page: Return only this specific page (1-based).
             page_size: Number of results per page.
             ordering: Field to sort by.
@@ -51,6 +55,10 @@ class StoragePathsResource:
             params["name__icontains"] = name_contains
         if name_exact is not None:
             params["name__iexact"] = name_exact
+        if path_contains is not None:
+            params["path__icontains"] = path_contains
+        if path_exact is not None:
+            params["path__iexact"] = path_exact
         if page is not None:
             params["page"] = page
         if page_size is not None:
@@ -126,6 +134,7 @@ class StoragePathsResource:
         matching_algorithm: MatchingAlgorithm | None | _Unset = UNSET,
         is_insensitive: bool | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
+        set_permissions: SetPermissions | None | _Unset = UNSET,
     ) -> StoragePath:
         """Partially update a storage path (PATCH semantics).
 
@@ -139,10 +148,17 @@ class StoragePathsResource:
             owner: Numeric user ID to assign as owner.
                 Pass ``None`` to clear the owner.
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
+            set_permissions: Explicit view/change permission sets.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
 
         Returns:
             The updated :class:`~easypaperless.models.storage_paths.StoragePath`.
         """
+        _set_perms: dict[str, Any] | _Unset = (
+            UNSET
+            if isinstance(set_permissions, _Unset)
+            else (set_permissions or SetPermissions()).model_dump()
+        )
         return cast(
             StoragePath,
             await self._core._update_resource(
@@ -155,6 +171,7 @@ class StoragePathsResource:
                 matching_algorithm=matching_algorithm,
                 is_insensitive=is_insensitive,
                 owner=owner,
+                set_permissions=_set_perms,
             ),
         )
 

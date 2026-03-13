@@ -106,11 +106,12 @@ class SyncTagsResource:
         is_insensitive: bool | None | _Unset = UNSET,
         parent: int | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
+        set_permissions: SetPermissions | None | _Unset = UNSET,
     ) -> Tag:
         """Partially update a tag.
-        
+
         This is a sync wrapper for the async method with exactly the same parameters.
-        See: `easypaperless.TagsResource.update` 
+        See: `easypaperless.TagsResource.update`
         """
         return cast(
             Tag,
@@ -125,6 +126,7 @@ class SyncTagsResource:
                     is_insensitive=is_insensitive,
                     parent=parent,
                     owner=owner,
+                    set_permissions=set_permissions,
                 )
             ),
         )

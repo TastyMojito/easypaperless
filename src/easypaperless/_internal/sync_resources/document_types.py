@@ -97,11 +97,12 @@ class SyncDocumentTypesResource:
         matching_algorithm: MatchingAlgorithm | None | _Unset = UNSET,
         is_insensitive: bool | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
+        set_permissions: SetPermissions | None | _Unset = UNSET,
     ) -> DocumentType:
         """Partially update a document type.
-        
+
         This is a sync wrapper for the async method with exactly the same parameters.
-        See: `easypaperless.DocumentTypesResource.update` 
+        See: `easypaperless.DocumentTypesResource.update`
         """
         return cast(
             DocumentType,
@@ -113,6 +114,7 @@ class SyncDocumentTypesResource:
                     matching_algorithm=matching_algorithm,
                     is_insensitive=is_insensitive,
                     owner=owner,
+                    set_permissions=set_permissions,
                 )
             ),
         )

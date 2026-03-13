@@ -86,6 +86,8 @@ class SyncDocumentsResource:
         any_correspondent: List[int | str] | None = None,
         exclude_correspondents: List[int | str] | None = None,
         document_type: int | str | None | _Unset = UNSET,
+        document_type_name_contains: str | None = None,
+        document_type_name_exact: str | None = None,
         any_document_type: List[int | str] | None = None,
         exclude_document_types: List[int | str] | None = None,
         storage_path: int | str | None | _Unset = UNSET,
@@ -137,6 +139,8 @@ class SyncDocumentsResource:
                     any_correspondent=any_correspondent,
                     exclude_correspondents=exclude_correspondents,
                     document_type=document_type,
+                    document_type_name_contains=document_type_name_contains,
+                    document_type_name_exact=document_type_name_exact,
                     any_document_type=any_document_type,
                     exclude_document_types=exclude_document_types,
                     storage_path=storage_path,
@@ -187,11 +191,12 @@ class SyncDocumentsResource:
         custom_fields: List[dict[str, Any]] | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
         set_permissions: SetPermissions | None | _Unset = UNSET,
+        remove_inbox_tags: bool | None | _Unset = UNSET,
     ) -> Document:
         """Partially update a document.
-        
+
         This is a sync wrapper for the async method with exactly the same parameters.
-        See: `easypaperless.DocumentsResource.update` 
+        See: `easypaperless.DocumentsResource.update`
         """
         return cast(
             Document,
@@ -209,6 +214,7 @@ class SyncDocumentsResource:
                     custom_fields=custom_fields,
                     owner=owner,
                     set_permissions=set_permissions,
+                    remove_inbox_tags=remove_inbox_tags,
                 )
             ),
         )
@@ -240,14 +246,15 @@ class SyncDocumentsResource:
         storage_path: int | str | None = None,
         tags: List[int | str] | None = None,
         asn: int | None = None,
+        custom_fields: List[dict[str, Any]] | None = None,
         wait: bool = False,
         poll_interval: float | None = None,
         poll_timeout: float | None = None,
     ) -> str | Document:
         """Upload a document to paperless-ngx.
-        
+
         This is a sync wrapper for the async method with exactly the same parameters.
-        See: `easypaperless.DocumentsResource.upload` 
+        See: `easypaperless.DocumentsResource.upload`
         """
         return cast(
             str | Document,
@@ -261,6 +268,7 @@ class SyncDocumentsResource:
                     storage_path=storage_path,
                     tags=tags,
                     asn=asn,
+                    custom_fields=custom_fields,
                     wait=wait,
                     poll_interval=poll_interval,
                     poll_timeout=poll_timeout,
