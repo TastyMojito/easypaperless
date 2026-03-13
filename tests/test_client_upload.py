@@ -71,7 +71,7 @@ async def test_upload_sends_metadata_fields(client, mock_router, tmp_path):
         document_type=3,
         storage_path=2,
         tags=[1, 7],
-        asn=42,
+        archive_serial_number=42,
     )
     assert result == "meta-task"
 

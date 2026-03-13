@@ -32,7 +32,7 @@ _DATETIME_STR_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T")
 
 _SEARCH_MODE_MAP = {
     "title": "title__icontains",
-    "title_or_text": "search",
+    "title_or_content": "search",
     "query": "query",
     "original_filename": "original_filename__icontains",
 }
@@ -173,7 +173,7 @@ class DocumentsResource:
         self,
         *,
         search: str | None = None,
-        search_mode: str = "title_or_text",
+        search_mode: str = "title_or_content",
         ids: List[int] | None = None,
         tags: List[int | str] | None = None,
         any_tags: List[int | str] | None = None,
@@ -224,7 +224,7 @@ class DocumentsResource:
         Args:
             search: Search string.  Behaviour depends on ``search_mode``.
             search_mode: How ``search`` is applied.  One of:
-                ``"title_or_text"`` *(default)*, ``"title"``, ``"query"``,
+                ``"title_or_content"`` *(default)*, ``"title"``, ``"query"``,
                 ``"original_filename"``.
             ids: Return only documents whose ID is in this list.
             tags: Documents must have **all** of these tags (AND semantics).
@@ -449,12 +449,12 @@ class DocumentsResource:
         *,
         title: str | None | _Unset = UNSET,
         content: str | None | _Unset = UNSET,
-        date: str | None | _Unset = UNSET,
+        created: date | str | None | _Unset = UNSET,
         correspondent: int | str | None | _Unset = UNSET,
         document_type: int | str | None | _Unset = UNSET,
         storage_path: int | str | None | _Unset = UNSET,
         tags: List[int | str] | None | _Unset = UNSET,
-        asn: int | None | _Unset = UNSET,
+        archive_serial_number: int | None | _Unset = UNSET,
         custom_fields: List[dict[str, Any]] | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
         set_permissions: SetPermissions | None | _Unset = UNSET,
@@ -466,7 +466,8 @@ class DocumentsResource:
             id: Numeric ID of the document to update.
             title: New document title.
             content: OCR text content of the document.
-            date: Creation date as an ISO-8601 string (``"YYYY-MM-DD"``).
+            created: Creation date as an ISO-8601 string (``"YYYY-MM-DD"``) or a
+                :class:`~datetime.date` object.
             correspondent: Correspondent to assign, as an ID or name.
                 Pass ``None`` to clear the correspondent.
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
@@ -477,7 +478,7 @@ class DocumentsResource:
                 Pass ``None`` to clear the storage path.
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             tags: Full replacement list of tags (IDs or names).
-            asn: Archive serial number to assign.
+            archive_serial_number: Archive serial number to assign.
                 Pass ``None`` to clear the archive serial number.
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             custom_fields: List of ``{"field": <field_id>, "value": ...}`` dicts.
@@ -499,8 +500,8 @@ class DocumentsResource:
             payload["title"] = title
         if not isinstance(content, _Unset):
             payload["content"] = content
-        if not isinstance(date, _Unset):
-            payload["created"] = date
+        if not isinstance(created, _Unset):
+            payload["created"] = self._format_date_value(created) if created is not None else None
         if not isinstance(correspondent, _Unset):
             payload["correspondent"] = (
                 None
@@ -521,8 +522,8 @@ class DocumentsResource:
             )
         if not isinstance(tags, _Unset):
             payload["tags"] = await resolver.resolve_list("tags", tags or [])
-        if not isinstance(asn, _Unset):
-            payload["archive_serial_number"] = asn
+        if not isinstance(archive_serial_number, _Unset):
+            payload["archive_serial_number"] = archive_serial_number
         if not isinstance(custom_fields, _Unset):
             payload["custom_fields"] = custom_fields
         if not isinstance(owner, _Unset):
@@ -575,12 +576,12 @@ class DocumentsResource:
         file: str | Path,
         *,
         title: str | None = None,
-        created: str | None = None,
+        created: date | str | None = None,
         correspondent: int | str | None = None,
         document_type: int | str | None = None,
         storage_path: int | str | None = None,
         tags: List[int | str] | None = None,
-        asn: int | None = None,
+        archive_serial_number: int | None = None,
         custom_fields: List[dict[str, Any]] | None = None,
         wait: bool = False,
         poll_interval: float | None = None,
@@ -591,12 +592,13 @@ class DocumentsResource:
         Args:
             file: Path to the file to upload.
             title: Title to assign to the document.
-            created: Creation date as an ISO-8601 string (``"YYYY-MM-DD"``).
+            created: Creation date as an ISO-8601 string (``"YYYY-MM-DD"``) or a
+                :class:`~datetime.date` object.
             correspondent: Correspondent to assign, as an ID or name.
             document_type: Document type to assign, as an ID or name.
             storage_path: Storage path to assign, as an ID or name.
             tags: Tags to assign, as IDs or names.
-            asn: Archive serial number to assign.
+            archive_serial_number: Archive serial number to assign.
             custom_fields: List of ``{"field": <field_id>, "value": ...}`` dicts.
             wait: If ``False`` *(default)*, returns immediately with the task ID.
                 If ``True``, polls until processing completes.
@@ -621,7 +623,7 @@ class DocumentsResource:
         if title is not None:
             data["title"] = title
         if created is not None:
-            data["created"] = created
+            data["created"] = self._format_date_value(created)
         if correspondent is not None:
             data["correspondent"] = await resolver.resolve("correspondents", correspondent)
         if document_type is not None:
@@ -631,8 +633,8 @@ class DocumentsResource:
         if tags is not None:
             resolved = await resolver.resolve_list("tags", tags)
             data["tags"] = resolved
-        if asn is not None:
-            data["archive_serial_number"] = asn
+        if archive_serial_number is not None:
+            data["archive_serial_number"] = archive_serial_number
         if custom_fields is not None:
             data["custom_fields"] = json.dumps(custom_fields)
 

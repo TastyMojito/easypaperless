@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- `DocumentsResource.update()`: parameter `date` renamed to `created`; parameter `asn` renamed to `archive_serial_number`.
+- `DocumentsResource.upload()`: parameter `asn` renamed to `archive_serial_number`.
+- `DocumentsResource.list()`: default `search_mode` changed from `"title_or_text"` to `"title_or_content"`; map key `"title_or_text"` removed in favour of `"title_or_content"`.
+
+### Fixed
+
+- `DocumentsResource.upload()` `created` parameter now also accepts a `date` object (previously only `str`).
+
 ## [0.2.0] - 2026-03-13
 
 ### Breaking Changes

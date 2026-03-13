@@ -123,7 +123,7 @@ async def test_list_documents_with_search(client, mock_router):
     assert len(docs) == 1
 
 
-async def test_list_documents_with_title_or_text_search(client, mock_router):
+async def test_list_documents_with_title_or_content_search(client, mock_router):
     mock_router.get("/documents/").mock(return_value=Response(200, json=DOC_LIST))
     docs = await client.documents.list(search="invoice")  # default mode
     assert len(docs) == 1
@@ -288,26 +288,34 @@ async def test_update_document_owner_and_permissions_not_sent_when_omitted(clien
     assert body == {"title": "New"}
 
 
-async def test_update_document_date_mapped_to_created(client, mock_router):
-    """date parameter is sent as 'created' in the PATCH payload."""
+async def test_update_document_created_sent_as_created(client, mock_router):
+    """created parameter is sent as 'created' in the PATCH payload."""
     captured: dict = {}
     mock_router.patch("/documents/1/").mock(
         side_effect=_patch_capturing_side_effect(captured, DOC_DATA)
     )
-    await client.documents.update(1, date="2024-06-15")
+    await client.documents.update(1, created="2024-06-15")
     assert captured["body"]["created"] == "2024-06-15"
-    assert "date" not in captured["body"]
 
 
-async def test_update_document_asn_mapped_to_archive_serial_number(client, mock_router):
-    """asn parameter is sent as 'archive_serial_number' in the PATCH payload."""
+async def test_update_document_created_accepts_date_object(client, mock_router):
+    """created parameter accepts a date object and formats it as ISO-8601."""
     captured: dict = {}
     mock_router.patch("/documents/1/").mock(
         side_effect=_patch_capturing_side_effect(captured, DOC_DATA)
     )
-    await client.documents.update(1, asn=42)
+    await client.documents.update(1, created=date(2024, 6, 15))
+    assert captured["body"]["created"] == "2024-06-15"
+
+
+async def test_update_document_archive_serial_number_sent_correctly(client, mock_router):
+    """archive_serial_number parameter is sent as 'archive_serial_number' in the PATCH payload."""
+    captured: dict = {}
+    mock_router.patch("/documents/1/").mock(
+        side_effect=_patch_capturing_side_effect(captured, DOC_DATA)
+    )
+    await client.documents.update(1, archive_serial_number=42)
     assert captured["body"]["archive_serial_number"] == 42
-    assert "asn" not in captured["body"]
 
 
 async def test_update_document_tags_with_name_resolution(client, mock_router):
@@ -1296,13 +1304,13 @@ async def test_update_document_none_owner_sends_null(client, mock_router):
     assert captured["body"]["owner"] is None
 
 
-async def test_update_document_none_asn_sends_null(client, mock_router):
-    """Passing asn=None must send null in the payload to clear the ASN."""
+async def test_update_document_none_archive_serial_number_sends_null(client, mock_router):
+    """Passing archive_serial_number=None must send null in the payload to clear the ASN."""
     captured: dict = {}
     mock_router.patch("/documents/1/").mock(
         side_effect=_patch_capturing_side_effect(captured, DOC_DATA)
     )
-    await client.documents.update(1, asn=None)
+    await client.documents.update(1, archive_serial_number=None)
     assert "archive_serial_number" in captured["body"]
     assert captured["body"]["archive_serial_number"] is None
 
