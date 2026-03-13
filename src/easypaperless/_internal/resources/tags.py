@@ -85,7 +85,7 @@ class TagsResource:
         is_inbox_tag: bool | None = None,
         match: str | None = None,
         matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
+        is_insensitive: bool = True,
         parent: int | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
         set_permissions: SetPermissions | None = None,
@@ -99,6 +99,7 @@ class TagsResource:
             match: Auto-matching pattern.
             matching_algorithm: Controls how ``match`` is applied.
             is_insensitive: When ``True``, ``match`` is case-insensitive.
+                Defaults to ``True``, matching the paperless-ngx API default.
             parent: ID of parent tag for hierarchical trees.
             owner: Numeric user ID to assign as owner.
             set_permissions: Explicit view/change permission sets.

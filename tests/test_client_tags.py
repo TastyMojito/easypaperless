@@ -77,6 +77,15 @@ async def test_create_tag(client, mock_router):
     assert tag.name == "invoice"
 
 
+async def test_create_tag_default_is_insensitive_sent_in_body(client, mock_router):
+    captured: dict = {}
+    mock_router.post("/tags/").mock(
+        side_effect=_json_capturing_side_effect(captured, TAG_DATA, status=201)
+    )
+    await client.tags.create(name="invoice")
+    assert captured["body"]["is_insensitive"] is True
+
+
 async def test_update_tag(client, mock_router):
     mock_router.patch("/tags/1/").mock(
         return_value=Response(200, json={**TAG_DATA, "name": "receipt"})
@@ -277,6 +286,15 @@ async def test_create_correspondent(client, mock_router):
     assert c.name == "ACME"
 
 
+async def test_create_correspondent_default_is_insensitive_sent_in_body(client, mock_router):
+    captured: dict = {}
+    mock_router.post("/correspondents/").mock(
+        side_effect=_json_capturing_side_effect(captured, CORR_DATA, status=201)
+    )
+    await client.correspondents.create(name="ACME")
+    assert captured["body"]["is_insensitive"] is True
+
+
 async def test_update_correspondent(client, mock_router):
     mock_router.patch("/correspondents/1/").mock(
         return_value=Response(200, json={**CORR_DATA, "name": "ACME Inc."})
@@ -474,6 +492,15 @@ async def test_create_document_type(client, mock_router):
     assert dt.name == "Invoice"
 
 
+async def test_create_document_type_default_is_insensitive_sent_in_body(client, mock_router):
+    captured: dict = {}
+    mock_router.post("/document_types/").mock(
+        side_effect=_json_capturing_side_effect(captured, DT_DATA, status=201)
+    )
+    await client.document_types.create(name="Invoice")
+    assert captured["body"]["is_insensitive"] is True
+
+
 async def test_update_document_type(client, mock_router):
     updated = {**DT_DATA, "name": "Receipt"}
     mock_router.patch("/document_types/1/").mock(
@@ -666,6 +693,15 @@ async def test_create_storage_path(client, mock_router):
     mock_router.post("/storage_paths/").mock(return_value=Response(201, json=SP_DATA))
     sp = await client.storage_paths.create(name="Archive")
     assert sp.name == "Archive"
+
+
+async def test_create_storage_path_default_is_insensitive_sent_in_body(client, mock_router):
+    captured: dict = {}
+    mock_router.post("/storage_paths/").mock(
+        side_effect=_json_capturing_side_effect(captured, SP_DATA, status=201)
+    )
+    await client.storage_paths.create(name="Archive")
+    assert captured["body"]["is_insensitive"] is True
 
 
 async def test_update_storage_path(client, mock_router):

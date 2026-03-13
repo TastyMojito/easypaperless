@@ -84,7 +84,7 @@ class DocumentTypesResource:
         name: str,
         match: str | None = None,
         matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
+        is_insensitive: bool = True,
         owner: int | None | _Unset = UNSET,
         set_permissions: SetPermissions | None = None,
     ) -> DocumentType:
@@ -95,6 +95,7 @@ class DocumentTypesResource:
             match: Auto-matching pattern.
             matching_algorithm: Controls how ``match`` is applied.
             is_insensitive: When ``True``, ``match`` is case-insensitive.
+                Defaults to ``True``, matching the paperless-ngx API default.
             owner: Numeric user ID to assign as owner.
             set_permissions: Explicit view/change permission sets.
 

@@ -67,7 +67,7 @@ class SyncTagsResource:
         is_inbox_tag: bool | None = None,
         match: str | None = None,
         matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
+        is_insensitive: bool = True,
         parent: int | None | _Unset = UNSET,
         owner: int | None | _Unset = UNSET,
         set_permissions: SetPermissions | None = None,

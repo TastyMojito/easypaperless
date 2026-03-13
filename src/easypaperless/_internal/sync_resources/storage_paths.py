@@ -70,7 +70,7 @@ class SyncStoragePathsResource:
         path: str | None = None,
         match: str | None = None,
         matching_algorithm: MatchingAlgorithm | None = None,
-        is_insensitive: bool | None = None,
+        is_insensitive: bool = True,
         owner: int | None | _Unset = UNSET,
         set_permissions: SetPermissions | None = None,
     ) -> StoragePath:
