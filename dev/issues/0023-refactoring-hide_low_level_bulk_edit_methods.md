@@ -1,0 +1,79 @@
+# [REFACTORING] Hide Low-Level Bulk Edit Methods from Public API
+
+## Summary
+
+`client.bulk_edit_objects()` and `client.documents.bulk_edit()` are currently exposed as public methods. They are internal implementation details that power the high-level bulk operation resource methods. They should be made private so users are guided to use the higher-level API only.
+
+---
+
+## Current State
+
+- `client.bulk_edit_objects()` is a public method on `PaperlessClient` (and `SyncPaperlessClient`).
+- `client.documents.bulk_edit()` is a public method on the documents resource.
+- Both are used internally by the high-level bulk operation methods (e.g. `client.documents.bulk_delete()`, `client.tags.bulk_delete()`, etc.).
+- Exposing these low-level methods invites misuse, increases the maintenance surface, and adds API noise for users who should only interact with the high-level methods.
+
+---
+
+## Desired State
+
+- `bulk_edit_objects` and `documents.bulk_edit` are private (prefixed with `_`) and no longer part of the documented public API.
+- The high-level bulk operation resource methods continue to work exactly as before, using the now-private helpers internally.
+- No sync wrappers exist for these methods (they were only needed because the methods were public; the private internal helpers do not require sync equivalents).
+- Users cannot accidentally discover or call these methods through normal IDE autocompletion or documentation.
+
+---
+
+## Motivation
+
+- [x] Reduce complexity
+- [x] Improve readability
+- [x] Align with current standards / conventions
+
+---
+
+## Scope
+
+### In Scope
+
+- Rename `bulk_edit_objects` to `_bulk_edit_objects` on the async client.
+- Rename `documents.bulk_edit` to `documents._bulk_edit` on the documents resource (async mixin).
+- Update all internal call sites to use the renamed private methods.
+- Remove any public sync wrappers for these two methods from `SyncPaperlessClient` and the sync documents mixin.
+- Remove these methods from `__init__.py` exports if currently listed there.
+
+### Out of Scope
+
+- Changes to the behavior or signatures of the high-level bulk operation methods.
+- Refactoring of any other methods beyond the two identified.
+- Changes to tests that exercise only the high-level methods (they should pass without modification).
+
+---
+
+## Risks & Considerations
+
+- Any user code directly calling `client.bulk_edit_objects()` or `client.documents.bulk_edit()` will break. These are considered low-level internals not intended for direct use, so this is an acceptable breaking change.
+- Unit and integration tests that directly call these methods must be updated to call the private equivalents or be removed if they only tested the internal mechanics.
+
+---
+
+## Acceptance Criteria
+
+- [ ] `client.bulk_edit_objects` is no longer accessible as a public attribute (renamed to `_bulk_edit_objects`).
+- [ ] `client.documents.bulk_edit` is no longer accessible as a public attribute (renamed to `_bulk_edit`).
+- [ ] All high-level bulk operation methods (e.g. `bulk_delete`, `bulk_add_tag`, etc.) continue to function correctly via the renamed private helpers.
+- [ ] No public sync wrappers exist for `_bulk_edit_objects` or `_bulk_edit`.
+- [ ] The methods do not appear in public documentation or `__init__.py` exports.
+- [ ] All existing tests for high-level bulk operations pass without modification.
+
+---
+
+## Priority
+
+`Medium`
+
+---
+
+## Additional Notes
+
+Related to issue #0018 (Resource-Based Client API refactoring) which introduced the high-level bulk operation resource methods that make these low-level methods redundant as public API surface.
