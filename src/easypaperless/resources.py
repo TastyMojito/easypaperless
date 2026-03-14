@@ -31,7 +31,10 @@ from easypaperless._internal.resources.tags import TagsResource
 from easypaperless._internal.sync_resources.correspondents import SyncCorrespondentsResource
 from easypaperless._internal.sync_resources.custom_fields import SyncCustomFieldsResource
 from easypaperless._internal.sync_resources.document_types import SyncDocumentTypesResource
-from easypaperless._internal.sync_resources.documents import SyncDocumentsResource, SyncNotesResource
+from easypaperless._internal.sync_resources.documents import (
+    SyncDocumentsResource,
+    SyncNotesResource,
+)
 from easypaperless._internal.sync_resources.storage_paths import SyncStoragePathsResource
 from easypaperless._internal.sync_resources.tags import SyncTagsResource
 

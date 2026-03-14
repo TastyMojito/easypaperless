@@ -39,14 +39,14 @@ async def test_upload_and_cleanup(client: PaperlessClient, uid: str) -> None:
 
     doc = None
     try:
-        result = await client.upload_document(
+        result = await client.documents.upload(
             tmp_path,
             title=f"__integration_upload_{uid}__",
             wait=True,
             poll_interval=2.0,
             poll_timeout=120.0,
         )
-        # upload_document with wait=True returns a Document
+        # upload with wait=True returns a Document
         from easypaperless import Document  # noqa: PLC0415
 
         assert isinstance(result, Document)
@@ -55,4 +55,4 @@ async def test_upload_and_cleanup(client: PaperlessClient, uid: str) -> None:
     finally:
         tmp_path.unlink(missing_ok=True)
         if doc is not None:
-            await client.delete_document(doc.id)
+            await client.documents.delete(doc.id)
