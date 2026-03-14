@@ -140,7 +140,6 @@ All functionality is accessed through resource attributes on the client (e.g. `c
 ### Client
 
 * **PaperlessClient / SyncPaperlessClient** Token-based authentication. Configurable timeout, poll interval, and poll timeout for slow instances.
-* **client.bulk_edit_objects()** Low-level batch operation on non-document system objects (tags, correspondents, etc.). Prefer the resource-level helpers below.
 
 ### `client.documents` — Documents
 
@@ -154,7 +153,6 @@ All functionality is accessed through resource attributes on the client (e.g. `c
 
 #### Document Bulk Operations
 
-* **bulk_edit()** Low-level method to execute arbitrary batch operations on a list of document IDs. Prefer the high-level helpers below.
 * **bulk_add_tag()** Add a single tag to a collection of documents in one request.
 * **bulk_remove_tag()** Strip a specific tag from multiple documents simultaneously.
 * **bulk_modify_tags()** Atomically add and remove multiple tags across a set of documents.
