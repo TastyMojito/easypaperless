@@ -179,8 +179,11 @@ class Document(BaseModel):
         document_type: ID of the assigned document type, or ``None``.
         correspondent: ID of the assigned correspondent, or ``None``.
         storage_path: ID of the assigned storage path, or ``None``.
-        created: Full creation datetime.
-        created_date: Date portion of creation (``date`` object).
+        created: Document creation date (``date`` object). Changed from
+            ``datetime`` to ``date`` in paperless-ngx API v9.
+        created_date: Date portion of creation. **Deprecated** by
+            paperless-ngx as of v9 — use ``created`` instead. Will be
+            removed in a future API version.
         archive_serial_number: Archive serial number (ASN), or ``None``.
         custom_fields: List of :class:`CustomFieldValue` instances.
         notes: User notes attached to this document.
@@ -201,7 +204,7 @@ class Document(BaseModel):
     document_type: int | None = None
     correspondent: int | None = None
     storage_path: int | None = None
-    created: datetime | None = None
+    created: date | None = None
     created_date: date | None = None
     modified: datetime | None = None
     added: datetime | None = None

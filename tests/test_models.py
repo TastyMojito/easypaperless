@@ -48,9 +48,16 @@ def test_document_created_date_is_date_not_datetime():
     assert isinstance(doc.created_date, date)
 
 
-def test_document_created_is_datetime():
-    doc = Document.model_validate({"id": 1, "title": "T", "created": "2024-03-15T10:00:00Z"})
-    assert isinstance(doc.created, datetime)
+def test_document_created_is_date():
+    doc = Document.model_validate({"id": 1, "title": "T", "created": "2024-03-15"})
+    assert isinstance(doc.created, date)
+    assert not isinstance(doc.created, datetime)
+
+
+def test_document_created_date_only_string_parses_without_error():
+    """Regression: date-only string from paperless-ngx v9+ must not raise ValidationError."""
+    doc = Document.model_validate({"id": 1, "title": "T", "created": "2024-01-15"})
+    assert doc.created == date(2024, 1, 15)
 
 
 def test_task_status_enum():
