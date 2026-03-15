@@ -83,7 +83,7 @@ async def main():
 
         # Fetch a single document
         doc = await client.documents.get(id=1)
-        print(doc.title, doc.created_date)
+        print(doc.title, doc.created)
 
         # check if a "API_edited" tag already exists - otherwise create it.
         tags = await client.tags.list(name_exact="API_edited")
@@ -120,7 +120,7 @@ with SyncPaperlessClient(url=url, api_key=api_key) as client:
 
     # Fetch a single document
     doc1 = client.documents.get(id=1)
-    print(doc1.title, doc1.created_date)
+    print(doc1.title, doc1.created)
 
     # check if a "API_edited" tag already exists - otherwise create it.
     tags = client.tags.list(name_exact="API_edited")
@@ -129,7 +129,7 @@ with SyncPaperlessClient(url=url, api_key=api_key) as client:
 
     # Update metadata — string names are resolved to IDs automatically
     doc_after_update = client.documents.update(id=1, tags=["API_edited"])
-    print(doc_after_update.title, doc_after_update.created_date, doc_after_update.tags)
+    print(doc_after_update.title, doc_after_update.created, doc_after_update.tags)
 
 ```
 

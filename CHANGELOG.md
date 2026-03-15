@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- `py.typed` marker file added to the package, making `easypaperless` PEP 561 compliant. Downstream projects running mypy will now receive full type information without needing `--ignore-missing-imports`.
+
+### Fixed
+
+- `Document.created` is now typed as `date | None` instead of `datetime | None`, matching the paperless-ngx v9+ API contract. Parsing documents returned by paperless-ngx v9+ no longer raises a Pydantic `ValidationError` for this field.
+  - **Note:** Non-midnight datetime strings (e.g. `"2024-03-15T10:00:00Z"`) passed as `created` will now raise a validation error. If you are on a pre-v9 instance that returns non-midnight datetimes for `created`, pin to `0.2.0`.
+  - `Document.created_date` is deprecated by paperless-ngx as of v9 and will be removed in a future API version; use `Document.created` instead.
+
+### Changed
+
+- Sync resource method docstrings (all classes in `_internal/sync_resources/`) now contain full, self-contained `Args`, `Returns`, and `Raises` sections. The previous pattern of deferring to the async counterpart via a cross-reference has been removed.
+
+---
+
 ## [0.2.0] - 2026-03-14
 
 ### Breaking Changes

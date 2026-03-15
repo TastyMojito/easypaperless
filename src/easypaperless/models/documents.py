@@ -131,7 +131,8 @@ class DocumentMetadata(BaseModel):
     """Extended file-level metadata for a document.
 
     Returned by ``GET /api/documents/{id}/metadata/`` and optionally attached
-    to a :class:`Document` when :meth:`~easypaperless.PaperlessClient.get_document`
+    to a :class:`Document` when
+    :meth:`~easypaperless._internal.resources.documents.DocumentsResource.get`
     is called with ``include_metadata=True``.
 
     Because reading metadata requires disk I/O it is **not** included in
@@ -191,8 +192,8 @@ class Document(BaseModel):
             the document was returned by a full-text search.
         metadata: Extended file-level metadata (checksums, sizes, MIME type).
             ``None`` unless the document was fetched with
-            ``include_metadata=True`` or enriched via
-            :meth:`~easypaperless.PaperlessClient.get_document_metadata`.
+            ``include_metadata=True`` or retrieved via
+            :meth:`~easypaperless._internal.resources.documents.DocumentsResource.get_metadata`.
     """
 
     model_config = ConfigDict(extra="ignore", populate_by_name=True)

@@ -1489,53 +1489,56 @@ definition.</li>
 
     </div>
     <a class="headerlink" href="#Document"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Document-172"><a href="#Document-172"><span class="linenos">172</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Document</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span><span id="Document-173"><a href="#Document-173"><span class="linenos">173</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;A paperless-ngx document.</span>
-</span><span id="Document-174"><a href="#Document-174"><span class="linenos">174</span></a>
-</span><span id="Document-175"><a href="#Document-175"><span class="linenos">175</span></a><span class="sd">    Attributes:</span>
-</span><span id="Document-176"><a href="#Document-176"><span class="linenos">176</span></a><span class="sd">        id: Unique document ID.</span>
-</span><span id="Document-177"><a href="#Document-177"><span class="linenos">177</span></a><span class="sd">        title: Document title.</span>
-</span><span id="Document-178"><a href="#Document-178"><span class="linenos">178</span></a><span class="sd">        content: Full OCR text content, if available.</span>
-</span><span id="Document-179"><a href="#Document-179"><span class="linenos">179</span></a><span class="sd">        tags: List of tag IDs assigned to this document.</span>
-</span><span id="Document-180"><a href="#Document-180"><span class="linenos">180</span></a><span class="sd">        document_type: ID of the assigned document type, or ``None``.</span>
-</span><span id="Document-181"><a href="#Document-181"><span class="linenos">181</span></a><span class="sd">        correspondent: ID of the assigned correspondent, or ``None``.</span>
-</span><span id="Document-182"><a href="#Document-182"><span class="linenos">182</span></a><span class="sd">        storage_path: ID of the assigned storage path, or ``None``.</span>
-</span><span id="Document-183"><a href="#Document-183"><span class="linenos">183</span></a><span class="sd">        created: Full creation datetime.</span>
-</span><span id="Document-184"><a href="#Document-184"><span class="linenos">184</span></a><span class="sd">        created_date: Date portion of creation (``date`` object).</span>
-</span><span id="Document-185"><a href="#Document-185"><span class="linenos">185</span></a><span class="sd">        archive_serial_number: Archive serial number (ASN), or ``None``.</span>
-</span><span id="Document-186"><a href="#Document-186"><span class="linenos">186</span></a><span class="sd">        custom_fields: List of :class:`CustomFieldValue` instances.</span>
-</span><span id="Document-187"><a href="#Document-187"><span class="linenos">187</span></a><span class="sd">        notes: User notes attached to this document.</span>
-</span><span id="Document-188"><a href="#Document-188"><span class="linenos">188</span></a><span class="sd">        search_hit: Full-text search relevance metadata, populated only when</span>
-</span><span id="Document-189"><a href="#Document-189"><span class="linenos">189</span></a><span class="sd">            the document was returned by a full-text search.</span>
-</span><span id="Document-190"><a href="#Document-190"><span class="linenos">190</span></a><span class="sd">        metadata: Extended file-level metadata (checksums, sizes, MIME type).</span>
-</span><span id="Document-191"><a href="#Document-191"><span class="linenos">191</span></a><span class="sd">            ``None`` unless the document was fetched with</span>
-</span><span id="Document-192"><a href="#Document-192"><span class="linenos">192</span></a><span class="sd">            ``include_metadata=True`` or enriched via</span>
-</span><span id="Document-193"><a href="#Document-193"><span class="linenos">193</span></a><span class="sd">            :meth:`~easypaperless.PaperlessClient.get_document_metadata`.</span>
-</span><span id="Document-194"><a href="#Document-194"><span class="linenos">194</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="Document-195"><a href="#Document-195"><span class="linenos">195</span></a>
-</span><span id="Document-196"><a href="#Document-196"><span class="linenos">196</span></a>    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">populate_by_name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="Document-197"><a href="#Document-197"><span class="linenos">197</span></a>
-</span><span id="Document-198"><a href="#Document-198"><span class="linenos">198</span></a>    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
-</span><span id="Document-199"><a href="#Document-199"><span class="linenos">199</span></a>    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="Document-200"><a href="#Document-200"><span class="linenos">200</span></a>    <span class="n">content</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-201"><a href="#Document-201"><span class="linenos">201</span></a>    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-</span><span id="Document-202"><a href="#Document-202"><span class="linenos">202</span></a>    <span class="n">document_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-203"><a href="#Document-203"><span class="linenos">203</span></a>    <span class="n">correspondent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-204"><a href="#Document-204"><span class="linenos">204</span></a>    <span class="n">storage_path</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-205"><a href="#Document-205"><span class="linenos">205</span></a>    <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-206"><a href="#Document-206"><span class="linenos">206</span></a>    <span class="n">created_date</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-207"><a href="#Document-207"><span class="linenos">207</span></a>    <span class="n">modified</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-208"><a href="#Document-208"><span class="linenos">208</span></a>    <span class="n">added</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-209"><a href="#Document-209"><span class="linenos">209</span></a>    <span class="n">archive_serial_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-210"><a href="#Document-210"><span class="linenos">210</span></a>    <span class="n">original_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-211"><a href="#Document-211"><span class="linenos">211</span></a>    <span class="n">archived_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-212"><a href="#Document-212"><span class="linenos">212</span></a>    <span class="n">owner</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-213"><a href="#Document-213"><span class="linenos">213</span></a>    <span class="n">user_can_change</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-214"><a href="#Document-214"><span class="linenos">214</span></a>    <span class="n">is_shared_by_requester</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="Document-215"><a href="#Document-215"><span class="linenos">215</span></a>    <span class="n">notes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DocumentNote</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-</span><span id="Document-216"><a href="#Document-216"><span class="linenos">216</span></a>    <span class="n">custom_fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CustomFieldValue</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-</span><span id="Document-217"><a href="#Document-217"><span class="linenos">217</span></a>    <span class="n">search_hit</span><span class="p">:</span> <span class="n">SearchHit</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;__search_hit__&quot;</span><span class="p">)</span>
-</span><span id="Document-218"><a href="#Document-218"><span class="linenos">218</span></a>    <span class="n">metadata</span><span class="p">:</span> <span class="n">DocumentMetadata</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Document-173"><a href="#Document-173"><span class="linenos">173</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Document</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="Document-174"><a href="#Document-174"><span class="linenos">174</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;A paperless-ngx document.</span>
+</span><span id="Document-175"><a href="#Document-175"><span class="linenos">175</span></a>
+</span><span id="Document-176"><a href="#Document-176"><span class="linenos">176</span></a><span class="sd">    Attributes:</span>
+</span><span id="Document-177"><a href="#Document-177"><span class="linenos">177</span></a><span class="sd">        id: Unique document ID.</span>
+</span><span id="Document-178"><a href="#Document-178"><span class="linenos">178</span></a><span class="sd">        title: Document title.</span>
+</span><span id="Document-179"><a href="#Document-179"><span class="linenos">179</span></a><span class="sd">        content: Full OCR text content, if available.</span>
+</span><span id="Document-180"><a href="#Document-180"><span class="linenos">180</span></a><span class="sd">        tags: List of tag IDs assigned to this document.</span>
+</span><span id="Document-181"><a href="#Document-181"><span class="linenos">181</span></a><span class="sd">        document_type: ID of the assigned document type, or ``None``.</span>
+</span><span id="Document-182"><a href="#Document-182"><span class="linenos">182</span></a><span class="sd">        correspondent: ID of the assigned correspondent, or ``None``.</span>
+</span><span id="Document-183"><a href="#Document-183"><span class="linenos">183</span></a><span class="sd">        storage_path: ID of the assigned storage path, or ``None``.</span>
+</span><span id="Document-184"><a href="#Document-184"><span class="linenos">184</span></a><span class="sd">        created: Document creation date (``date`` object). Changed from</span>
+</span><span id="Document-185"><a href="#Document-185"><span class="linenos">185</span></a><span class="sd">            ``datetime`` to ``date`` in paperless-ngx API v9.</span>
+</span><span id="Document-186"><a href="#Document-186"><span class="linenos">186</span></a><span class="sd">        created_date: Date portion of creation. **Deprecated** by</span>
+</span><span id="Document-187"><a href="#Document-187"><span class="linenos">187</span></a><span class="sd">            paperless-ngx as of v9 — use ``created`` instead. Will be</span>
+</span><span id="Document-188"><a href="#Document-188"><span class="linenos">188</span></a><span class="sd">            removed in a future API version.</span>
+</span><span id="Document-189"><a href="#Document-189"><span class="linenos">189</span></a><span class="sd">        archive_serial_number: Archive serial number (ASN), or ``None``.</span>
+</span><span id="Document-190"><a href="#Document-190"><span class="linenos">190</span></a><span class="sd">        custom_fields: List of :class:`CustomFieldValue` instances.</span>
+</span><span id="Document-191"><a href="#Document-191"><span class="linenos">191</span></a><span class="sd">        notes: User notes attached to this document.</span>
+</span><span id="Document-192"><a href="#Document-192"><span class="linenos">192</span></a><span class="sd">        search_hit: Full-text search relevance metadata, populated only when</span>
+</span><span id="Document-193"><a href="#Document-193"><span class="linenos">193</span></a><span class="sd">            the document was returned by a full-text search.</span>
+</span><span id="Document-194"><a href="#Document-194"><span class="linenos">194</span></a><span class="sd">        metadata: Extended file-level metadata (checksums, sizes, MIME type).</span>
+</span><span id="Document-195"><a href="#Document-195"><span class="linenos">195</span></a><span class="sd">            ``None`` unless the document was fetched with</span>
+</span><span id="Document-196"><a href="#Document-196"><span class="linenos">196</span></a><span class="sd">            ``include_metadata=True`` or retrieved via</span>
+</span><span id="Document-197"><a href="#Document-197"><span class="linenos">197</span></a><span class="sd">            :meth:`~easypaperless._internal.resources.documents.DocumentsResource.get_metadata`.</span>
+</span><span id="Document-198"><a href="#Document-198"><span class="linenos">198</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="Document-199"><a href="#Document-199"><span class="linenos">199</span></a>
+</span><span id="Document-200"><a href="#Document-200"><span class="linenos">200</span></a>    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">populate_by_name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="Document-201"><a href="#Document-201"><span class="linenos">201</span></a>
+</span><span id="Document-202"><a href="#Document-202"><span class="linenos">202</span></a>    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="Document-203"><a href="#Document-203"><span class="linenos">203</span></a>    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="Document-204"><a href="#Document-204"><span class="linenos">204</span></a>    <span class="n">content</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-205"><a href="#Document-205"><span class="linenos">205</span></a>    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+</span><span id="Document-206"><a href="#Document-206"><span class="linenos">206</span></a>    <span class="n">document_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-207"><a href="#Document-207"><span class="linenos">207</span></a>    <span class="n">correspondent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-208"><a href="#Document-208"><span class="linenos">208</span></a>    <span class="n">storage_path</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-209"><a href="#Document-209"><span class="linenos">209</span></a>    <span class="n">created</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-210"><a href="#Document-210"><span class="linenos">210</span></a>    <span class="n">created_date</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-211"><a href="#Document-211"><span class="linenos">211</span></a>    <span class="n">modified</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-212"><a href="#Document-212"><span class="linenos">212</span></a>    <span class="n">added</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-213"><a href="#Document-213"><span class="linenos">213</span></a>    <span class="n">archive_serial_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-214"><a href="#Document-214"><span class="linenos">214</span></a>    <span class="n">original_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-215"><a href="#Document-215"><span class="linenos">215</span></a>    <span class="n">archived_file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-216"><a href="#Document-216"><span class="linenos">216</span></a>    <span class="n">owner</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-217"><a href="#Document-217"><span class="linenos">217</span></a>    <span class="n">user_can_change</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-218"><a href="#Document-218"><span class="linenos">218</span></a>    <span class="n">is_shared_by_requester</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="Document-219"><a href="#Document-219"><span class="linenos">219</span></a>    <span class="n">notes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DocumentNote</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+</span><span id="Document-220"><a href="#Document-220"><span class="linenos">220</span></a>    <span class="n">custom_fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CustomFieldValue</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+</span><span id="Document-221"><a href="#Document-221"><span class="linenos">221</span></a>    <span class="n">search_hit</span><span class="p">:</span> <span class="n">SearchHit</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;__search_hit__&quot;</span><span class="p">)</span>
+</span><span id="Document-222"><a href="#Document-222"><span class="linenos">222</span></a>    <span class="n">metadata</span><span class="p">:</span> <span class="n">DocumentMetadata</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 </span></pre></div>
 
 
@@ -1551,8 +1554,11 @@ definition.</li>
 <li><strong>document_type:</strong>  ID of the assigned document type, or <code>None</code>.</li>
 <li><strong>correspondent:</strong>  ID of the assigned correspondent, or <code>None</code>.</li>
 <li><strong>storage_path:</strong>  ID of the assigned storage path, or <code>None</code>.</li>
-<li><strong>created:</strong>  Full creation datetime.</li>
-<li><strong>created_date:</strong>  Date portion of creation (<code>date</code> object).</li>
+<li><strong>created:</strong>  Document creation date (<code>date</code> object). Changed from
+<code>datetime</code> to <code>date</code> in paperless-ngx API v9.</li>
+<li><strong>created_date:</strong>  Date portion of creation. <strong>Deprecated</strong> by
+paperless-ngx as of v9 — use <code><a href="#Document.created">created</a></code> instead. Will be
+removed in a future API version.</li>
 <li><strong>archive_serial_number:</strong>  Archive serial number (ASN), or <code>None</code>.</li>
 <li><strong>custom_fields:</strong>  List of <code><a href="#CustomFieldValue">CustomFieldValue</a></code> instances.</li>
 <li><strong>notes:</strong>  User notes attached to this document.</li>
@@ -1560,8 +1566,8 @@ definition.</li>
 the document was returned by a full-text search.</li>
 <li><strong>metadata:</strong>  Extended file-level metadata (checksums, sizes, MIME type).
 <code>None</code> unless the document was fetched with
-<code>include_metadata=True</code> or enriched via
-<code>~easypaperless.PaperlessClient.get_document_metadata()</code>.</li>
+<code>include_metadata=True</code> or retrieved via
+<code>~easypaperless._internal.resources.documents.DocumentsResource.get_metadata()</code>.</li>
 </ul>
 </div>
 
@@ -1652,7 +1658,7 @@ the document was returned by a full-text search.</li>
                             </div>
                             <div id="Document.created" class="classattr">
                                 <div class="attr variable">
-            <span class="name">created</span><span class="annotation">: datetime.datetime | None</span>        =
+            <span class="name">created</span><span class="annotation">: datetime.date | None</span>        =
 <span class="default_value">None</span>
 
         
@@ -1834,48 +1840,50 @@ the document was returned by a full-text search.</li>
 </span><span id="DocumentMetadata-132"><a href="#DocumentMetadata-132"><span class="linenos">132</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extended file-level metadata for a document.</span>
 </span><span id="DocumentMetadata-133"><a href="#DocumentMetadata-133"><span class="linenos">133</span></a>
 </span><span id="DocumentMetadata-134"><a href="#DocumentMetadata-134"><span class="linenos">134</span></a><span class="sd">    Returned by ``GET /api/documents/{id}/metadata/`` and optionally attached</span>
-</span><span id="DocumentMetadata-135"><a href="#DocumentMetadata-135"><span class="linenos">135</span></a><span class="sd">    to a :class:`Document` when :meth:`~easypaperless.PaperlessClient.get_document`</span>
-</span><span id="DocumentMetadata-136"><a href="#DocumentMetadata-136"><span class="linenos">136</span></a><span class="sd">    is called with ``include_metadata=True``.</span>
-</span><span id="DocumentMetadata-137"><a href="#DocumentMetadata-137"><span class="linenos">137</span></a>
-</span><span id="DocumentMetadata-138"><a href="#DocumentMetadata-138"><span class="linenos">138</span></a><span class="sd">    Because reading metadata requires disk I/O it is **not** included in</span>
-</span><span id="DocumentMetadata-139"><a href="#DocumentMetadata-139"><span class="linenos">139</span></a><span class="sd">    document list responses; it must be requested explicitly.</span>
-</span><span id="DocumentMetadata-140"><a href="#DocumentMetadata-140"><span class="linenos">140</span></a>
-</span><span id="DocumentMetadata-141"><a href="#DocumentMetadata-141"><span class="linenos">141</span></a><span class="sd">    Attributes:</span>
-</span><span id="DocumentMetadata-142"><a href="#DocumentMetadata-142"><span class="linenos">142</span></a><span class="sd">        original_checksum: MD5 checksum of the original uploaded file.</span>
-</span><span id="DocumentMetadata-143"><a href="#DocumentMetadata-143"><span class="linenos">143</span></a><span class="sd">        original_size: Size of the original file in bytes.</span>
-</span><span id="DocumentMetadata-144"><a href="#DocumentMetadata-144"><span class="linenos">144</span></a><span class="sd">        original_mime_type: MIME type of the original file</span>
-</span><span id="DocumentMetadata-145"><a href="#DocumentMetadata-145"><span class="linenos">145</span></a><span class="sd">            (e.g. ``&quot;application/pdf&quot;``).</span>
-</span><span id="DocumentMetadata-146"><a href="#DocumentMetadata-146"><span class="linenos">146</span></a><span class="sd">        media_filename: Path of the archived file relative to the</span>
-</span><span id="DocumentMetadata-147"><a href="#DocumentMetadata-147"><span class="linenos">147</span></a><span class="sd">            paperless-ngx media root.</span>
-</span><span id="DocumentMetadata-148"><a href="#DocumentMetadata-148"><span class="linenos">148</span></a><span class="sd">        has_archive_version: ``True`` when paperless-ngx has produced an</span>
-</span><span id="DocumentMetadata-149"><a href="#DocumentMetadata-149"><span class="linenos">149</span></a><span class="sd">            archived (post-processed) PDF in addition to the original.</span>
-</span><span id="DocumentMetadata-150"><a href="#DocumentMetadata-150"><span class="linenos">150</span></a><span class="sd">        original_metadata: File-level metadata entries extracted from the</span>
-</span><span id="DocumentMetadata-151"><a href="#DocumentMetadata-151"><span class="linenos">151</span></a><span class="sd">            original document (PDF XMP/info tags, etc.).</span>
-</span><span id="DocumentMetadata-152"><a href="#DocumentMetadata-152"><span class="linenos">152</span></a><span class="sd">        archive_checksum: MD5 checksum of the archived file, or ``None`` if</span>
-</span><span id="DocumentMetadata-153"><a href="#DocumentMetadata-153"><span class="linenos">153</span></a><span class="sd">            no archive version exists.</span>
-</span><span id="DocumentMetadata-154"><a href="#DocumentMetadata-154"><span class="linenos">154</span></a><span class="sd">        archive_size: Size of the archived file in bytes, or ``None``.</span>
-</span><span id="DocumentMetadata-155"><a href="#DocumentMetadata-155"><span class="linenos">155</span></a><span class="sd">        archive_metadata: File-level metadata entries from the archived</span>
-</span><span id="DocumentMetadata-156"><a href="#DocumentMetadata-156"><span class="linenos">156</span></a><span class="sd">            document, or ``None``.</span>
-</span><span id="DocumentMetadata-157"><a href="#DocumentMetadata-157"><span class="linenos">157</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="DocumentMetadata-158"><a href="#DocumentMetadata-158"><span class="linenos">158</span></a>
-</span><span id="DocumentMetadata-159"><a href="#DocumentMetadata-159"><span class="linenos">159</span></a>    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
-</span><span id="DocumentMetadata-160"><a href="#DocumentMetadata-160"><span class="linenos">160</span></a>
-</span><span id="DocumentMetadata-161"><a href="#DocumentMetadata-161"><span class="linenos">161</span></a>    <span class="n">original_checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="DocumentMetadata-162"><a href="#DocumentMetadata-162"><span class="linenos">162</span></a>    <span class="n">original_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="DocumentMetadata-163"><a href="#DocumentMetadata-163"><span class="linenos">163</span></a>    <span class="n">original_mime_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="DocumentMetadata-164"><a href="#DocumentMetadata-164"><span class="linenos">164</span></a>    <span class="n">media_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="DocumentMetadata-165"><a href="#DocumentMetadata-165"><span class="linenos">165</span></a>    <span class="n">has_archive_version</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="DocumentMetadata-166"><a href="#DocumentMetadata-166"><span class="linenos">166</span></a>    <span class="n">original_metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FileMetadataEntry</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-</span><span id="DocumentMetadata-167"><a href="#DocumentMetadata-167"><span class="linenos">167</span></a>    <span class="n">archive_checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="DocumentMetadata-168"><a href="#DocumentMetadata-168"><span class="linenos">168</span></a>    <span class="n">archive_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="DocumentMetadata-169"><a href="#DocumentMetadata-169"><span class="linenos">169</span></a>    <span class="n">archive_metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FileMetadataEntry</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="DocumentMetadata-135"><a href="#DocumentMetadata-135"><span class="linenos">135</span></a><span class="sd">    to a :class:`Document` when</span>
+</span><span id="DocumentMetadata-136"><a href="#DocumentMetadata-136"><span class="linenos">136</span></a><span class="sd">    :meth:`~easypaperless._internal.resources.documents.DocumentsResource.get`</span>
+</span><span id="DocumentMetadata-137"><a href="#DocumentMetadata-137"><span class="linenos">137</span></a><span class="sd">    is called with ``include_metadata=True``.</span>
+</span><span id="DocumentMetadata-138"><a href="#DocumentMetadata-138"><span class="linenos">138</span></a>
+</span><span id="DocumentMetadata-139"><a href="#DocumentMetadata-139"><span class="linenos">139</span></a><span class="sd">    Because reading metadata requires disk I/O it is **not** included in</span>
+</span><span id="DocumentMetadata-140"><a href="#DocumentMetadata-140"><span class="linenos">140</span></a><span class="sd">    document list responses; it must be requested explicitly.</span>
+</span><span id="DocumentMetadata-141"><a href="#DocumentMetadata-141"><span class="linenos">141</span></a>
+</span><span id="DocumentMetadata-142"><a href="#DocumentMetadata-142"><span class="linenos">142</span></a><span class="sd">    Attributes:</span>
+</span><span id="DocumentMetadata-143"><a href="#DocumentMetadata-143"><span class="linenos">143</span></a><span class="sd">        original_checksum: MD5 checksum of the original uploaded file.</span>
+</span><span id="DocumentMetadata-144"><a href="#DocumentMetadata-144"><span class="linenos">144</span></a><span class="sd">        original_size: Size of the original file in bytes.</span>
+</span><span id="DocumentMetadata-145"><a href="#DocumentMetadata-145"><span class="linenos">145</span></a><span class="sd">        original_mime_type: MIME type of the original file</span>
+</span><span id="DocumentMetadata-146"><a href="#DocumentMetadata-146"><span class="linenos">146</span></a><span class="sd">            (e.g. ``&quot;application/pdf&quot;``).</span>
+</span><span id="DocumentMetadata-147"><a href="#DocumentMetadata-147"><span class="linenos">147</span></a><span class="sd">        media_filename: Path of the archived file relative to the</span>
+</span><span id="DocumentMetadata-148"><a href="#DocumentMetadata-148"><span class="linenos">148</span></a><span class="sd">            paperless-ngx media root.</span>
+</span><span id="DocumentMetadata-149"><a href="#DocumentMetadata-149"><span class="linenos">149</span></a><span class="sd">        has_archive_version: ``True`` when paperless-ngx has produced an</span>
+</span><span id="DocumentMetadata-150"><a href="#DocumentMetadata-150"><span class="linenos">150</span></a><span class="sd">            archived (post-processed) PDF in addition to the original.</span>
+</span><span id="DocumentMetadata-151"><a href="#DocumentMetadata-151"><span class="linenos">151</span></a><span class="sd">        original_metadata: File-level metadata entries extracted from the</span>
+</span><span id="DocumentMetadata-152"><a href="#DocumentMetadata-152"><span class="linenos">152</span></a><span class="sd">            original document (PDF XMP/info tags, etc.).</span>
+</span><span id="DocumentMetadata-153"><a href="#DocumentMetadata-153"><span class="linenos">153</span></a><span class="sd">        archive_checksum: MD5 checksum of the archived file, or ``None`` if</span>
+</span><span id="DocumentMetadata-154"><a href="#DocumentMetadata-154"><span class="linenos">154</span></a><span class="sd">            no archive version exists.</span>
+</span><span id="DocumentMetadata-155"><a href="#DocumentMetadata-155"><span class="linenos">155</span></a><span class="sd">        archive_size: Size of the archived file in bytes, or ``None``.</span>
+</span><span id="DocumentMetadata-156"><a href="#DocumentMetadata-156"><span class="linenos">156</span></a><span class="sd">        archive_metadata: File-level metadata entries from the archived</span>
+</span><span id="DocumentMetadata-157"><a href="#DocumentMetadata-157"><span class="linenos">157</span></a><span class="sd">            document, or ``None``.</span>
+</span><span id="DocumentMetadata-158"><a href="#DocumentMetadata-158"><span class="linenos">158</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="DocumentMetadata-159"><a href="#DocumentMetadata-159"><span class="linenos">159</span></a>
+</span><span id="DocumentMetadata-160"><a href="#DocumentMetadata-160"><span class="linenos">160</span></a>    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+</span><span id="DocumentMetadata-161"><a href="#DocumentMetadata-161"><span class="linenos">161</span></a>
+</span><span id="DocumentMetadata-162"><a href="#DocumentMetadata-162"><span class="linenos">162</span></a>    <span class="n">original_checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="DocumentMetadata-163"><a href="#DocumentMetadata-163"><span class="linenos">163</span></a>    <span class="n">original_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="DocumentMetadata-164"><a href="#DocumentMetadata-164"><span class="linenos">164</span></a>    <span class="n">original_mime_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="DocumentMetadata-165"><a href="#DocumentMetadata-165"><span class="linenos">165</span></a>    <span class="n">media_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="DocumentMetadata-166"><a href="#DocumentMetadata-166"><span class="linenos">166</span></a>    <span class="n">has_archive_version</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="DocumentMetadata-167"><a href="#DocumentMetadata-167"><span class="linenos">167</span></a>    <span class="n">original_metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FileMetadataEntry</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+</span><span id="DocumentMetadata-168"><a href="#DocumentMetadata-168"><span class="linenos">168</span></a>    <span class="n">archive_checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="DocumentMetadata-169"><a href="#DocumentMetadata-169"><span class="linenos">169</span></a>    <span class="n">archive_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="DocumentMetadata-170"><a href="#DocumentMetadata-170"><span class="linenos">170</span></a>    <span class="n">archive_metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FileMetadataEntry</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 </span></pre></div>
 
 
             <div class="docstring"><p>Extended file-level metadata for a document.</p>
 
 <p>Returned by <code>GET /api/documents/{id}/metadata/</code> and optionally attached
-to a <code><a href="#Document">Document</a></code> when <code>~easypaperless.PaperlessClient.get_document()</code>
+to a <code><a href="#Document">Document</a></code> when
+<code>~easypaperless._internal.resources.documents.DocumentsResource.get()</code>
 is called with <code>include_metadata=True</code>.</p>
 
 <p>Because reading metadata requires disk I/O it is <strong>not</strong> included in
