@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, List, cast
 
 from easypaperless._internal.sentinel import UNSET, Unset
@@ -12,6 +13,8 @@ from easypaperless.models.storage_paths import StoragePath
 
 if TYPE_CHECKING:
     from easypaperless.client import _ClientCore
+
+logger = logging.getLogger(__name__)
 
 
 class StoragePathsResource:
@@ -55,6 +58,7 @@ class StoragePathsResource:
             :class:`~easypaperless.models.paged_result.PagedResult` of
             :class:`~easypaperless.models.storage_paths.StoragePath` objects.
         """
+        logger.info("Listing storage paths")
         params: dict[str, Any] = {}
         if ids is not None:
             params["id__in"] = ",".join(str(i) for i in ids)
@@ -89,6 +93,7 @@ class StoragePathsResource:
         Raises:
             ~easypaperless.exceptions.NotFoundError: If no storage path exists with that ID.
         """
+        logger.info("Getting storage path id=%d", id)
         return cast(StoragePath, await self._core._get_resource("storage_paths", id, StoragePath))
 
     async def create(
@@ -118,6 +123,7 @@ class StoragePathsResource:
         Returns:
             The newly created :class:`~easypaperless.models.storage_paths.StoragePath`.
         """
+        logger.info("Creating storage path name=%r", name)
         return cast(
             StoragePath,
             await self._core._create_resource(
@@ -164,6 +170,7 @@ class StoragePathsResource:
         Returns:
             The updated :class:`~easypaperless.models.storage_paths.StoragePath`.
         """
+        logger.info("Updating storage path id=%d", id)
         return cast(
             StoragePath,
             await self._core._update_resource(
@@ -189,6 +196,7 @@ class StoragePathsResource:
         Raises:
             ~easypaperless.exceptions.NotFoundError: If no storage path exists with that ID.
         """
+        logger.info("Deleting storage path id=%d", id)
         await self._core._delete_resource("storage_paths", id)
 
     async def bulk_delete(self, ids: List[int]) -> None:
@@ -197,6 +205,7 @@ class StoragePathsResource:
         Args:
             ids: List of storage path IDs to delete.
         """
+        logger.info("Bulk deleting %d storage paths", len(ids))
         await self._core._bulk_edit_objects("storage_paths", ids, "delete")
 
     async def bulk_set_permissions(
@@ -218,6 +227,7 @@ class StoragePathsResource:
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             merge: When ``True``, new permissions are merged with existing ones.
         """
+        logger.info("Bulk setting permissions on %d storage paths", len(ids))
         params: dict[str, Any] = {"merge": merge}
         if not isinstance(set_permissions, Unset):
             params["permissions"] = set_permissions.model_dump()

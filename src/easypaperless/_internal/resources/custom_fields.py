@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from easypaperless._internal.sentinel import UNSET, Unset
@@ -11,6 +12,8 @@ from easypaperless.models.permissions import SetPermissions
 
 if TYPE_CHECKING:
     from easypaperless.client import _ClientCore
+
+logger = logging.getLogger(__name__)
 
 
 class CustomFieldsResource:
@@ -48,6 +51,7 @@ class CustomFieldsResource:
             :class:`~easypaperless.models.paged_result.PagedResult` of
             :class:`~easypaperless.models.custom_fields.CustomField` objects.
         """
+        logger.info("Listing custom fields")
         params: dict[str, Any] = {}
         if name_contains is not None:
             params["name__icontains"] = name_contains
@@ -76,6 +80,7 @@ class CustomFieldsResource:
         Raises:
             ~easypaperless.exceptions.NotFoundError: If no custom field exists with that ID.
         """
+        logger.info("Getting custom field id=%d", id)
         return cast(CustomField, await self._core._get_resource("custom_fields", id, CustomField))
 
     async def create(
@@ -102,6 +107,7 @@ class CustomFieldsResource:
         Returns:
             The newly created :class:`~easypaperless.models.custom_fields.CustomField`.
         """
+        logger.info("Creating custom field name=%r data_type=%r", name, data_type)
         return cast(
             CustomField,
             await self._core._create_resource(
@@ -143,6 +149,7 @@ class CustomFieldsResource:
         Returns:
             The updated :class:`~easypaperless.models.custom_fields.CustomField`.
         """
+        logger.info("Updating custom field id=%d", id)
         return cast(
             CustomField,
             await self._core._update_resource(
@@ -166,4 +173,5 @@ class CustomFieldsResource:
         Raises:
             ~easypaperless.exceptions.NotFoundError: If no custom field exists with that ID.
         """
+        logger.info("Deleting custom field id=%d", id)
         await self._core._delete_resource("custom_fields", id)

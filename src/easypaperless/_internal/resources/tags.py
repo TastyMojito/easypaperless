@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, List, cast
 
 from easypaperless._internal.sentinel import UNSET, Unset
@@ -12,6 +13,8 @@ from easypaperless.models.tags import Tag
 
 if TYPE_CHECKING:
     from easypaperless.client import _ClientCore
+
+logger = logging.getLogger(__name__)
 
 
 class TagsResource:
@@ -51,6 +54,7 @@ class TagsResource:
             :class:`~easypaperless.models.paged_result.PagedResult` of
             :class:`~easypaperless.models.tags.Tag` objects.
         """
+        logger.info("Listing tags")
         params: dict[str, Any] = {}
         if ids is not None:
             params["id__in"] = ",".join(str(i) for i in ids)
@@ -82,6 +86,7 @@ class TagsResource:
             ~easypaperless.exceptions.NotFoundError: If no tag exists with
                 that ID.
         """
+        logger.info("Getting tag id=%d", id)
         return cast(Tag, await self._core._get_resource("tags", id, Tag))
 
     async def create(
@@ -115,6 +120,7 @@ class TagsResource:
         Returns:
             The newly created :class:`~easypaperless.models.tags.Tag`.
         """
+        logger.info("Creating tag name=%r", name)
         return cast(
             Tag,
             await self._core._create_resource(
@@ -169,6 +175,7 @@ class TagsResource:
         Returns:
             The updated :class:`~easypaperless.models.tags.Tag`.
         """
+        logger.info("Updating tag id=%d", id)
         return cast(
             Tag,
             await self._core._update_resource(
@@ -197,6 +204,7 @@ class TagsResource:
             ~easypaperless.exceptions.NotFoundError: If no tag exists with
                 that ID.
         """
+        logger.info("Deleting tag id=%d", id)
         await self._core._delete_resource("tags", id)
 
     async def bulk_delete(self, ids: List[int]) -> None:
@@ -205,6 +213,7 @@ class TagsResource:
         Args:
             ids: List of tag IDs to delete.
         """
+        logger.info("Bulk deleting %d tags", len(ids))
         await self._core._bulk_edit_objects("tags", ids, "delete")
 
     async def bulk_set_permissions(
@@ -226,6 +235,7 @@ class TagsResource:
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             merge: When ``True``, new permissions are merged with existing ones.
         """
+        logger.info("Bulk setting permissions on %d tags", len(ids))
         params: dict[str, Any] = {"merge": merge}
         if not isinstance(set_permissions, Unset):
             params["permissions"] = set_permissions.model_dump()

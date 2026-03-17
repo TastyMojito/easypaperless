@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, List, cast
 
 from easypaperless._internal.sentinel import UNSET, Unset
@@ -12,6 +13,8 @@ from easypaperless.models.permissions import SetPermissions
 
 if TYPE_CHECKING:
     from easypaperless.client import _ClientCore
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentTypesResource:
@@ -51,6 +54,7 @@ class DocumentTypesResource:
             :class:`~easypaperless.models.paged_result.PagedResult` of
             :class:`~easypaperless.models.document_types.DocumentType` objects.
         """
+        logger.info("Listing document types")
         params: dict[str, Any] = {}
         if ids is not None:
             params["id__in"] = ",".join(str(i) for i in ids)
@@ -81,6 +85,7 @@ class DocumentTypesResource:
         Raises:
             ~easypaperless.exceptions.NotFoundError: If no document type exists with that ID.
         """
+        logger.info("Getting document type id=%d", id)
         return cast(
             DocumentType, await self._core._get_resource("document_types", id, DocumentType)
         )
@@ -110,6 +115,7 @@ class DocumentTypesResource:
         Returns:
             The newly created :class:`~easypaperless.models.document_types.DocumentType`.
         """
+        logger.info("Creating document type name=%r", name)
         return cast(
             DocumentType,
             await self._core._create_resource(
@@ -153,6 +159,7 @@ class DocumentTypesResource:
         Returns:
             The updated :class:`~easypaperless.models.document_types.DocumentType`.
         """
+        logger.info("Updating document type id=%d", id)
         return cast(
             DocumentType,
             await self._core._update_resource(
@@ -177,6 +184,7 @@ class DocumentTypesResource:
         Raises:
             ~easypaperless.exceptions.NotFoundError: If no document type exists with that ID.
         """
+        logger.info("Deleting document type id=%d", id)
         await self._core._delete_resource("document_types", id)
 
     async def bulk_delete(self, ids: List[int]) -> None:
@@ -185,6 +193,7 @@ class DocumentTypesResource:
         Args:
             ids: List of document type IDs to delete.
         """
+        logger.info("Bulk deleting %d document types", len(ids))
         await self._core._bulk_edit_objects("document_types", ids, "delete")
 
     async def bulk_set_permissions(
@@ -206,6 +215,7 @@ class DocumentTypesResource:
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             merge: When ``True``, new permissions are merged with existing ones.
         """
+        logger.info("Bulk setting permissions on %d document types", len(ids))
         params: dict[str, Any] = {"merge": merge}
         if not isinstance(set_permissions, Unset):
             params["permissions"] = set_permissions.model_dump()

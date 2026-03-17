@@ -86,7 +86,15 @@ class HttpSession:
         timeout: float | None = None,
     ) -> httpx.Response:
         client = self._get_client()
-        logger.debug("%s %s", method.upper(), path)
+        if logger.isEnabledFor(logging.DEBUG):
+            if json is not None:
+                logger.debug("%s %s body=%s", method.upper(), path, json)
+            elif data is not None:
+                logger.debug("%s %s data=%s", method.upper(), path, data)
+            elif files is not None:
+                logger.debug("%s %s <multipart/form-data>", method.upper(), path)
+            else:
+                logger.debug("%s %s", method.upper(), path)
         try:
             response = await client.request(
                 method,
@@ -105,7 +113,11 @@ class HttpSession:
         except httpx.HTTPError as exc:
             msg = str(exc) or f"HTTP error on {method.upper()} {path}"
             raise ServerError(msg) from exc
-        logger.debug("%s %s %s", response.status_code, method.upper(), path)
+        if logger.isEnabledFor(logging.DEBUG):
+            body = response.text
+            if len(body) > 1000:
+                body = body[:1000] + "...<truncated>"
+            logger.debug("%s %s %s response=%s", response.status_code, method.upper(), path, body)
         self._raise_for_status(response, method, path)
         return response
 

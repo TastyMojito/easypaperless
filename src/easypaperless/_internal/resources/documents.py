@@ -59,7 +59,7 @@ class NotesResource:
             ~easypaperless.exceptions.NotFoundError: If no document exists
                 with that ID.
         """
-        logger.debug("Fetching notes for document id=%d", document_id)
+        logger.info("Listing notes for document id=%d", document_id)
         resp = await self._core._session.get(f"/documents/{document_id}/notes/")
         return [DocumentNote.model_validate(item) for item in resp.json()]
 
@@ -77,7 +77,7 @@ class NotesResource:
             ~easypaperless.exceptions.NotFoundError: If no document exists
                 with that ID.
         """
-        logger.debug("Creating note for document id=%d", document_id)
+        logger.info("Creating note for document id=%d", document_id)
         resp = await self._core._session.post(
             f"/documents/{document_id}/notes/",
             json={"note": note},
@@ -98,7 +98,7 @@ class NotesResource:
             ~easypaperless.exceptions.NotFoundError: If no document or note
                 exists with the given IDs.
         """
-        logger.debug("Deleting note id=%d from document id=%d", note_id, document_id)
+        logger.info("Deleting note id=%d from document id=%d", note_id, document_id)
         await self._core._session.delete(f"/documents/{document_id}/notes/", params={"id": note_id})
 
 
@@ -142,6 +142,7 @@ class DocumentsResource:
             ~easypaperless.exceptions.NotFoundError: If no document exists
                 with that ID.
         """
+        logger.info("Getting document id=%d", id)
         if include_metadata:
             doc_resp, meta_resp = await asyncio.gather(
                 self._core._session.get(f"/documents/{id}/"),
@@ -167,6 +168,7 @@ class DocumentsResource:
             ~easypaperless.exceptions.NotFoundError: If no document exists
                 with that ID.
         """
+        logger.info("Getting metadata for document id=%d", id)
         resp = await self._core._session.get(f"/documents/{id}/metadata/")
         return DocumentMetadata.model_validate(resp.json())
 
@@ -286,6 +288,7 @@ class DocumentsResource:
             :class:`~easypaperless.models.paged_result.PagedResult` of
             :class:`~easypaperless.models.documents.Document` objects.
         """
+        logger.info("Listing documents")
         resolver = self._core._resolver
         params: dict[str, Any] = {"page_size": page_size}
 
@@ -505,7 +508,7 @@ class DocumentsResource:
         Returns:
             The updated :class:`~easypaperless.models.documents.Document`.
         """
-        logger.debug("Updating document id=%d", id)
+        logger.info("Updating document id=%d", id)
         resolver = self._core._resolver
         payload: dict[str, Any] = {}
 
@@ -563,7 +566,7 @@ class DocumentsResource:
             ~easypaperless.exceptions.NotFoundError: If no document exists
                 with that ID.
         """
-        logger.debug("Deleting document id=%d", id)
+        logger.info("Deleting document id=%d", id)
         await self._core._session.delete(f"/documents/{id}/")
 
     async def download(self, id: int, *, original: bool = False) -> bytes:
@@ -577,6 +580,7 @@ class DocumentsResource:
         Returns:
             Raw file bytes.
         """
+        logger.info("Downloading document id=%d (original=%s)", id, original)
         endpoint = "download" if original else "archive"
         resp = await self._core._session.get_download(f"/documents/{id}/{endpoint}/")
         content_type = resp.headers.get("content-type", "")
@@ -727,6 +731,7 @@ class DocumentsResource:
             document_ids: List of document IDs to tag.
             tag: Tag to add, as an ID or name.
         """
+        logger.info("Bulk adding tag %r to %d documents", tag, len(document_ids))
         tag_id = await self._core._resolver.resolve("tags", tag)
         await self._bulk_edit(document_ids, "add_tag", tag=tag_id)
 
@@ -737,6 +742,7 @@ class DocumentsResource:
             document_ids: List of document IDs to un-tag.
             tag: Tag to remove, as an ID or name.
         """
+        logger.info("Bulk removing tag %r from %d documents", tag, len(document_ids))
         tag_id = await self._core._resolver.resolve("tags", tag)
         await self._bulk_edit(document_ids, "remove_tag", tag=tag_id)
 
@@ -754,6 +760,7 @@ class DocumentsResource:
             add_tags: Tags to add, as IDs or names.
             remove_tags: Tags to remove, as IDs or names.
         """
+        logger.info("Bulk modifying tags on %d documents", len(document_ids))
         resolver = self._core._resolver
         add_ids = await resolver.resolve_list("tags", add_tags or [])
         remove_ids = await resolver.resolve_list("tags", remove_tags or [])
@@ -765,6 +772,7 @@ class DocumentsResource:
         Args:
             document_ids: List of document IDs to delete.
         """
+        logger.info("Bulk deleting %d documents", len(document_ids))
         await self._bulk_edit(document_ids, "delete")
 
     async def bulk_set_correspondent(
@@ -777,6 +785,9 @@ class DocumentsResource:
             correspondent: Correspondent to assign, as an ID or name.
                 Pass ``None`` to clear.
         """
+        logger.info(
+            "Bulk setting correspondent %r on %d documents", correspondent, len(document_ids)
+        )
         cor_id: int | None = None
         if correspondent is not None:
             cor_id = await self._core._resolver.resolve("correspondents", correspondent)
@@ -792,6 +803,9 @@ class DocumentsResource:
             document_type: Document type to assign, as an ID or name.
                 Pass ``None`` to clear.
         """
+        logger.info(
+            "Bulk setting document type %r on %d documents", document_type, len(document_ids)
+        )
         dt_id: int | None = None
         if document_type is not None:
             dt_id = await self._core._resolver.resolve("document_types", document_type)
@@ -807,6 +821,7 @@ class DocumentsResource:
             storage_path: Storage path to assign, as an ID or name.
                 Pass ``None`` to clear.
         """
+        logger.info("Bulk setting storage path %r on %d documents", storage_path, len(document_ids))
         sp_id: int | None = None
         if storage_path is not None:
             sp_id = await self._core._resolver.resolve("storage_paths", storage_path)
@@ -826,6 +841,7 @@ class DocumentsResource:
             add_fields: Custom-field value dicts to add.
             remove_fields: Custom-field IDs whose values should be removed.
         """
+        logger.info("Bulk modifying custom fields on %d documents", len(document_ids))
         await self._bulk_edit(
             document_ids,
             "modify_custom_fields",
@@ -852,6 +868,7 @@ class DocumentsResource:
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             merge: When ``True``, new permissions are merged with existing ones.
         """
+        logger.info("Bulk setting permissions on %d documents", len(document_ids))
         params: dict[str, Any] = {"merge": merge}
         if not isinstance(set_permissions, Unset):
             params["set_permissions"] = set_permissions.model_dump()

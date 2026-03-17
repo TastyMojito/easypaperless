@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, List, cast
 
 from easypaperless._internal.sentinel import UNSET, Unset
@@ -12,6 +13,8 @@ from easypaperless.models.permissions import SetPermissions
 
 if TYPE_CHECKING:
     from easypaperless.client import _ClientCore
+
+logger = logging.getLogger(__name__)
 
 
 class CorrespondentsResource:
@@ -51,6 +54,7 @@ class CorrespondentsResource:
             :class:`~easypaperless.models.paged_result.PagedResult` of
             :class:`~easypaperless.models.correspondents.Correspondent` objects.
         """
+        logger.info("Listing correspondents")
         params: dict[str, Any] = {}
         if ids is not None:
             params["id__in"] = ",".join(str(i) for i in ids)
@@ -81,6 +85,7 @@ class CorrespondentsResource:
         Raises:
             ~easypaperless.exceptions.NotFoundError: If no correspondent exists with that ID.
         """
+        logger.info("Getting correspondent id=%d", id)
         return cast(
             Correspondent, await self._core._get_resource("correspondents", id, Correspondent)
         )
@@ -110,6 +115,7 @@ class CorrespondentsResource:
         Returns:
             The newly created :class:`~easypaperless.models.correspondents.Correspondent`.
         """
+        logger.info("Creating correspondent name=%r", name)
         return cast(
             Correspondent,
             await self._core._create_resource(
@@ -153,6 +159,7 @@ class CorrespondentsResource:
         Returns:
             The updated :class:`~easypaperless.models.correspondents.Correspondent`.
         """
+        logger.info("Updating correspondent id=%d", id)
         return cast(
             Correspondent,
             await self._core._update_resource(
@@ -177,6 +184,7 @@ class CorrespondentsResource:
         Raises:
             ~easypaperless.exceptions.NotFoundError: If no correspondent exists with that ID.
         """
+        logger.info("Deleting correspondent id=%d", id)
         await self._core._delete_resource("correspondents", id)
 
     async def bulk_delete(self, ids: List[int]) -> None:
@@ -185,6 +193,7 @@ class CorrespondentsResource:
         Args:
             ids: List of correspondent IDs to delete.
         """
+        logger.info("Bulk deleting %d correspondents", len(ids))
         await self._core._bulk_edit_objects("correspondents", ids, "delete")
 
     async def bulk_set_permissions(
@@ -206,6 +215,7 @@ class CorrespondentsResource:
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             merge: When ``True``, new permissions are merged with existing ones.
         """
+        logger.info("Bulk setting permissions on %d correspondents", len(ids))
         params: dict[str, Any] = {"merge": merge}
         if not isinstance(set_permissions, Unset):
             params["permissions"] = set_permissions.model_dump()
