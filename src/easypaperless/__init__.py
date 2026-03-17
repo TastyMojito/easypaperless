@@ -6,7 +6,7 @@ import logging
 __version__: str = importlib.metadata.version("easypaperless")
 
 from easypaperless import resources as resources  # noqa: F401
-from easypaperless._internal.sentinel import UNSET
+from easypaperless._internal.sentinel import UNSET, Unset
 from easypaperless.client import PaperlessClient
 from easypaperless.exceptions import (
     AuthError,
@@ -47,6 +47,7 @@ __all__ = [
     "SyncPaperlessClient",
     # Sentinel
     "UNSET",
+    "Unset",
     # Models
     "MatchingAlgorithm",
     "Correspondent",

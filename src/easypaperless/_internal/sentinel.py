@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 
-class _Unset:
+class Unset:
     """Sentinel type signalling that a parameter was not provided.
 
     Use the singleton :data:`UNSET` constant — do not instantiate directly.
@@ -17,4 +17,7 @@ class _Unset:
         return "UNSET"
 
 
-UNSET: Final = _Unset()
+UNSET: Final = Unset()
+
+# Internal alias kept for backward compatibility with existing isinstance checks.
+_Unset = Unset

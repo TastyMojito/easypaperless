@@ -67,12 +67,18 @@ async def test_update_document_asn_None(client: PaperlessClient, temp_documents)
         assert updated.title == new_title2
         assert updated.archive_serial_number == 666 #not changed
         new_title3 = f"__integration_updated3__ {original.title}"
-        updated = await client.documents.update(original.id, title=new_title3, archive_serial_number=None)
+        updated = await client.documents.update(
+            original.id, title=new_title3, archive_serial_number=None
+        )
         assert updated.title == new_title3
-        assert updated.archive_serial_number == None #removed
-    
+        assert updated.archive_serial_number is None  # removed
+
     finally:
-        await client.documents.update(original.id, title=original.title, archive_serial_number=original.archive_serial_number)
+        await client.documents.update(
+            original.id,
+            title=original.title,
+            archive_serial_number=original.archive_serial_number,
+        )
 
 
 

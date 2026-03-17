@@ -146,9 +146,8 @@ async def test_upload_omits_unset_metadata(client, mock_router, tmp_path):
 
 
 async def test_upload_omits_explicit_none_metadata(client, mock_router, tmp_path):
-    """Explicitly passing None for nullable upload params also omits them (form data has no null)."""
-    from easypaperless._internal.sentinel import UNSET
-
+    """Explicitly passing None for nullable upload params also omits them
+    (form data has no null)."""
     pdf = tmp_path / "scan.pdf"
     pdf.write_bytes(b"%PDF-1.4 test")
 

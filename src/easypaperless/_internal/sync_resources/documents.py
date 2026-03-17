@@ -7,7 +7,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, cast
 
-from easypaperless._internal.sentinel import UNSET, _Unset
+from easypaperless._internal.sentinel import UNSET, Unset
 from easypaperless.models.documents import Document, DocumentMetadata, DocumentNote
 from easypaperless.models.permissions import SetPermissions
 
@@ -121,24 +121,24 @@ class SyncDocumentsResource:
         tags: List[int | str] | None = None,
         any_tags: List[int | str] | None = None,
         exclude_tags: List[int | str] | None = None,
-        correspondent: int | str | None | _Unset = UNSET,
+        correspondent: int | str | None | Unset = UNSET,
         any_correspondent: List[int | str] | None = None,
         exclude_correspondents: List[int | str] | None = None,
-        document_type: int | str | None | _Unset = UNSET,
+        document_type: int | str | None | Unset = UNSET,
         document_type_name_contains: str | None = None,
         document_type_name_exact: str | None = None,
         any_document_type: List[int | str] | None = None,
         exclude_document_types: List[int | str] | None = None,
-        storage_path: int | str | None | _Unset = UNSET,
+        storage_path: int | str | None | Unset = UNSET,
         any_storage_paths: List[int | str] | None = None,
         exclude_storage_paths: List[int | str] | None = None,
-        owner: int | None | _Unset = UNSET,
+        owner: int | None | Unset = UNSET,
         exclude_owners: List[int] | None = None,
         custom_fields: List[int | str] | None = None,
         any_custom_fields: List[int | str] | None = None,
         exclude_custom_fields: List[int | str] | None = None,
         custom_field_query: List[Any] | None = None,
-        archive_serial_number: int | None | _Unset = UNSET,
+        archive_serial_number: int | None | Unset = UNSET,
         archive_serial_number_from: int | None = None,
         archive_serial_number_till: int | None = None,
         created_after: date | str | None = None,
@@ -274,18 +274,18 @@ class SyncDocumentsResource:
         self,
         id: int,
         *,
-        title: str | None | _Unset = UNSET,
-        content: str | None | _Unset = UNSET,
-        created: date | str | None | _Unset = UNSET,
-        correspondent: int | str | None | _Unset = UNSET,
-        document_type: int | str | None | _Unset = UNSET,
-        storage_path: int | str | None | _Unset = UNSET,
-        tags: List[int | str] | None | _Unset = UNSET,
-        archive_serial_number: int | None | _Unset = UNSET,
-        custom_fields: List[dict[str, Any]] | None | _Unset = UNSET,
-        owner: int | None | _Unset = UNSET,
-        set_permissions: SetPermissions | None | _Unset = UNSET,
-        remove_inbox_tags: bool | None | _Unset = UNSET,
+        title: str | Unset = UNSET,
+        content: str | Unset = UNSET,
+        created: date | str | None | Unset = UNSET,
+        correspondent: int | str | None | Unset = UNSET,
+        document_type: int | str | None | Unset = UNSET,
+        storage_path: int | str | None | Unset = UNSET,
+        tags: List[int | str] | None | Unset = UNSET,
+        archive_serial_number: int | None | Unset = UNSET,
+        custom_fields: List[dict[str, Any]] | None | Unset = UNSET,
+        owner: int | None | Unset = UNSET,
+        set_permissions: SetPermissions | None | Unset = UNSET,
+        remove_inbox_tags: bool | None | Unset = UNSET,
     ) -> Document:
         """Partially update a document (PATCH semantics).
 
@@ -308,6 +308,8 @@ class SyncDocumentsResource:
             owner: Numeric user ID to assign as document owner.
                 Pass ``None`` to clear the owner.
             set_permissions: Explicit view/change permission sets.
+                Pass ``None`` to clear all permissions (overwrite with empty).
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             remove_inbox_tags: When ``True``, removes all inbox tags from the document.
 
         Returns:
@@ -363,13 +365,13 @@ class SyncDocumentsResource:
         self,
         file: str | Path,
         *,
-        title: str | None = None,
+        title: str | Unset = UNSET,
         created: date | str | None = None,
-        correspondent: int | str | None | _Unset = UNSET,
-        document_type: int | str | None | _Unset = UNSET,
-        storage_path: int | str | None | _Unset = UNSET,
+        correspondent: int | str | None | Unset = UNSET,
+        document_type: int | str | None | Unset = UNSET,
+        storage_path: int | str | None | Unset = UNSET,
         tags: List[int | str] | None = None,
-        archive_serial_number: int | None | _Unset = UNSET,
+        archive_serial_number: int | None | Unset = UNSET,
         custom_fields: List[dict[str, Any]] | None = None,
         wait: bool = False,
         poll_interval: float | None = None,
@@ -528,8 +530,8 @@ class SyncDocumentsResource:
         self,
         document_ids: List[int],
         *,
-        set_permissions: SetPermissions | None = None,
-        owner: int | None = None,
+        set_permissions: SetPermissions | Unset = UNSET,
+        owner: int | None | Unset = UNSET,
         merge: bool = False,
     ) -> None:
         """Set permissions and/or owner on multiple documents.
@@ -537,7 +539,10 @@ class SyncDocumentsResource:
         Args:
             document_ids: List of document IDs to modify.
             set_permissions: Explicit view/change permission sets.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             owner: Numeric user ID to assign as document owner.
+                Pass ``None`` to clear the owner.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             merge: When ``True``, new permissions are merged with existing ones.
         """
         self._run(

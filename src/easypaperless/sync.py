@@ -78,13 +78,20 @@ class SyncPaperlessClient(_SyncCore):
 
     Resources are accessible as attributes:
 
-    * ``client.correspondents`` — correspondent CRUD + bulk ops - see `easypaperless.resources.SyncCorrespondentsResource`
-    * ``client.custom_fields`` — custom field CRUD - see `easypaperless.resources.SyncCustomFieldsResource`
-    * ``client.document_types`` — document type CRUD + bulk ops - see `easypaperless.resources.SyncDocumentTypesResource`
-    * ``client.documents`` — document CRUD, bulk ops, upload, download - see `easypaperless.resources.SyncDocumentsResource`
-    * ``client.documents.notes`` — document notes - see `easypaperless.resources.SyncNotesResource`
-    * ``client.storage_paths`` — storage path CRUD + bulk ops - see `easypaperless.resources.SyncStoragePathsResource`
-    * ``client.tags`` — tag CRUD + bulk ops - see `easypaperless.resources.SyncTagsResource`  
+    * ``client.correspondents`` — correspondent CRUD + bulk ops -
+      see `easypaperless.resources.SyncCorrespondentsResource`
+    * ``client.custom_fields`` — custom field CRUD -
+      see `easypaperless.resources.SyncCustomFieldsResource`
+    * ``client.document_types`` — document type CRUD + bulk ops -
+      see `easypaperless.resources.SyncDocumentTypesResource`
+    * ``client.documents`` — document CRUD, bulk ops, upload, download -
+      see `easypaperless.resources.SyncDocumentsResource`
+    * ``client.documents.notes`` — document notes -
+      see `easypaperless.resources.SyncNotesResource`
+    * ``client.storage_paths`` — storage path CRUD + bulk ops -
+      see `easypaperless.resources.SyncStoragePathsResource`
+    * ``client.tags`` — tag CRUD + bulk ops -
+      see `easypaperless.resources.SyncTagsResource`
 
     All methods are synchronous wrappers around the async
     :class:`~easypaperless.client.PaperlessClient`.  Operations run on a

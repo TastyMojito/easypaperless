@@ -12,7 +12,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, List
 
-from easypaperless._internal.sentinel import UNSET, _Unset
+from easypaperless._internal.sentinel import UNSET, Unset
 from easypaperless.exceptions import ServerError, TaskTimeoutError, UploadError
 from easypaperless.models.documents import (
     Document,
@@ -178,24 +178,24 @@ class DocumentsResource:
         tags: List[int | str] | None = None,
         any_tags: List[int | str] | None = None,
         exclude_tags: List[int | str] | None = None,
-        correspondent: int | str | None | _Unset = UNSET,
+        correspondent: int | str | None | Unset = UNSET,
         any_correspondent: List[int | str] | None = None,
         exclude_correspondents: List[int | str] | None = None,
-        document_type: int | str | None | _Unset = UNSET,
+        document_type: int | str | None | Unset = UNSET,
         document_type_name_contains: str | None = None,
         document_type_name_exact: str | None = None,
         any_document_type: List[int | str] | None = None,
         exclude_document_types: List[int | str] | None = None,
-        storage_path: int | str | None | _Unset = UNSET,
+        storage_path: int | str | None | Unset = UNSET,
         any_storage_paths: List[int | str] | None = None,
         exclude_storage_paths: List[int | str] | None = None,
-        owner: int | None | _Unset = UNSET,
+        owner: int | None | Unset = UNSET,
         exclude_owners: List[int] | None = None,
         custom_fields: List[int | str] | None = None,
         any_custom_fields: List[int | str] | None = None,
         exclude_custom_fields: List[int | str] | None = None,
         custom_field_query: List[Any] | None = None,
-        archive_serial_number: int | None | _Unset = UNSET,
+        archive_serial_number: int | None | Unset = UNSET,
         archive_serial_number_from: int | None = None,
         archive_serial_number_till: int | None = None,
         created_after: date | str | None = None,
@@ -301,7 +301,7 @@ class DocumentsResource:
         if any_correspondent is not None:
             resolved = await resolver.resolve_list("correspondents", any_correspondent)
             params["correspondent__id__in"] = ",".join(str(c) for c in resolved)
-        elif not isinstance(correspondent, _Unset):
+        elif not isinstance(correspondent, Unset):
             if correspondent is None:
                 params["correspondent__isnull"] = "true"
             else:
@@ -320,7 +320,7 @@ class DocumentsResource:
         if any_document_type is not None:
             resolved = await resolver.resolve_list("document_types", any_document_type)
             params["document_type__id__in"] = ",".join(str(d) for d in resolved)
-        elif not isinstance(document_type, _Unset):
+        elif not isinstance(document_type, Unset):
             if document_type is None:
                 params["document_type__isnull"] = "true"
             else:
@@ -334,7 +334,7 @@ class DocumentsResource:
         if any_storage_paths is not None:
             resolved = await resolver.resolve_list("storage_paths", any_storage_paths)
             params["storage_path__id__in"] = ",".join(str(s) for s in resolved)
-        elif not isinstance(storage_path, _Unset):
+        elif not isinstance(storage_path, Unset):
             if storage_path is None:
                 params["storage_path__isnull"] = "true"
             else:
@@ -345,7 +345,7 @@ class DocumentsResource:
             resolved = await resolver.resolve_list("storage_paths", exclude_storage_paths)
             params["storage_path__id__none"] = ",".join(str(s) for s in resolved)
 
-        if not isinstance(owner, _Unset):
+        if not isinstance(owner, Unset):
             if owner is None:
                 params["owner__isnull"] = "true"
             else:
@@ -369,7 +369,7 @@ class DocumentsResource:
         if custom_field_query is not None:
             params["custom_field_query"] = json.dumps(custom_field_query)
 
-        if not isinstance(archive_serial_number, _Unset):
+        if not isinstance(archive_serial_number, Unset):
             if archive_serial_number is None:
                 params["archive_serial_number__isnull"] = "true"
             else:
@@ -442,18 +442,18 @@ class DocumentsResource:
         self,
         id: int,
         *,
-        title: str | None | _Unset = UNSET,
-        content: str | None | _Unset = UNSET,
-        created: date | str | None | _Unset = UNSET,
-        correspondent: int | str | None | _Unset = UNSET,
-        document_type: int | str | None | _Unset = UNSET,
-        storage_path: int | str | None | _Unset = UNSET,
-        tags: List[int | str] | None | _Unset = UNSET,
-        archive_serial_number: int | None | _Unset = UNSET,
-        custom_fields: List[dict[str, Any]] | None | _Unset = UNSET,
-        owner: int | None | _Unset = UNSET,
-        set_permissions: SetPermissions | None | _Unset = UNSET,
-        remove_inbox_tags: bool | None | _Unset = UNSET,
+        title: str | Unset = UNSET,
+        content: str | Unset = UNSET,
+        created: date | str | None | Unset = UNSET,
+        correspondent: int | str | None | Unset = UNSET,
+        document_type: int | str | None | Unset = UNSET,
+        storage_path: int | str | None | Unset = UNSET,
+        tags: List[int | str] | None | Unset = UNSET,
+        archive_serial_number: int | None | Unset = UNSET,
+        custom_fields: List[dict[str, Any]] | None | Unset = UNSET,
+        owner: int | None | Unset = UNSET,
+        set_permissions: SetPermissions | None | Unset = UNSET,
+        remove_inbox_tags: bool | None | Unset = UNSET,
     ) -> Document:
         """Partially update a document (PATCH semantics).
 
@@ -476,6 +476,8 @@ class DocumentsResource:
             owner: Numeric user ID to assign as document owner.
                 Pass ``None`` to clear the owner.
             set_permissions: Explicit view/change permission sets.
+                Pass ``None`` to clear all permissions (overwrite with empty).
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             remove_inbox_tags: When ``True``, removes all inbox tags from the document.
 
         Returns:
@@ -485,41 +487,45 @@ class DocumentsResource:
         resolver = self._core._resolver
         payload: dict[str, Any] = {}
 
-        if not isinstance(title, _Unset):
+        if not isinstance(title, Unset):
             payload["title"] = title
-        if not isinstance(content, _Unset):
+        if not isinstance(content, Unset):
             payload["content"] = content
-        if not isinstance(created, _Unset):
+        if not isinstance(created, Unset):
             payload["created"] = self._format_date_value(created) if created is not None else None
-        if not isinstance(correspondent, _Unset):
+        if not isinstance(correspondent, Unset):
             payload["correspondent"] = (
                 None
                 if correspondent is None
                 else await resolver.resolve("correspondents", correspondent)
             )
-        if not isinstance(document_type, _Unset):
+        if not isinstance(document_type, Unset):
             payload["document_type"] = (
                 None
                 if document_type is None
                 else await resolver.resolve("document_types", document_type)
             )
-        if not isinstance(storage_path, _Unset):
+        if not isinstance(storage_path, Unset):
             payload["storage_path"] = (
                 None
                 if storage_path is None
                 else await resolver.resolve("storage_paths", storage_path)
             )
-        if not isinstance(tags, _Unset):
+        if not isinstance(tags, Unset):
             payload["tags"] = await resolver.resolve_list("tags", tags or [])
-        if not isinstance(archive_serial_number, _Unset):
+        if not isinstance(archive_serial_number, Unset):
             payload["archive_serial_number"] = archive_serial_number
-        if not isinstance(custom_fields, _Unset):
+        if not isinstance(custom_fields, Unset):
             payload["custom_fields"] = custom_fields
-        if not isinstance(owner, _Unset):
+        if not isinstance(owner, Unset):
             payload["owner"] = owner
-        if not isinstance(set_permissions, _Unset):
-            payload["set_permissions"] = (set_permissions or SetPermissions()).model_dump()
-        if not isinstance(remove_inbox_tags, _Unset):
+        if not isinstance(set_permissions, Unset):
+            payload["set_permissions"] = (
+                SetPermissions().model_dump()
+                if set_permissions is None
+                else set_permissions.model_dump()
+            )
+        if not isinstance(remove_inbox_tags, Unset):
             payload["remove_inbox_tags"] = remove_inbox_tags
 
         resp = await self._core._session.patch(f"/documents/{id}/", json=payload)
@@ -564,13 +570,13 @@ class DocumentsResource:
         self,
         file: str | Path,
         *,
-        title: str | None = None,
+        title: str | Unset = UNSET,
         created: date | str | None = None,
-        correspondent: int | str | None | _Unset = UNSET,
-        document_type: int | str | None | _Unset = UNSET,
-        storage_path: int | str | None | _Unset = UNSET,
+        correspondent: int | str | None | Unset = UNSET,
+        document_type: int | str | None | Unset = UNSET,
+        storage_path: int | str | None | Unset = UNSET,
         tags: List[int | str] | None = None,
-        archive_serial_number: int | None | _Unset = UNSET,
+        archive_serial_number: int | None | Unset = UNSET,
         custom_fields: List[dict[str, Any]] | None = None,
         wait: bool = False,
         poll_interval: float | None = None,
@@ -609,20 +615,20 @@ class DocumentsResource:
         logger.info("Uploading %r (%d bytes)", file_path.name, len(file_bytes))
 
         data: dict[str, Any] = {}
-        if title is not None:
+        if not isinstance(title, Unset):
             data["title"] = title
         if created is not None:
             data["created"] = self._format_date_value(created)
-        if not isinstance(correspondent, _Unset) and correspondent is not None:
+        if not isinstance(correspondent, Unset) and correspondent is not None:
             data["correspondent"] = await resolver.resolve("correspondents", correspondent)
-        if not isinstance(document_type, _Unset) and document_type is not None:
+        if not isinstance(document_type, Unset) and document_type is not None:
             data["document_type"] = await resolver.resolve("document_types", document_type)
-        if not isinstance(storage_path, _Unset) and storage_path is not None:
+        if not isinstance(storage_path, Unset) and storage_path is not None:
             data["storage_path"] = await resolver.resolve("storage_paths", storage_path)
         if tags is not None:
             resolved = await resolver.resolve_list("tags", tags)
             data["tags"] = resolved
-        if not isinstance(archive_serial_number, _Unset) and archive_serial_number is not None:
+        if not isinstance(archive_serial_number, Unset) and archive_serial_number is not None:
             data["archive_serial_number"] = archive_serial_number
         if custom_fields is not None:
             data["custom_fields"] = json.dumps(custom_fields)
@@ -809,8 +815,8 @@ class DocumentsResource:
         self,
         document_ids: List[int],
         *,
-        set_permissions: SetPermissions | None = None,
-        owner: int | None = None,
+        set_permissions: SetPermissions | Unset = UNSET,
+        owner: int | None | Unset = UNSET,
         merge: bool = False,
     ) -> None:
         """Set permissions and/or owner on multiple documents.
@@ -818,12 +824,15 @@ class DocumentsResource:
         Args:
             document_ids: List of document IDs to modify.
             set_permissions: Explicit view/change permission sets.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             owner: Numeric user ID to assign as document owner.
+                Pass ``None`` to clear the owner.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             merge: When ``True``, new permissions are merged with existing ones.
         """
         params: dict[str, Any] = {"merge": merge}
-        if set_permissions is not None:
+        if not isinstance(set_permissions, Unset):
             params["set_permissions"] = set_permissions.model_dump()
-        if owner is not None:
+        if not isinstance(owner, Unset):
             params["owner"] = owner
         await self._bulk_edit(document_ids, "set_permissions", **params)

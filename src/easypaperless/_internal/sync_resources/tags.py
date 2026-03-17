@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, List, cast
 
-from easypaperless._internal.sentinel import UNSET, _Unset
+from easypaperless._internal.sentinel import UNSET, Unset
 from easypaperless.models._base import MatchingAlgorithm
 from easypaperless.models.permissions import SetPermissions
 from easypaperless.models.tags import Tag
@@ -79,14 +79,14 @@ class SyncTagsResource:
         self,
         *,
         name: str,
-        color: str | None | _Unset = UNSET,
-        is_inbox_tag: bool | None | _Unset = UNSET,
-        match: str | None | _Unset = UNSET,
-        matching_algorithm: MatchingAlgorithm | None | _Unset = UNSET,
+        color: str | Unset = UNSET,
+        is_inbox_tag: bool | Unset = UNSET,
+        match: str | Unset = UNSET,
+        matching_algorithm: MatchingAlgorithm | Unset = UNSET,
         is_insensitive: bool = True,
-        parent: int | None | _Unset = UNSET,
-        owner: int | None | _Unset = UNSET,
-        set_permissions: SetPermissions | None = None,
+        parent: int | None | Unset = UNSET,
+        owner: int | None | Unset = UNSET,
+        set_permissions: SetPermissions | None | Unset = UNSET,
     ) -> Tag:
         """Create a new tag.
 
@@ -101,6 +101,7 @@ class SyncTagsResource:
             parent: ID of parent tag for hierarchical trees.
             owner: Numeric user ID to assign as owner.
             set_permissions: Explicit view/change permission sets.
+                Pass ``None`` to create with empty permissions.
 
         Returns:
             The newly created :class:`~easypaperless.models.tags.Tag`.
@@ -126,15 +127,15 @@ class SyncTagsResource:
         self,
         id: int,
         *,
-        name: str | None | _Unset = UNSET,
-        color: str | None | _Unset = UNSET,
-        is_inbox_tag: bool | None | _Unset = UNSET,
-        match: str | None | _Unset = UNSET,
-        matching_algorithm: MatchingAlgorithm | None | _Unset = UNSET,
-        is_insensitive: bool | None | _Unset = UNSET,
-        parent: int | None | _Unset = UNSET,
-        owner: int | None | _Unset = UNSET,
-        set_permissions: SetPermissions | None | _Unset = UNSET,
+        name: str | Unset = UNSET,
+        color: str | Unset = UNSET,
+        is_inbox_tag: bool | Unset = UNSET,
+        match: str | Unset = UNSET,
+        matching_algorithm: MatchingAlgorithm | Unset = UNSET,
+        is_insensitive: bool | Unset = UNSET,
+        parent: int | None | Unset = UNSET,
+        owner: int | None | Unset = UNSET,
+        set_permissions: SetPermissions | None | Unset = UNSET,
     ) -> Tag:
         """Partially update a tag (PATCH semantics).
 
@@ -153,6 +154,7 @@ class SyncTagsResource:
                 Pass ``None`` to clear the owner.
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             set_permissions: Explicit view/change permission sets.
+                Pass ``None`` to clear all permissions (overwrite with empty).
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
 
         Returns:
@@ -200,8 +202,8 @@ class SyncTagsResource:
         self,
         ids: List[int],
         *,
-        set_permissions: SetPermissions | None = None,
-        owner: int | None = None,
+        set_permissions: SetPermissions | Unset = UNSET,
+        owner: int | None | Unset = UNSET,
         merge: bool = False,
     ) -> None:
         """Set permissions and/or owner on multiple tags.
@@ -209,7 +211,10 @@ class SyncTagsResource:
         Args:
             ids: List of tag IDs to modify.
             set_permissions: Explicit view/change permission sets.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             owner: Numeric user ID to assign as owner.
+                Pass ``None`` to clear the owner.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             merge: When ``True``, new permissions are merged with existing ones.
         """
         self._run(

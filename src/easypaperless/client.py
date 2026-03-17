@@ -13,7 +13,7 @@ from easypaperless._internal.resources.document_types import DocumentTypesResour
 from easypaperless._internal.resources.documents import DocumentsResource
 from easypaperless._internal.resources.storage_paths import StoragePathsResource
 from easypaperless._internal.resources.tags import TagsResource
-from easypaperless._internal.sentinel import UNSET, _Unset
+from easypaperless._internal.sentinel import UNSET, Unset
 from easypaperless.models.permissions import SetPermissions
 
 logger = logging.getLogger(__name__)
@@ -82,26 +82,41 @@ class _ClientCore:
         resource: str,
         model_class: type[Any],
         *,
-        owner: int | None | _Unset = UNSET,
-        set_permissions: SetPermissions | None = None,
+        owner: int | None | Unset = UNSET,
+        set_permissions: SetPermissions | None | Unset = UNSET,
         **kwargs: Any,
     ) -> Any:
         logger.debug("Creating %s resource", resource)
-        payload = {k: v for k, v in kwargs.items() if not isinstance(v, _Unset)}
-        if not isinstance(owner, _Unset):
+        payload = {k: v for k, v in kwargs.items() if not isinstance(v, Unset)}
+        if not isinstance(owner, Unset):
             payload["owner"] = owner
-        payload["set_permissions"] = (
-            set_permissions if set_permissions is not None else SetPermissions()
-        ).model_dump()
+        if not isinstance(set_permissions, Unset):
+            payload["set_permissions"] = (
+                SetPermissions().model_dump()
+                if set_permissions is None
+                else set_permissions.model_dump()
+            )
         resp = await self._session.post(f"/{resource}/", json=payload)
         self._resolver.invalidate(resource)
         return model_class.model_validate(resp.json())
 
     async def _update_resource(
-        self, resource: str, id: int, model_class: type[Any], **kwargs: Any
+        self,
+        resource: str,
+        id: int,
+        model_class: type[Any],
+        *,
+        set_permissions: SetPermissions | None | Unset = UNSET,
+        **kwargs: Any,
     ) -> Any:
         logger.debug("Updating %s resource id=%d", resource, id)
-        payload = {k: v for k, v in kwargs.items() if not isinstance(v, _Unset)}
+        payload = {k: v for k, v in kwargs.items() if not isinstance(v, Unset)}
+        if not isinstance(set_permissions, Unset):
+            payload["set_permissions"] = (
+                SetPermissions().model_dump()
+                if set_permissions is None
+                else set_permissions.model_dump()
+            )
         resp = await self._session.patch(f"/{resource}/{id}/", json=payload)
         self._resolver.invalidate(resource)
         return model_class.model_validate(resp.json())
@@ -132,13 +147,20 @@ class PaperlessClient(_ClientCore):
 
     Resources are accessible as attributes:
 
-    * ``client.correspondents`` — correspondent CRUD + bulk ops - see `easypaperless.resources.CorrespondentsResource`
-    * ``client.custom_fields`` — custom field CRUD - see `easypaperless.resources.CustomFieldsResource`
-    * ``client.document_types`` — document type CRUD + bulk ops - see `easypaperless.resources.DocumentTypesResource`
-    * ``client.documents`` — document CRUD, bulk ops, upload, download - see `easypaperless.resources.DocumentsResource`
-    * ``client.documents.notes`` — document notes - see `easypaperless.resources.NotesResource`
-    * ``client.storage_paths`` — storage path CRUD + bulk ops - see `easypaperless.resources.StoragePathsResource`
-    * ``client.tags`` — tag CRUD + bulk ops - see `easypaperless.resources.TagsResource`
+    * ``client.correspondents`` — correspondent CRUD + bulk ops -
+      see `easypaperless.resources.CorrespondentsResource`
+    * ``client.custom_fields`` — custom field CRUD -
+      see `easypaperless.resources.CustomFieldsResource`
+    * ``client.document_types`` — document type CRUD + bulk ops -
+      see `easypaperless.resources.DocumentTypesResource`
+    * ``client.documents`` — document CRUD, bulk ops, upload, download -
+      see `easypaperless.resources.DocumentsResource`
+    * ``client.documents.notes`` — document notes -
+      see `easypaperless.resources.NotesResource`
+    * ``client.storage_paths`` — storage path CRUD + bulk ops -
+      see `easypaperless.resources.StoragePathsResource`
+    * ``client.tags`` — tag CRUD + bulk ops -
+      see `easypaperless.resources.TagsResource`
 
     Use as an async context manager to ensure the underlying HTTP connection
     pool is closed when you are done:

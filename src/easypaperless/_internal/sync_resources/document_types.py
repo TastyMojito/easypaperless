@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, List, cast
 
-from easypaperless._internal.sentinel import UNSET, _Unset
+from easypaperless._internal.sentinel import UNSET, Unset
 from easypaperless.models._base import MatchingAlgorithm
 from easypaperless.models.document_types import DocumentType
 from easypaperless.models.permissions import SetPermissions
@@ -78,11 +78,11 @@ class SyncDocumentTypesResource:
         self,
         *,
         name: str,
-        match: str | None | _Unset = UNSET,
-        matching_algorithm: MatchingAlgorithm | None | _Unset = UNSET,
+        match: str | Unset = UNSET,
+        matching_algorithm: MatchingAlgorithm | Unset = UNSET,
         is_insensitive: bool = True,
-        owner: int | None | _Unset = UNSET,
-        set_permissions: SetPermissions | None = None,
+        owner: int | None | Unset = UNSET,
+        set_permissions: SetPermissions | None | Unset = UNSET,
     ) -> DocumentType:
         """Create a new document type.
 
@@ -94,6 +94,7 @@ class SyncDocumentTypesResource:
                 Defaults to ``True``, matching the paperless-ngx API default.
             owner: Numeric user ID to assign as owner.
             set_permissions: Explicit view/change permission sets.
+                Pass ``None`` to create with empty permissions.
 
         Returns:
             The newly created :class:`~easypaperless.models.document_types.DocumentType`.
@@ -116,12 +117,12 @@ class SyncDocumentTypesResource:
         self,
         id: int,
         *,
-        name: str | None | _Unset = UNSET,
-        match: str | None | _Unset = UNSET,
-        matching_algorithm: MatchingAlgorithm | None | _Unset = UNSET,
-        is_insensitive: bool | None | _Unset = UNSET,
-        owner: int | None | _Unset = UNSET,
-        set_permissions: SetPermissions | None | _Unset = UNSET,
+        name: str | Unset = UNSET,
+        match: str | Unset = UNSET,
+        matching_algorithm: MatchingAlgorithm | Unset = UNSET,
+        is_insensitive: bool | Unset = UNSET,
+        owner: int | None | Unset = UNSET,
+        set_permissions: SetPermissions | None | Unset = UNSET,
     ) -> DocumentType:
         """Partially update a document type (PATCH semantics).
 
@@ -135,6 +136,7 @@ class SyncDocumentTypesResource:
                 Pass ``None`` to clear the owner.
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             set_permissions: Explicit view/change permission sets.
+                Pass ``None`` to clear all permissions (overwrite with empty).
                 Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
 
         Returns:
@@ -178,8 +180,8 @@ class SyncDocumentTypesResource:
         self,
         ids: List[int],
         *,
-        set_permissions: SetPermissions | None = None,
-        owner: int | None = None,
+        set_permissions: SetPermissions | Unset = UNSET,
+        owner: int | None | Unset = UNSET,
         merge: bool = False,
     ) -> None:
         """Set permissions and/or owner on multiple document types.
@@ -187,7 +189,10 @@ class SyncDocumentTypesResource:
         Args:
             ids: List of document type IDs to modify.
             set_permissions: Explicit view/change permission sets.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             owner: Numeric user ID to assign as owner.
+                Pass ``None`` to clear the owner.
+                Omit (or pass :data:`~easypaperless.UNSET`) to leave unchanged.
             merge: When ``True``, new permissions are merged with existing ones.
         """
         self._run(

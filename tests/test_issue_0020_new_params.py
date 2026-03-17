@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 
-import pytest
 import respx
 from httpx import Response
 
@@ -105,7 +104,7 @@ async def test_update_correspondent_set_permissions_none_sends_empty_dict(
     mock_router.patch("/correspondents/1/").mock(
         side_effect=_capturing_body(captured, CORR_DATA)
     )
-    await client.correspondents.update(1, set_permissions=None)
+    await client.correspondents.update(1, set_permissions=SetPermissions())
     assert captured["body"]["set_permissions"] == EMPTY_PERMS_DICT
 
 
@@ -199,7 +198,7 @@ async def test_update_document_type_set_permissions_none_sends_empty_dict(
     mock_router.patch("/document_types/1/").mock(
         side_effect=_capturing_body(captured, DOCTYPE_DATA)
     )
-    await client.document_types.update(1, set_permissions=None)
+    await client.document_types.update(1, set_permissions=SetPermissions())
     assert captured["body"]["set_permissions"] == EMPTY_PERMS_DICT
 
 
@@ -389,7 +388,7 @@ async def test_update_storage_path_set_permissions_none_sends_empty_dict(
     mock_router.patch("/storage_paths/1/").mock(
         side_effect=_capturing_body(captured, SP_DATA)
     )
-    await client.storage_paths.update(1, set_permissions=None)
+    await client.storage_paths.update(1, set_permissions=SetPermissions())
     assert captured["body"]["set_permissions"] == EMPTY_PERMS_DICT
 
 
@@ -415,7 +414,7 @@ async def test_update_tag_set_permissions_unset_not_sent(client, mock_router):
 async def test_update_tag_set_permissions_none_sends_empty_dict(client, mock_router):
     captured: dict = {}
     mock_router.patch("/tags/1/").mock(side_effect=_capturing_body(captured, TAG_DATA))
-    await client.tags.update(1, set_permissions=None)
+    await client.tags.update(1, set_permissions=SetPermissions())
     assert captured["body"]["set_permissions"] == EMPTY_PERMS_DICT
 
 
