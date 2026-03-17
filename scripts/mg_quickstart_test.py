@@ -14,16 +14,17 @@ async def main():
         docs = await client.documents.list(
             search="test", max_results=3, ordering="added", descending=True
         )
-        for doc in docs:
+        print(f"Total matching: {docs.count}")
+        for doc in docs.results:
             print(f"Id: {doc.id} \nTitle: {doc.title} \nadded: {doc.added}\n")
 
         # Fetch a single document
         doc = await client.documents.get(id=1)
-        print(doc.title, doc.created_date)
+        print(doc.title, doc.created)
 
         # check if a "API_edited" tag already exists - otherwise create it.
         tags = await client.tags.list(name_exact="API_edited")
-        if not tags:
+        if not tags.results:
             await client.tags.create(name="API_edited", color="#40bfb7")
 
         # Update metadata — string names are resolved to IDs automatically

@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-03-17
+
+### Breaking Changes
+
+- All `list()` methods now return `PagedResult[T]` instead of `list[T]`. Update call sites to access items via `.results` and the total count via `.count`.
+
+### Added
+
+- `PagedResult[T]` generic Pydantic model exported from `easypaperless`. All `list()` methods across every resource (async and sync) now return this model, providing access to the total item count (`.count`), raw pagination URLs (`.next`, `.previous`), all matching IDs (`.all`), and the result items (`.results`).
+- `Unset` type alias and `UNSET` sentinel constant are now exported from the top-level `easypaperless` namespace. Use `UNSET` to signal "not provided" in optional parameters, distinct from explicit `None` (which clears a nullable field). Previously only available as an internal symbol; now fully public and documented.
+- Structured logging throughout the library. Every resource method emits an `INFO`-level log record when called; the HTTP layer emits `DEBUG`-level request and response details. All loggers are children of the `easypaperless` logger — attach any standard Python `logging` handler to capture them. Auth tokens are never logged.
+
+### Fixed
+
+- `SyncTagsResource.create()`: `color` and `is_inbox_tag` parameters now correctly default to `UNSET` (was `None`). Previously, omitting these arguments would send `"color": null` and `"is_inbox_tag": null` to the API, silently overriding server-side defaults.
+- `None` / `UNSET` semantics corrected across all async resource `create()` and `update()` methods. Parameters that cannot be `None` (e.g. `name`, `match`, `is_insensitive`) now use `UNSET` as their default and exclude `None` from their type. Nullable parameters (e.g. `owner`, `correspondent`) preserve `None` as the "clear this field" value.
+- `CustomFieldsResource.update()` now accepts `owner` and `set_permissions` parameters, matching the API capabilities.
+- `set_permissions` now supports three-way semantics in all `create()` and `update()` methods: `UNSET` — omit from payload; `None` — overwrite with empty permissions; `SetPermissions(...)` — overwrite with the provided value.
+
+### Changed
+
+- All `Optional[X]` usages in resource method signatures replaced with `X | None` for consistency with the modern Python union syntax.
+- Sync resource methods no longer declare an unused `logger` variable. Logging is emitted by the async delegate under the `easypaperless._internal.resources.*` logger hierarchy.
+
+---
+
 ## [0.2.1] - 2026-03-15
 
 ### Added

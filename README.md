@@ -26,7 +26,8 @@ Unlike other wrappers that simply mirror REST endpoints, **easypaperless** is de
 * **Extensive Coverage:** Currently covers a lot of essential workflows from document management to complex bulk operations.
 * **Async-First with Sync Support:** Built on top of httpx, easypaperless is fully asynchronous by default for high-performance applications. But it also offers a synchronous wrapper for a classic blocking workflow.
 * **Built-in Bulk Tools:** Easily manage hundreds of tags, correspondents, or documents with single-method calls.
-* **Intuitive Error Hierarchy:** easypaperless provides descriptive, custom exceptions that tell you exactly what went wrong,
+* **Structured Logging:** The library emits structured log records under the `easypaperless` logger hierarchy. Attach any standard Python logging handler to capture API calls, responses, and errors.
+* **Intuitive Error Hierarchy:** easypaperless provides descriptive, custom exceptions that tell you exactly what went wrong.
 
 ---
 
@@ -75,10 +76,12 @@ async def main():
     api_key = "YOUR_TOKEN"
     async with PaperlessClient(url=url, api_key=api_key) as client:
         # List documents — full-text search across title and OCR content, return the last 3 docs
+        # list() returns a PagedResult; use .results for the items and .count for the total
         docs = await client.documents.list(
             search="test", max_results=3, ordering="added", descending=True
         )
-        for doc in docs:
+        print(f"Total matching: {docs.count}")
+        for doc in docs.results:
             print(f"Id: {doc.id} \nTitle: {doc.title} \nadded: {doc.added}\n")
 
         # Fetch a single document
@@ -87,7 +90,7 @@ async def main():
 
         # check if a "API_edited" tag already exists - otherwise create it.
         tags = await client.tags.list(name_exact="API_edited")
-        if not tags:
+        if not tags.results:
             await client.tags.create(name="API_edited", color="#40bfb7")
 
         # Update metadata — string names are resolved to IDs automatically
@@ -114,8 +117,10 @@ url = "http://localhost:8000"
 api_key = "YOUR_TOKEN"
 with SyncPaperlessClient(url=url, api_key=api_key) as client:
     # List documents — full-text search across title and OCR content, return the last 3 docs
+    # list() returns a PagedResult; use .results for the items and .count for the total
     docs = client.documents.list(search="test", max_results=3, ordering="added", descending=True)
-    for doc in docs:
+    print(f"Total matching: {docs.count}")
+    for doc in docs.results:
         print(f"Id: {doc.id} \nTitle: {doc.title} \nadded: {doc.added}\n")
 
     # Fetch a single document
@@ -124,7 +129,7 @@ with SyncPaperlessClient(url=url, api_key=api_key) as client:
 
     # check if a "API_edited" tag already exists - otherwise create it.
     tags = client.tags.list(name_exact="API_edited")
-    if not tags:
+    if not tags.results:
         client.tags.create(name="API_edited", color="#40bfb7")
 
     # Update metadata — string names are resolved to IDs automatically
@@ -136,6 +141,10 @@ with SyncPaperlessClient(url=url, api_key=api_key) as client:
 ## 📖 Functional Overview
 
 All functionality is accessed through resource attributes on the client (e.g. `client.documents`, `client.tags`). Both `PaperlessClient` (async) and `SyncPaperlessClient` (sync) expose the same resources and methods.
+
+All `list()` methods return a `PagedResult[T]` containing `.results` (the items), `.count` (total matches from the server), `.next` / `.previous` (raw page URLs when requesting a single page), and `.all` (all matching IDs when provided by the API).
+
+The `UNSET` sentinel (importable from `easypaperless`) allows you to distinguish "not provided" from explicit `None` in optional parameters. Omitting a parameter or passing `UNSET` leaves the field unchanged; passing `None` explicitly clears a nullable field.
 
 ### Client
 
