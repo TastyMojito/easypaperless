@@ -489,3 +489,123 @@ async def test_get_all_pages_with_params(session):
         results = await session.get_all_pages("/items/", params={"ordering": "name"})
     assert len(results) == 1
     assert "ordering" in str(route.calls[0].request.url)
+
+
+# ---------------------------------------------------------------------------
+# Scheme normalisation in pagination (_normalise_next_url / #0033)
+# ---------------------------------------------------------------------------
+
+HTTPS_BASE_URL = "https://paperless.test"
+
+
+@pytest.fixture
+async def https_session():
+    s = HttpSession(base_url=HTTPS_BASE_URL, api_token="key")
+    yield s
+    await s.close()
+
+
+async def test_get_all_pages_normalises_http_next_to_https(https_session):
+    """get_all_pages replaces http:// next URL with https:// when base_url uses https."""
+    page1 = {
+        "count": 2,
+        # API returns http:// despite the client using https://
+        "next": "http://paperless.test/api/items/?page=2",
+        "previous": None,
+        "results": [{"id": 1}],
+    }
+    page2 = {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [{"id": 2}],
+    }
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        # Both requests must arrive over https
+        assert str(request.url).startswith("https://"), f"Expected https, got: {request.url}"
+        return Response(200, json=page1 if call_count == 1 else page2)
+
+    with respx.mock(assert_all_called=False) as router:
+        router.get(HTTPS_BASE_URL + "/api/items/").mock(side_effect=side_effect)
+        results = await https_session.get_all_pages("/items/")
+
+    assert [r["id"] for r in results] == [1, 2]
+    assert call_count == 2
+
+
+async def test_get_all_pages_same_scheme_unchanged(session):
+    """get_all_pages leaves next URL untouched when scheme already matches base_url."""
+    page1 = {
+        "count": 2,
+        "next": BASE_URL + "/api/items/?page=2",
+        "previous": None,
+        "results": [{"id": 1}],
+    }
+    page2 = {"count": 2, "next": None, "previous": None, "results": [{"id": 2}]}
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        return Response(200, json=page1 if call_count == 1 else page2)
+
+    with respx.mock(assert_all_called=False) as router:
+        router.get(BASE_URL + "/api/items/").mock(side_effect=side_effect)
+        results = await session.get_all_pages("/items/")
+
+    assert [r["id"] for r in results] == [1, 2]
+    assert call_count == 2
+
+
+async def test_get_all_pages_normalises_https_next_to_http(session):
+    """get_all_pages replaces https:// next URL with http:// when base_url uses http."""
+    page1 = {
+        "count": 2,
+        "next": "https://paperless.test/api/items/?page=2",
+        "previous": None,
+        "results": [{"id": 1}],
+    }
+    page2 = {"count": 2, "next": None, "previous": None, "results": [{"id": 2}]}
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        assert str(request.url).startswith("http://"), f"Expected http, got: {request.url}"
+        return Response(200, json=page1 if call_count == 1 else page2)
+
+    with respx.mock(assert_all_called=False) as router:
+        router.get(BASE_URL + "/api/items/").mock(side_effect=side_effect)
+        results = await session.get_all_pages("/items/")
+
+    assert [r["id"] for r in results] == [1, 2]
+    assert call_count == 2
+
+
+async def test_get_all_pages_paged_normalises_http_next_to_https(https_session):
+    """get_all_pages_paged replaces http:// next URL with https:// when base_url uses https."""
+    page1 = {
+        "count": 2,
+        "next": "http://paperless.test/api/items/?page=2",
+        "previous": None,
+        "results": [{"id": 1}],
+    }
+    page2 = {"count": 2, "next": None, "previous": None, "results": [{"id": 2}]}
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        assert str(request.url).startswith("https://"), f"Expected https, got: {request.url}"
+        return Response(200, json=page1 if call_count == 1 else page2)
+
+    with respx.mock(assert_all_called=False) as router:
+        router.get(HTTPS_BASE_URL + "/api/items/").mock(side_effect=side_effect)
+        paged = await https_session.get_all_pages_paged("/items/")
+
+    assert [r["id"] for r in paged.items] == [1, 2]
+    assert call_count == 2

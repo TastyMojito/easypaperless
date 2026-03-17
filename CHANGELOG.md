@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1] - 2026-03-17
+
+### Fixed
+
+- `documents.notes.list()` now returns `PagedResult[DocumentNote]` instead of a plain `list`. The method signature, return type, and docstrings are now consistent with every other `list()` method in the library.
+- Pagination no longer fails when a paperless-ngx instance is served behind a TLS-terminating reverse proxy that does not forward `X-Forwarded-Proto: https`. Previously, `get_all_pages` and `get_all_pages_paged` would follow `next` URLs verbatim from the API response, causing the proxy to reject plain-HTTP requests on its HTTPS port with a 400 error. Both methods now normalise the scheme of every `next` URL to match the scheme configured in `base_url` before issuing the request.
+
+---
+
 ## [0.3.0] - 2026-03-17
 
 ### Breaking Changes

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import urllib.parse
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -175,6 +176,23 @@ class HttpSession:
     async def delete(self, path: str, *, params: dict[str, Any] | None = None) -> httpx.Response:
         return await self.request("DELETE", path, params=params)
 
+    def _normalise_next_url(self, next_url: str) -> str:
+        """Return *next_url* with its scheme replaced by the one in *base_url*.
+
+        When paperless-ngx runs behind a TLS-terminating reverse proxy that
+        does not forward ``X-Forwarded-Proto: https``, Django returns
+        pagination ``next`` URLs with an ``http://`` scheme even though the
+        client configured an ``https://`` base URL.  Following those URLs
+        verbatim causes the proxy to reject the request.  This method
+        normalises the scheme so every page request uses the same scheme as
+        the configured base URL.
+        """
+        base_scheme = urllib.parse.urlparse(self._base_url).scheme
+        parsed = urllib.parse.urlparse(next_url)
+        if parsed.scheme == base_scheme:
+            return next_url
+        return parsed._replace(scheme=base_scheme).geturl()
+
     async def get_all_pages(
         self,
         path: str,
@@ -202,6 +220,7 @@ class HttpSession:
 
         next_url: str | None = page.get("next")
         while next_url:
+            next_url = self._normalise_next_url(next_url)
             logger.debug("Fetching next page: %s", next_url)
             # next is absolute; pass it directly to the client
             client = self._get_client()
@@ -299,6 +318,7 @@ class HttpSession:
 
         next_url: str | None = page.get("next")
         while next_url:
+            next_url = self._normalise_next_url(next_url)
             logger.debug("Fetching next page: %s", next_url)
             client = self._get_client()
             try:
