@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-03-20
+
+### Added
+
+- **Users resource** (`client.users` / `sync_client.users`): Full CRUD operations (`list`, `get`, `create`, `update`, `delete`) against the `/api/users/` endpoint. `list()` supports filtering by `username_contains` (case-insensitive substring) and `username_exact` (case-insensitive exact match), and returns `PagedResult[User]`.
+- **`User` model** (`easypaperless.models.User`): Pydantic model with all fields from the API response, including `user_permissions` (directly assigned), `inherited_permissions` (read-only effective permissions), and `is_mfa_enabled` (read-only).
+- **`PaperlessPermission` type alias** (`easypaperless.PaperlessPermission`): A `Literal[...]` type alias enumerating all 176 known Paperless permission strings. Use with standard `in` checks for type-safe, IDE-assisted permission inspection without relying on raw strings.
+- **Trash resource** (`client.trash` / `sync_client.trash`): Manage the Paperless-ngx trash bin via three methods:
+  - `list(page, page_size)` — returns `PagedResult[Document]` of all trashed documents.
+  - `restore(document_ids)` — recovers the specified documents from the trash back to active status.
+  - `empty(document_ids)` — **permanently and irreversibly** deletes the specified documents. A clear warning is included in the method docstring.
+
+---
+
 ## [0.3.2] - 2026-03-18
 
 ### Fixed

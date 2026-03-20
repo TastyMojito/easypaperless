@@ -206,6 +206,17 @@ The `UNSET` sentinel (importable from `easypaperless`) allows you to distinguish
 
 * **list() / get() / create() / update() / delete()** Full CRUD for user-defined metadata fields for advanced document tracking.
 
+### `client.users` — Users
+
+* **list() / get() / create() / update() / delete()** Full CRUD for Paperless-ngx user accounts. Supports filtering by username and paginated results.
+* Use `PaperlessPermission` (a typed `Literal` alias) for type-safe permission checks against `user.user_permissions` or `user.inherited_permissions`.
+
+### `client.trash` — Trash
+
+* **list()** List all documents currently in the Paperless-ngx trash bin. Returns `PagedResult[Document]`.
+* **restore()** Recover one or more trashed documents back to active status.
+* **empty()** Permanently and irreversibly delete trashed documents. **This operation cannot be undone.**
+
 
 ## 📚 Documentation
 
