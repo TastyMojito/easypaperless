@@ -177,11 +177,23 @@ def test_sync_delete_document():
 def test_sync_download_document():
     content = b"%PDF-1.4 fake content"
     with respx.mock(base_url=BASE_URL + "/api", assert_all_called=False) as router:
-        router.get("/documents/1/archive/").mock(
+        router.get("/documents/1/download/").mock(
             return_value=Response(200, content=content, headers={"content-type": "application/pdf"})
         )
         with SyncPaperlessClient(url=BASE_URL, api_token=API_KEY) as client:
             data = client.documents.download(1)
+    assert data == content
+
+
+def test_sync_download_document_original():
+    """Regression test for #0037: original=True must use ?original=true query param."""
+    content = b"\xff\xd8\xff fake jpeg"
+    with respx.mock(base_url=BASE_URL + "/api", assert_all_called=False) as router:
+        router.get("/documents/1/download/", params={"original": "true"}).mock(
+            return_value=Response(200, content=content, headers={"content-type": "image/jpeg"})
+        )
+        with SyncPaperlessClient(url=BASE_URL, api_token=API_KEY) as client:
+            data = client.documents.download(1, original=True)
     assert data == content
 
 

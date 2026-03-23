@@ -395,8 +395,10 @@ class SyncDocumentsResource:
 
         Args:
             id: Numeric ID of the document to download.
-            original: If ``False`` *(default)*, returns the archived PDF.
-                If ``True``, returns the original uploaded file.
+            original: If ``False`` *(default)*, returns the archived PDF
+                (``GET /documents/{id}/download/``).
+                If ``True``, returns the original uploaded file
+                (``GET /documents/{id}/download/?original=true``).
 
         Returns:
             Raw file bytes.

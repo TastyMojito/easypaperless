@@ -657,15 +657,19 @@ class DocumentsResource:
 
         Args:
             id: Numeric ID of the document to download.
-            original: If ``False`` *(default)*, returns the archived PDF.
-                If ``True``, returns the original uploaded file.
+            original: If ``False`` *(default)*, returns the archived PDF
+                (``GET /documents/{id}/download/``).
+                If ``True``, returns the original uploaded file
+                (``GET /documents/{id}/download/?original=true``).
 
         Returns:
             Raw file bytes.
         """
         logger.info("Downloading document id=%d (original=%s)", id, original)
-        endpoint = "download" if original else "archive"
-        resp = await self._core._session.get_download(f"/documents/{id}/{endpoint}/")
+        path = f"/documents/{id}/download/"
+        if original:
+            path += "?original=true"
+        resp = await self._core._session.get_download(path)
         content_type = resp.headers.get("content-type", "")
         if "text/html" in content_type or resp.content[:9].lower().startswith(b"<!doctype"):
             raise ServerError(

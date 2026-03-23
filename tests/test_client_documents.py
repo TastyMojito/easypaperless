@@ -165,19 +165,21 @@ async def test_delete_document_not_found(client, mock_router):
 
 
 async def test_download_document_archive(client, mock_router):
-    mock_router.get("/documents/1/archive/").mock(return_value=Response(200, content=b"PDF"))
+    mock_router.get("/documents/1/download/").mock(return_value=Response(200, content=b"PDF"))
     content = await client.documents.download(1)
     assert content == b"PDF"
 
 
 async def test_download_document_original(client, mock_router):
-    mock_router.get("/documents/1/download/").mock(return_value=Response(200, content=b"ORIG"))
+    mock_router.get("/documents/1/download/", params={"original": "true"}).mock(
+        return_value=Response(200, content=b"ORIG")
+    )
     content = await client.documents.download(1, original=True)
     assert content == b"ORIG"
 
 
 async def test_download_document_not_found(client, mock_router):
-    mock_router.get("/documents/999/archive/").mock(
+    mock_router.get("/documents/999/download/").mock(
         return_value=Response(404, json={"detail": "Not found."})
     )
     with pytest.raises(NotFoundError):
@@ -186,7 +188,7 @@ async def test_download_document_not_found(client, mock_router):
 
 async def test_download_document_html_content_type(client, mock_router):
     """HTML content-type indicates a login-page redirect — should raise ServerError."""
-    mock_router.get("/documents/1/archive/").mock(
+    mock_router.get("/documents/1/download/").mock(
         return_value=Response(
             200,
             content=b"<html><body>Login</body></html>",
@@ -199,7 +201,7 @@ async def test_download_document_html_content_type(client, mock_router):
 
 async def test_download_document_html_body_prefix(client, mock_router):
     """Body starting with <!doctype should raise ServerError even without HTML content-type."""
-    mock_router.get("/documents/1/archive/").mock(
+    mock_router.get("/documents/1/download/").mock(
         return_value=Response(
             200,
             content=b"<!DOCTYPE html><html><body>Login</body></html>",
