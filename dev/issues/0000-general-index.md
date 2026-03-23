@@ -40,4 +40,4 @@
 | 0034 | Bug | `notes.list()` Crashes at Runtime with AttributeError on Real Instance | Deployed | [0034-bug-notes_list_crashes_on_plain_array_response.md](0034-bug-notes_list_crashes_on_plain_array_response.md) |
 | 0035 | Feature | Users Resource CRUD | QA Passed | [0035-feature-users_resource_crud.md](0035-feature-users_resource_crud.md) |
 | 0036 | Feature | Trash Resource | QA Passed | [0036-feature-trash_resource.md](0036-feature-trash_resource.md) |
-| 0037 | Bug | `documents.download(original=True)` Returns Archived PDF Instead of Original File | Implemented | [0037-bug-download_original_returns_pdf.md](0037-bug-download_original_returns_pdf.md) |
+| 0037 | Bug | `documents.download(original=True)` Returns Archived PDF Instead of Original File | QA Passed | [0037-bug-download_original_returns_pdf.md](0037-bug-download_original_returns_pdf.md) |

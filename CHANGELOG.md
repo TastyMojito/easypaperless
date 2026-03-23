@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.1] - 2026-03-23
+
+### Fixed
+
+- `documents.download(id, original=True)` now correctly returns the original uploaded file instead of the archived PDF. The previous implementation routed `original=True` to `GET /documents/{id}/download/` and `original=False` to `GET /documents/{id}/archive/`, which no longer matches the current Paperless-ngx API. Both paths now use the single `GET /documents/{id}/download/` endpoint: omitting the query parameter returns the archived PDF (default), and appending `?original=true` returns the original file. Affects async and sync clients equally.
+
+---
+
 ## [0.4.0] - 2026-03-20
 
 ### Added
